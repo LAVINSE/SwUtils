@@ -1,6 +1,6 @@
 {
   "name": "com.lavinse.swutils",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "displayName": "SwUtils",
   "description": "Utility scripts for Unity projects",
   "unity": "2021.3",
