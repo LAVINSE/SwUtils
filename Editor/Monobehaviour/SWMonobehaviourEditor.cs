@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -21,6 +22,7 @@ namespace SWTools
         /// 에디터에 적용할 (Unity Style Sheet) 스타일시트
         /// </summary>
         public StyleSheet EditorStyleSheet;
+        private const string STYLESHEET_PATH = "Assets/SwUtils/Editor/StyleSheet/SWMonobehaviourEditorStylesheet.uss";
 
         /// <summary>
         /// 중복 초기화 방지 플래그
@@ -135,6 +137,11 @@ namespace SWTools
             if (DrawerInitialized && PropertiesList != null)
             {
                 return;
+            }
+
+            if (EditorStyleSheet == null)
+            {
+                EditorStyleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(STYLESHEET_PATH);
             }
 
             shouldDrawBase = true;
