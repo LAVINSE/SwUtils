@@ -1,0 +1,18 @@
+{
+    "name": "SwUtils.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a4cc37ab7f63a45488e4bd9a29de9cc2"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
