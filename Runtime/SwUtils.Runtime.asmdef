@@ -1,0 +1,9 @@
+{
+  "name": "SwUtils.Runtime",
+  "rootNamespace": "SwUtils",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "autoReferenced": true
+}

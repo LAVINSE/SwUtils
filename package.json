@@ -1,0 +1,16 @@
+{
+  "name": "com.lavinse.swutils",
+  "version": "1.0.0",
+  "displayName": "SwUtils",
+  "description": "Utility scripts for Unity projects",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/LAVINSE/SwUtils",
+  "changelogUrl": "https://github.com/LAVINSE/SwUtils/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/LAVINSE/SwUtils/blob/main/LICENSE.md",
+  "dependencies": {},
+  "keywords": ["utilities", "utils"],
+  "author": {
+    "name": "LAVINSE",
+    "url": "https://github.com/LAVINSE"
+  }
+}
