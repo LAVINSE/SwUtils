@@ -41,14 +41,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 8902777629549608974}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac86a31888bc9e24bbf6ae7201f808de, type: 3}
+  m_Script: {fileID: 11500000, guid: 80d26adfe3e748842b3822f179d89b9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SWAttributeExample
   groupIndex: 0
   groupReadOnly: 0
   conditionExample: 0
   isConditionExample: 0
-  dropDownValueExample: 2
+  dropDownValueExample: 0
   enumConditionExample: 0
   conditionTypeExample: 0
   isDebugButtonBar: 0

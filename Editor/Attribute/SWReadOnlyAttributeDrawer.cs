@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace DropAway
+namespace SWTools
 {
+    [CustomPropertyDrawer(typeof(SWReadOnlyAttribute))]
     public class SWReadOnlyAttributeDrawer : PropertyDrawer
     {
         #region 필드
