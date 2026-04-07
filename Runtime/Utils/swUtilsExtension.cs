@@ -46,7 +46,7 @@ namespace SWUtils
         /// <returns>a가 b보다 크면 true</returns>
         public static bool ExIsGreat(this float a, float b)
         {
-            return a > b - float.Epsilon;
+            return a > b + float.Epsilon;
         }
 
         /// <summary>

@@ -181,7 +181,7 @@ namespace SWUtils
         /// <param name="lastUseUtc">마지막 사용 UTC 시각. null이면 현재 시각 사용</param>
         public void Set(int count, DateTime? lastUseUtc = null)
         {
-            count = Mathf.Clamp(count, 0, maxCount);
+            this.count = Mathf.Clamp(count, 0, maxCount);
             lastUseUtc = lastUseUtc ?? DateTime.UtcNow;
             Save();
         }
