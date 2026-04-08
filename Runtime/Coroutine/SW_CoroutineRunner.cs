@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SWCoroutine
 {
-    public class SwCoroutineRunner : SWMonoBehaviour, ICoroutineRunner
+    public class SWCoroutineRunner : SWMonoBehaviour, ICoroutineRunner
     {
         #region 필드
         private readonly Dictionary<float, WaitForSeconds> waitDict = new();

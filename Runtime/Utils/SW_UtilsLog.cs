@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public static class SwUtilsLog
+    public static class SWUtilsLog
     {
         #region 함수
         [System.Diagnostics.Conditional("DebugMode")]

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public class SwUtilsFactory : MonoBehaviour
+    public class SWUtilsFactory : MonoBehaviour
     {
         #region 함수
         /// <summary>
@@ -69,7 +69,7 @@ namespace SWUtils
             GameObject parentObj, Vector3 pos, Vector3 scale, Vector3 rotate,
             bool isStayWorldPos = false) where T : Component
         {
-            var oGameObject = SwUtilsFactory.CreateGameObj(objName,
+            var oGameObject = SWUtilsFactory.CreateGameObj(objName,
                 parentObj, pos, scale, rotate, isStayWorldPos);
 
             return oGameObject.GetComponent<T>() ?? oGameObject.AddComponent<T>();
@@ -89,7 +89,7 @@ namespace SWUtils
             Vector3 scale, Vector3 rotate,
             bool isStayWorldPos = false) where T : Component
         {
-            var oGameObject = SwUtilsFactory.CreateCloneGameObj(objName,
+            var oGameObject = SWUtilsFactory.CreateCloneGameObj(objName,
                 prefabObj, parentObj, pos, scale, rotate, isStayWorldPos);
 
             return oGameObject.GetComponent<T>() ?? oGameObject.AddComponent<T>();

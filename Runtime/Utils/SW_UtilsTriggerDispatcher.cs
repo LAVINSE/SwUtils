@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public class SwUtilsTriggerDispatcher : MonoBehaviour
+    public class SWUtilsTriggerDispatcher : MonoBehaviour
     {
         #region 프로퍼티
-        public System.Action<SwUtilsTriggerDispatcher, Collider> EnterCallback { get; set; } = null;
-        public System.Action<SwUtilsTriggerDispatcher, Collider> StayCallback { get; set; } = null;
-        public System.Action<SwUtilsTriggerDispatcher, Collider> ExitCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider> EnterCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider> StayCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider> ExitCallback { get; set; } = null;
 
-        public System.Action<SwUtilsTriggerDispatcher, Collider2D> Enter2DCallback { get; set; } = null;
-        public System.Action<SwUtilsTriggerDispatcher, Collider2D> Stay2DCallback { get; set; } = null;
-        public System.Action<SwUtilsTriggerDispatcher, Collider2D> Exit2DCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider2D> Enter2DCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider2D> Stay2DCallback { get; set; } = null;
+        public System.Action<SWUtilsTriggerDispatcher, Collider2D> Exit2DCallback { get; set; } = null;
         #endregion // 프로퍼티
 
 

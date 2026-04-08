@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace SWUtils
 {
-    public static class SwUtilsUtility
+    public static class SWUtilsUtility
     {
         #region 함수
         /** 정수형 랜덤숫자를 반환한다 */

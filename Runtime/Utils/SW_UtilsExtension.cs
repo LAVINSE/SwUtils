@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public static class SwUtilsExtension
+    public static class SWUtilsExtension
     {
         #region 실수
         /// <summary>

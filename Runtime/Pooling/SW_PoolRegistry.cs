@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SWPool
 {
-    public class SwPoolRegistry : SWMonoBehaviour
+    public class SWPoolRegistry : SWMonoBehaviour
     {
         #region 데이터
         [System.Serializable]
@@ -16,7 +16,7 @@ namespace SWPool
         #endregion // 데이터
 
         #region 필드
-        [SerializeField] private SwPool targetPool;
+        [SerializeField] private SWPool targetPool;
         [SerializeField] private PoolEntry[] poolEntries;
         #endregion // 필드
 
@@ -28,7 +28,7 @@ namespace SWPool
         {
             if (targetPool == null)
             {
-                SwUtilsLog.LogError("[SwPoolRegistry] SwPool을 찾을 수 없습니다");
+                SWUtilsLog.LogError("[SwPoolRegistry] SWPool을 찾을 수 없습니다");
                 return;
             }
 

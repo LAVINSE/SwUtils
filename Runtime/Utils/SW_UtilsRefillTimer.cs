@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SWUtils
 {
     [System.Serializable]
-    public class SwUtilsRefillTimer
+    public class SWUtilsRefillTimer
     {
         #region 필드
         /// <summary>PlayerPrefs 저장에 사용되는 고유 식별자.</summary>
@@ -44,9 +44,9 @@ namespace SWUtils
             }
         }
         /// <summary>다음 1개 회복까지 남은 시간을 "MM:SS" 형식으로 반환.</summary>
-        public string RemainText => SwUtilsTime.ToMinSec(RemainSeconds);
+        public string RemainText => SWUtilsTime.ToMinSec(RemainSeconds);
         /// <summary>다음 1개 회복까지 남은 시간을 자연어로 반환.</summary>
-        public string RemainReadable => SwUtilsTime.ToReadable(RemainSeconds);
+        public string RemainReadable => SWUtilsTime.ToReadable(RemainSeconds);
         /// <summary>전부 회복까지 남은 시간(초). 가득 찼으면 0.</summary>
         public float RemainSecondsAll
         {
@@ -60,7 +60,7 @@ namespace SWUtils
             }
         }
         /// <summary>전부 회복까지 남은 시간을 "HH:MM:SS" 형식으로 반환.</summary>
-        public string RemainTextAll => SwUtilsTime.ToHourMinSec(RemainSecondsAll);
+        public string RemainTextAll => SWUtilsTime.ToHourMinSec(RemainSecondsAll);
         /// <summary>회복 진행률 (0 = 방금 소모, 1 = 회복 직전).</summary>
         public float Progress
         {
@@ -82,7 +82,7 @@ namespace SWUtils
         /// <param name="id">고유 식별자 (PlayerPrefs 키에 사용)</param>
         /// <param name="maxCount">최대 보유 수량</param>
         /// <param name="intervalSec">1개 회복 간격(초)</param>
-        public SwUtilsRefillTimer(string id, int maxCount, float intervalSec)
+        public SWUtilsRefillTimer(string id, int maxCount, float intervalSec)
         {
             this.id = id;
             this.maxCount = maxCount;

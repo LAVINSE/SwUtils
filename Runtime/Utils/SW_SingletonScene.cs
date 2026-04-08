@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public class SwSingletonScene<T> : MonoBehaviour where T : Component
+    public class SWSingletonScene<T> : MonoBehaviour where T : Component
     {
         private static T instance;
         public static T Instance

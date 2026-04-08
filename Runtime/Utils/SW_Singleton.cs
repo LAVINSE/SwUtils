@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public class SwSingleton<T> : MonoBehaviour where T : Component
+    public class SWSingleton<T> : MonoBehaviour where T : Component
     {
         #region 변수
         private static T instance;

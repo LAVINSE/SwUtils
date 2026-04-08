@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SWUtils
 {
-    public class SwUtilsTime
+    public class SWUtilsTime
     {
         #region 필드
         /// <summary>서버-클라이언트 간 시간 차이(초). 서버 응답 수신 시 갱신.</summary>

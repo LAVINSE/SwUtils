@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 
 namespace SWPool
 {
-    public class SwPool : SWMonoBehaviour, IPool
+    public class SWPool : SWMonoBehaviour, IPool
     {
         #region 필드
         [SWGroup("=====> 설정 <=====")]
