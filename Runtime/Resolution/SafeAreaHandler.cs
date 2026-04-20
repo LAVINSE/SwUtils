@@ -31,8 +31,10 @@ namespace SWUtils
             rectTransform.anchorMin = anchorMin;
             rectTransform.anchorMax = anchorMax;
 
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
             UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+#endif // UNITY_EDITOR
         }
         #endregion // 함수
 
@@ -45,8 +47,10 @@ namespace SWUtils
             rectTransform.anchorMin = new Vector2(0, 0);
             rectTransform.anchorMax = new Vector2(1, 1);
 
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
             UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+#endif // UNITY_EDITOR
         }
         #endregion // 유틸 및 편의성
     }

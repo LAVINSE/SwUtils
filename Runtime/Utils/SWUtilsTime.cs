@@ -4,14 +4,18 @@ using UnityEngine;
 
 namespace SWUtils
 {
+    /// <summary>
+    /// 시간 처리와 관련된 통합 유틸리티.
+    /// 서버/클라이언트 시간 보정, 파싱, 포맷팅, 쿨다운, 오프라인 시간 처리 등을 제공한다.
+    /// </summary>
     public class SWUtilsTime
     {
         #region 필드
         /// <summary>서버-클라이언트 간 시간 차이(초). 서버 응답 수신 시 갱신.</summary>
         private static double serverOffset;
-        /// <summary>오프라인 경과 시간 저장용 기본 PlayerPrefs 키</summary>
+        /// <summary>오프라인 경과 시간 저장용 기본 PlayerPrefs 키.</summary>
         private const string DefaultExitTimeKey = "SwUtilsTime_LastExitTime";
-        /// <summary>일일 리셋 기록용 기본 PlayerPrefs 키</summary>
+        /// <summary>일일 리셋 기록용 기본 PlayerPrefs 키.</summary>
         private const string DefaultResetKey = "SwUtilsTime_LastResetDate";
         /// <summary>간이 프로파일링용 스톱워치.</summary>
         private static readonly System.Diagnostics.Stopwatch stopWatch = new();
@@ -61,15 +65,15 @@ namespace SWUtils
             if (string.IsNullOrEmpty(serverTime) || serverTime == "null")
                 return false;
 
-            string s = serverTime.Trim();
-            if (!s.Contains("T"))
+            string source = serverTime.Trim();
+            if (!source.Contains("T"))
             {
-                s = s.Replace(" ", "T");
-                if (!s.EndsWith("Z")) s += "Z";
+                source = source.Replace(" ", "T");
+                if (!source.EndsWith("Z")) source += "Z";
             }
 
             return DateTime.TryParseExact(
-                s, ParseFormats,
+                source, ParseFormats,
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
                 out result);
@@ -79,11 +83,11 @@ namespace SWUtils
         /// <see cref="DateTime"/>을 지정한 포맷의 문자열로 변환한다.
         /// </summary>
         /// <param name="time">변환할 DateTime</param>
-        /// <param name="fmt">출력 포맷 문자열</param>
+        /// <param name="format">출력 포맷 문자열</param>
         /// <returns>포맷된 시간 문자열</returns>
-        public static string ToString(DateTime time, string fmt = "yyyy-MM-dd HH:mm:ss")
+        public static string ToString(DateTime time, string format = "yyyy-MM-dd HH:mm:ss")
         {
-            return time.ToString(fmt, CultureInfo.InvariantCulture);
+            return time.ToString(format, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -93,9 +97,9 @@ namespace SWUtils
         /// <returns>로컬 시간 문자열. 파싱 실패 시 빈 문자열</returns>
         public static string ToLocalTimeString(string serverTime)
         {
-            if (!TryParseServerTime(serverTime, out DateTime utc))
+            if (!TryParseServerTime(serverTime, out DateTime utcTime))
                 return string.Empty;
-            return ToString(utc.ToLocalTime());
+            return ToString(utcTime.ToLocalTime());
         }
 
         /// <summary>
@@ -107,8 +111,8 @@ namespace SWUtils
         {
             if (yyMMdd == null || yyMMdd.Length < 6) return string.Empty;
             if (DateTime.TryParseExact("20" + yyMMdd.Substring(0, 6), "yyyyMMdd",
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                return dt.ToString("yyyy-MM-dd");
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
+                return dateTime.ToString("yyyy-MM-dd");
             return string.Empty;
         }
         #endregion // 파싱 & 변환
@@ -134,7 +138,7 @@ namespace SWUtils
         /// 현재 시각의 Unix 타임스탬프(초)를 반환한다.
         /// </summary>
         /// <returns>현재 Unix 타임스탬프(초)</returns>
-        public static long NowUnix() 
+        public static long NowUnix()
             => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         #endregion // Unix 타임스탬프
 
@@ -147,9 +151,13 @@ namespace SWUtils
         public static double ElapsedServer(DateTime utcTarget)
             => (ServerUtcNow - utcTarget).TotalSeconds;
 
+        /// <summary>
+        /// 서버 기준 경과 시간(초)을 반환한다. (문자열 버전)
+        /// </summary>
         /// <param name="serverTime">비교 대상 서버 시간 문자열</param>
+        /// <returns>경과 시간(초)</returns>
         public static double ElapsedServer(string serverTime)
-            => TryParseServerTime(serverTime, out DateTime dt) ? ElapsedServer(dt) : 0;
+            => TryParseServerTime(serverTime, out DateTime dateTime) ? ElapsedServer(dateTime) : 0;
 
         /// <summary>
         /// 서버 기준 남은 시간(초)을 반환한다. 양수=아직 남음, 음수=이미 지남.
@@ -159,9 +167,13 @@ namespace SWUtils
         public static double RemainServer(DateTime utcTarget)
             => (utcTarget - ServerUtcNow).TotalSeconds;
 
+        /// <summary>
+        /// 서버 기준 남은 시간(초)을 반환한다. (문자열 버전)
+        /// </summary>
         /// <param name="serverTime">목표 서버 시간 문자열</param>
+        /// <returns>남은 시간(초)</returns>
         public static double RemainServer(string serverTime)
-            => TryParseServerTime(serverTime, out DateTime dt) ? RemainServer(dt) : 0;
+            => TryParseServerTime(serverTime, out DateTime dateTime) ? RemainServer(dateTime) : 0;
 
         /// <summary>
         /// 로컬 기준 경과 시간(초)을 반환한다.
@@ -171,7 +183,11 @@ namespace SWUtils
         public static double ElapsedLocal(DateTime localTarget)
             => (DateTime.Now - localTarget).TotalSeconds;
 
+        /// <summary>
+        /// 로컬 기준 경과 시간(초)을 반환한다. (문자열 버전)
+        /// </summary>
         /// <param name="time">비교 대상 시간 문자열</param>
+        /// <returns>경과 시간(초)</returns>
         public static double ElapsedLocal(string time)
         {
             try { return ElapsedLocal(Convert.ToDateTime(time)); }
@@ -186,7 +202,11 @@ namespace SWUtils
         public static double RemainLocal(DateTime localTarget)
             => (localTarget - DateTime.Now).TotalSeconds;
 
+        /// <summary>
+        /// 로컬 기준 남은 시간(초)을 반환한다. (문자열 버전)
+        /// </summary>
         /// <param name="time">목표 시간 문자열</param>
+        /// <returns>남은 시간(초)</returns>
         public static double RemainLocal(string time)
         {
             if (string.IsNullOrEmpty(time)) return 0;
@@ -204,7 +224,11 @@ namespace SWUtils
         public static bool IsToday(DateTime time)
             => time.Date == DateTime.Today;
 
+        /// <summary>
+        /// 주어진 시간이 오늘인지 확인한다. (문자열 버전)
+        /// </summary>
         /// <param name="time">확인할 시간 문자열</param>
+        /// <returns>오늘이면 true</returns>
         public static bool IsToday(string time)
         {
             try { return IsToday(Convert.ToDateTime(time)); }
@@ -219,15 +243,15 @@ namespace SWUtils
         /// <returns>야간이면 true</returns>
         public static bool IsNight(int nightStart = 19, int nightEnd = 5)
         {
-            int h = DateTime.Now.Hour;
-            return h >= nightStart || h <= nightEnd;
+            int hour = DateTime.Now.Hour;
+            return hour >= nightStart || hour <= nightEnd;
         }
 
         /// <summary>
         /// 현재 요일을 반환한다.
         /// </summary>
         /// <returns>현재 요일</returns>
-        public static DayOfWeek GetDayOfWeek() 
+        public static DayOfWeek GetDayOfWeek()
             => DateTime.Today.DayOfWeek;
 
         /// <summary>
@@ -238,8 +262,8 @@ namespace SWUtils
         /// <returns>해당 요일이면 true</returns>
         public static bool IsDayOfWeek(DayOfWeek day, string time = "")
         {
-            DateTime dt = string.IsNullOrEmpty(time) ? DateTime.Now : Convert.ToDateTime(time);
-            return dt.DayOfWeek == day;
+            DateTime dateTime = string.IsNullOrEmpty(time) ? DateTime.Now : Convert.ToDateTime(time);
+            return dateTime.DayOfWeek == day;
         }
 
         /// <summary>
@@ -285,9 +309,9 @@ namespace SWUtils
         /// <returns>"MM:SS" 형식 문자열</returns>
         public static string ToMinSec(float seconds)
         {
-            int m = Mathf.FloorToInt(Mathf.Abs(seconds) / 60f);
-            int s = Mathf.FloorToInt(Mathf.Abs(seconds) % 60f);
-            return $"{m:D2}:{s:D2}";
+            int minutes = Mathf.FloorToInt(Mathf.Abs(seconds) / 60f);
+            int secs = Mathf.FloorToInt(Mathf.Abs(seconds) % 60f);
+            return $"{minutes:D2}:{secs:D2}";
         }
 
         /// <summary>
@@ -297,11 +321,11 @@ namespace SWUtils
         /// <returns>"HH:MM:SS" 형식 문자열</returns>
         public static string ToHourMinSec(float seconds)
         {
-            float abs = Mathf.Abs(seconds);
-            int h = Mathf.FloorToInt(abs / 3600f);
-            int m = Mathf.FloorToInt((abs % 3600f) / 60f);
-            int s = Mathf.FloorToInt(abs % 60f);
-            return $"{h:D2}:{m:D2}:{s:D2}";
+            float absolute = Mathf.Abs(seconds);
+            int hours = Mathf.FloorToInt(absolute / 3600f);
+            int minutes = Mathf.FloorToInt((absolute % 3600f) / 60f);
+            int secs = Mathf.FloorToInt(absolute % 60f);
+            return $"{hours:D2}:{minutes:D2}:{secs:D2}";
         }
 
         /// <summary>
@@ -311,11 +335,11 @@ namespace SWUtils
         /// <returns>"MM:SS.mmm" 형식 문자열</returns>
         public static string ToMinSecMs(float seconds)
         {
-            float abs = Mathf.Abs(seconds);
-            int m = Mathf.FloorToInt(abs / 60f);
-            int s = Mathf.FloorToInt(abs % 60f);
-            int ms = Mathf.FloorToInt((abs * 1000f) % 1000f);
-            return $"{m:D2}:{s:D2}.{ms:D3}";
+            float absolute = Mathf.Abs(seconds);
+            int minutes = Mathf.FloorToInt(absolute / 60f);
+            int secs = Mathf.FloorToInt(absolute % 60f);
+            int milliseconds = Mathf.FloorToInt((absolute * 1000f) % 1000f);
+            return $"{minutes:D2}:{secs:D2}.{milliseconds:D3}";
         }
 
         /// <summary>
@@ -325,14 +349,14 @@ namespace SWUtils
         /// <returns>"N시간 N분 N초" 형식 문자열</returns>
         public static string ToReadable(float seconds)
         {
-            float abs = Mathf.Abs(seconds);
-            int h = Mathf.FloorToInt(abs / 3600f);
-            int m = Mathf.FloorToInt((abs % 3600f) / 60f);
-            int s = Mathf.FloorToInt(abs % 60f);
+            float absolute = Mathf.Abs(seconds);
+            int hours = Mathf.FloorToInt(absolute / 3600f);
+            int minutes = Mathf.FloorToInt((absolute % 3600f) / 60f);
+            int secs = Mathf.FloorToInt(absolute % 60f);
 
-            if (h > 0) return $"{h}시간 {m}분 {s}초";
-            if (m > 0) return $"{m}분 {s}초";
-            return $"{s}초";
+            if (hours > 0) return $"{hours}시간 {minutes}분 {secs}초";
+            if (minutes > 0) return $"{minutes}분 {secs}초";
+            return $"{secs}초";
         }
 
         /// <summary>
@@ -342,11 +366,11 @@ namespace SWUtils
         /// <returns>"Nd", "Nh", "Nm", "Ns" 형식 문자열</returns>
         public static string ToShortForm(float seconds)
         {
-            float abs = Mathf.Abs(seconds);
-            if (abs >= 86400f) return $"{Mathf.FloorToInt(abs / 86400f)}d";
-            if (abs >= 3600f) return $"{Mathf.FloorToInt(abs / 3600f)}h";
-            if (abs >= 60f) return $"{Mathf.FloorToInt(abs / 60f)}m";
-            return $"{Mathf.FloorToInt(abs)}s";
+            float absolute = Mathf.Abs(seconds);
+            if (absolute >= 86400f) return $"{Mathf.FloorToInt(absolute / 86400f)}d";
+            if (absolute >= 3600f) return $"{Mathf.FloorToInt(absolute / 3600f)}h";
+            if (absolute >= 60f) return $"{Mathf.FloorToInt(absolute / 60f)}m";
+            return $"{Mathf.FloorToInt(absolute)}s";
         }
 
         /// <summary>
@@ -356,16 +380,16 @@ namespace SWUtils
         /// <returns>"Nd Nh", "Nh Nm", "Nm Ns" 형식 문자열</returns>
         public static string ToShortForm2(float seconds)
         {
-            float abs = Mathf.Abs(seconds);
-            int d = Mathf.FloorToInt(abs / 86400f);
-            int h = Mathf.FloorToInt((abs % 86400f) / 3600f);
-            int m = Mathf.FloorToInt((abs % 3600f) / 60f);
-            int s = Mathf.FloorToInt(abs % 60f);
+            float absolute = Mathf.Abs(seconds);
+            int days = Mathf.FloorToInt(absolute / 86400f);
+            int hours = Mathf.FloorToInt((absolute % 86400f) / 3600f);
+            int minutes = Mathf.FloorToInt((absolute % 3600f) / 60f);
+            int secs = Mathf.FloorToInt(absolute % 60f);
 
-            if (d > 0) return $"{d}d {h}h";
-            if (h > 0) return $"{h}h {m}m";
-            if (m > 0) return $"{m}m {s}s";
-            return $"{s}s";
+            if (days > 0) return $"{days}d {hours}h";
+            if (hours > 0) return $"{hours}h {minutes}m";
+            if (minutes > 0) return $"{minutes}m {secs}s";
+            return $"{secs}s";
         }
         #endregion // 포맷팅
 
@@ -377,11 +401,11 @@ namespace SWUtils
         /// <returns>"방금 전", "N분 전", "N시간 전", "N일 전" 또는 날짜 문자열</returns>
         public static string TimeAgo(DateTime utcTime)
         {
-            double sec = (DateTime.UtcNow - utcTime).TotalSeconds;
-            if (sec < 60) return "방금 전";
-            if (sec < 3600) return $"{(int)(sec / 60)}분 전";
-            if (sec < 86400) return $"{(int)(sec / 3600)}시간 전";
-            if (sec < 604800) return $"{(int)(sec / 86400)}일 전";
+            double seconds = (DateTime.UtcNow - utcTime).TotalSeconds;
+            if (seconds < 60) return "방금 전";
+            if (seconds < 3600) return $"{(int)(seconds / 60)}분 전";
+            if (seconds < 86400) return $"{(int)(seconds / 3600)}시간 전";
+            if (seconds < 604800) return $"{(int)(seconds / 86400)}일 전";
             return utcTime.ToLocalTime().ToString("yyyy-MM-dd");
         }
 
@@ -392,12 +416,12 @@ namespace SWUtils
         /// <returns>"지금", "N초 후", "N분 후", "N시간 후", "N일 후"</returns>
         public static string TimeUntil(DateTime utcTarget)
         {
-            double sec = (utcTarget - DateTime.UtcNow).TotalSeconds;
-            if (sec <= 0) return "지금";
-            if (sec < 60) return $"{(int)sec}초 후";
-            if (sec < 3600) return $"{(int)(sec / 60)}분 후";
-            if (sec < 86400) return $"{(int)(sec / 3600)}시간 후";
-            return $"{(int)(sec / 86400)}일 후";
+            double seconds = (utcTarget - DateTime.UtcNow).TotalSeconds;
+            if (seconds <= 0) return "지금";
+            if (seconds < 60) return $"{(int)seconds}초 후";
+            if (seconds < 3600) return $"{(int)(seconds / 60)}분 후";
+            if (seconds < 86400) return $"{(int)(seconds / 3600)}시간 후";
+            return $"{(int)(seconds / 86400)}일 후";
         }
         #endregion // 상대 시간 표현
 
@@ -433,19 +457,19 @@ namespace SWUtils
         /// <see cref="DateTime"/> 기반 쿨다운 완료 여부를 확인한다.
         /// </summary>
         /// <param name="startUtc">쿨다운 시작 UTC 시각</param>
-        /// <param name="durationSec">쿨다운 지속 시간(초)</param>
+        /// <param name="durationSeconds">쿨다운 지속 시간(초)</param>
         /// <returns>완료되었으면 true</returns>
-        public static bool IsCooldownDone(DateTime startUtc, float durationSec)
-            => (DateTime.UtcNow - startUtc).TotalSeconds >= durationSec;
+        public static bool IsCooldownDone(DateTime startUtc, float durationSeconds)
+            => (DateTime.UtcNow - startUtc).TotalSeconds >= durationSeconds;
 
         /// <summary>
         /// <see cref="DateTime"/> 기반 남은 쿨다운 시간(초)을 반환한다.
         /// </summary>
         /// <param name="startUtc">쿨다운 시작 UTC 시각</param>
-        /// <param name="durationSec">쿨다운 지속 시간(초)</param>
+        /// <param name="durationSeconds">쿨다운 지속 시간(초)</param>
         /// <returns>남은 시간(초). 최소 0</returns>
-        public static float CooldownRemain(DateTime startUtc, float durationSec)
-            => Mathf.Max(0f, durationSec - (float)(DateTime.UtcNow - startUtc).TotalSeconds);
+        public static float CooldownRemain(DateTime startUtc, float durationSeconds)
+            => Mathf.Max(0f, durationSeconds - (float)(DateTime.UtcNow - startUtc).TotalSeconds);
         #endregion // 쿨다운 & 타이머
 
         #region 보간 & 이징 헬퍼
@@ -485,42 +509,54 @@ namespace SWUtils
         #endregion // 보간 & 이징 헬퍼
 
         #region 시간 단위 변환
-        /// <summary>프레임 수를 초로 변환한다.</summary>
+        /// <summary>
+        /// 프레임 수를 초로 변환한다.
+        /// </summary>
         /// <param name="frames">프레임 수</param>
-        /// <param name="fps">초당 프레임 수</param>
+        /// <param name="framesPerSecond">초당 프레임 수</param>
         /// <returns>초 단위 시간</returns>
-        public static float FramesToSeconds(int frames, float fps = 60f) 
-            => frames / fps;
+        public static float FramesToSeconds(int frames, float framesPerSecond = 60f)
+            => frames / framesPerSecond;
 
-        /// <summary>초를 프레임 수로 변환한다.</summary>
+        /// <summary>
+        /// 초를 프레임 수로 변환한다.
+        /// </summary>
         /// <param name="seconds">초</param>
-        /// <param name="fps">초당 프레임 수</param>
+        /// <param name="framesPerSecond">초당 프레임 수</param>
         /// <returns>프레임 수 (반올림)</returns>
-        public static int SecondsToFrames(float seconds, float fps = 60f) 
-            => Mathf.RoundToInt(seconds * fps);
+        public static int SecondsToFrames(float seconds, float framesPerSecond = 60f)
+            => Mathf.RoundToInt(seconds * framesPerSecond);
 
-        /// <summary>BPM을 초 단위 비트 간격으로 변환한다.</summary>
-        /// <param name="bpm">분당 비트 수</param>
+        /// <summary>
+        /// BPM을 초 단위 비트 간격으로 변환한다.
+        /// </summary>
+        /// <param name="beatsPerMinute">분당 비트 수</param>
         /// <returns>비트 간격(초)</returns>
-        public static float BpmToInterval(float bpm) 
-            => 60f / bpm;
+        public static float BpmToInterval(float beatsPerMinute)
+            => 60f / beatsPerMinute;
 
-        /// <summary>분을 초로 변환한다.</summary>
-        /// <param name="min">분</param>
+        /// <summary>
+        /// 분을 초로 변환한다.
+        /// </summary>
+        /// <param name="minutes">분</param>
         /// <returns>초</returns>
-        public static float MinutesToSeconds(float min) 
-            => min * 60f;
+        public static float MinutesToSeconds(float minutes)
+            => minutes * 60f;
 
-        /// <summary>시간을 초로 변환한다.</summary>
+        /// <summary>
+        /// 시간을 초로 변환한다.
+        /// </summary>
         /// <param name="hours">시간</param>
         /// <returns>초</returns>
-        public static float HoursToSeconds(float hours) 
+        public static float HoursToSeconds(float hours)
             => hours * 3600f;
 
-        /// <summary>일을 초로 변환한다.</summary>
+        /// <summary>
+        /// 일을 초로 변환한다.
+        /// </summary>
         /// <param name="days">일</param>
         /// <returns>초</returns>
-        public static float DaysToSeconds(float days) 
+        public static float DaysToSeconds(float days)
             => days * 86400f;
         #endregion // 시간 단위 변환
 
@@ -694,8 +730,8 @@ namespace SWUtils
         public static double StopwatchStop()
         {
 #if DebugMode
-        stopWatch.Stop();
-        return stopWatch.Elapsed.TotalMilliseconds;
+            stopWatch.Stop();
+            return stopWatch.Elapsed.TotalMilliseconds;
 #else
             return 0;
 #endif
@@ -709,7 +745,7 @@ namespace SWUtils
         public static double StopwatchLap()
         {
 #if DebugMode
-        return stopWatch.Elapsed.TotalMilliseconds;
+            return stopWatch.Elapsed.TotalMilliseconds;
 #else
             return 0;
 #endif

@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace SWUtils
 {
+    /// <summary>
+    /// 시간이 지남에 따라 자동 회복되는 수량을 관리하는 타이머.
+    /// 하트, 스태미너, 에너지 시스템 등에 사용한다.
+    /// </summary>
     [System.Serializable]
     public class SWUtilsRefillTimer
     {
@@ -12,7 +16,7 @@ namespace SWUtils
         /// <summary>최대 보유 수량.</summary>
         private readonly int maxCount;
         /// <summary>1개 회복에 걸리는 시간(초).</summary>
-        private readonly float intervalSec;
+        private readonly float intervalSeconds;
         /// <summary>현재 보유 수량.</summary>
         private int count;
         /// <summary>마지막으로 소모한 UTC 시각.</summary>
@@ -26,12 +30,16 @@ namespace SWUtils
         #region 프로퍼티
         /// <summary>현재 보유 수량.</summary>
         public int Count => count;
+
         /// <summary>최대 보유 수량.</summary>
         public int MaxCount => maxCount;
+
         /// <summary>수량이 가득 찼는지 여부.</summary>
         public bool IsFull => count >= maxCount;
+
         /// <summary>사용 가능 여부 (1개 이상 보유).</summary>
         public bool CanUse => count > 0;
+
         /// <summary>다음 1개 회복까지 남은 시간(초). 가득 찼으면 0.</summary>
         public float RemainSeconds
         {
@@ -39,14 +47,17 @@ namespace SWUtils
             {
                 if (IsFull) return 0f;
                 float elapsed = (float)(DateTime.UtcNow - lastUseUtc).TotalSeconds;
-                float remain = intervalSec - (elapsed % intervalSec);
+                float remain = intervalSeconds - (elapsed % intervalSeconds);
                 return Mathf.Max(0f, remain);
             }
         }
+
         /// <summary>다음 1개 회복까지 남은 시간을 "MM:SS" 형식으로 반환.</summary>
         public string RemainText => SWUtilsTime.ToMinSec(RemainSeconds);
+
         /// <summary>다음 1개 회복까지 남은 시간을 자연어로 반환.</summary>
         public string RemainReadable => SWUtilsTime.ToReadable(RemainSeconds);
+
         /// <summary>전부 회복까지 남은 시간(초). 가득 찼으면 0.</summary>
         public float RemainSecondsAll
         {
@@ -55,12 +66,14 @@ namespace SWUtils
                 if (IsFull) return 0f;
                 int need = maxCount - count;
                 float elapsed = (float)(DateTime.UtcNow - lastUseUtc).TotalSeconds;
-                float total = need * intervalSec - (elapsed % intervalSec);
+                float total = need * intervalSeconds - (elapsed % intervalSeconds);
                 return Mathf.Max(0f, total);
             }
         }
+
         /// <summary>전부 회복까지 남은 시간을 "HH:MM:SS" 형식으로 반환.</summary>
         public string RemainTextAll => SWUtilsTime.ToHourMinSec(RemainSecondsAll);
+
         /// <summary>회복 진행률 (0 = 방금 소모, 1 = 회복 직전).</summary>
         public float Progress
         {
@@ -68,9 +81,10 @@ namespace SWUtils
             {
                 if (IsFull) return 1f;
                 float elapsed = (float)(DateTime.UtcNow - lastUseUtc).TotalSeconds;
-                return Mathf.Clamp01((elapsed % intervalSec) / intervalSec);
+                return Mathf.Clamp01((elapsed % intervalSeconds) / intervalSeconds);
             }
         }
+
         /// <summary>"현재/최대" 형식 문자열. 예: "3/5"</summary>
         public string CountText => $"{count}/{maxCount}";
         #endregion // 프로퍼티
@@ -81,12 +95,12 @@ namespace SWUtils
         /// </summary>
         /// <param name="id">고유 식별자 (PlayerPrefs 키에 사용)</param>
         /// <param name="maxCount">최대 보유 수량</param>
-        /// <param name="intervalSec">1개 회복 간격(초)</param>
-        public SWUtilsRefillTimer(string id, int maxCount, float intervalSec)
+        /// <param name="intervalSeconds">1개 회복 간격(초)</param>
+        public SWUtilsRefillTimer(string id, int maxCount, float intervalSeconds)
         {
             this.id = id;
             this.maxCount = maxCount;
-            this.intervalSec = intervalSec;
+            this.intervalSeconds = intervalSeconds;
             count = maxCount;
             lastUseUtc = DateTime.UtcNow;
 
@@ -105,7 +119,7 @@ namespace SWUtils
             if (IsFull) return 0;
 
             double elapsed = (DateTime.UtcNow - lastUseUtc).TotalSeconds;
-            int recovered = Mathf.FloorToInt((float)(elapsed / intervalSec));
+            int recovered = Mathf.FloorToInt((float)(elapsed / intervalSeconds));
 
             if (recovered <= 0) return 0;
 
@@ -116,7 +130,7 @@ namespace SWUtils
             if (IsFull)
                 lastUseUtc = DateTime.UtcNow;
             else
-                lastUseUtc = lastUseUtc.AddSeconds(recovered * intervalSec);
+                lastUseUtc = lastUseUtc.AddSeconds(recovered * intervalSeconds);
 
             Save();
             return actual;
@@ -182,7 +196,7 @@ namespace SWUtils
         public void Set(int count, DateTime? lastUseUtc = null)
         {
             this.count = Mathf.Clamp(count, 0, maxCount);
-            lastUseUtc = lastUseUtc ?? DateTime.UtcNow;
+            this.lastUseUtc = lastUseUtc ?? DateTime.UtcNow;
             Save();
         }
         #endregion // 기능
@@ -208,7 +222,7 @@ namespace SWUtils
             if (IsFull) return 0;
 
             double elapsed = (DateTime.UtcNow - lastUseUtc).TotalSeconds;
-            int recovered = Mathf.FloorToInt((float)(elapsed / intervalSec));
+            int recovered = Mathf.FloorToInt((float)(elapsed / intervalSeconds));
             recovered = Mathf.Min(recovered, maxRecoverCount);
 
             if (recovered <= 0) return 0;
@@ -220,7 +234,7 @@ namespace SWUtils
             if (IsFull)
                 lastUseUtc = DateTime.UtcNow;
             else
-                lastUseUtc = lastUseUtc.AddSeconds(recovered * intervalSec);
+                lastUseUtc = lastUseUtc.AddSeconds(recovered * intervalSeconds);
 
             Save();
             return actual;

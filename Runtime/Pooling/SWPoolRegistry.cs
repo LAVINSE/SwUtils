@@ -10,8 +10,10 @@ namespace SWPool
         [System.Serializable]
         public class PoolEntry
         {
-            public GameObject prefab; // 풀링할 프리팹
-            public int prewarmCount = 1; // 미리 생성할 개수
+            /// <summary>풀링할 프리팹</summary>
+            public GameObject prefab;
+            /// <summary>미리 생성할 개수</summary>
+            public int prewarmCount = 1;
         }
         #endregion // 데이터
 
@@ -36,11 +38,11 @@ namespace SWPool
             {
                 return;
             }
-            
-            for(int i = 0; i < poolEntries.Length; ++i)
+
+            for (int index = 0; index < poolEntries.Length; ++index)
             {
-                PoolEntry poolEntry = poolEntries[i];
-                if(poolEntry?.prefab != null && poolEntry.prewarmCount > 0)
+                PoolEntry poolEntry = poolEntries[index];
+                if (poolEntry?.prefab != null && poolEntry.prewarmCount > 0)
                 {
                     targetPool.Prewarm(poolEntry.prefab, poolEntry.prewarmCount);
                 }

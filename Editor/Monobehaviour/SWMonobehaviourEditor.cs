@@ -22,14 +22,14 @@ namespace SWTools
         /// 에디터에 적용할 (Unity Style Sheet) 스타일시트
         /// </summary>
         public StyleSheet EditorStyleSheet;
-        private const string STYLESHEET_PATH = "Assets/SwUtils/Editor/StyleSheet/SWMonobehaviourEditorStylesheet.uss";
+        private const string STYLESHEET_NAME = "SWMonobehaviourEditorStylesheet";
 
         /// <summary>
         /// 중복 초기화 방지 플래그
         /// </summary>
         public bool DrawerInitialized;
 
-        /// <summary>
+        /// <summary>   
         /// Key - 그룹 이름
         /// Value - 그룹 데이터
         /// 모든 인스펙터 그룹 정보 저장
@@ -141,7 +141,16 @@ namespace SWTools
 
             if (EditorStyleSheet == null)
             {
-                EditorStyleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(STYLESHEET_PATH);
+                string[] guids = AssetDatabase.FindAssets($"{STYLESHEET_NAME} t:StyleSheet");
+                if (guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    EditorStyleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
+                }
+                else
+                {
+                    Debug.LogWarning($"StyleSheet '{STYLESHEET_NAME}'을(를) 찾을 수 없습니다.");
+                }
             }
 
             shouldDrawBase = true;

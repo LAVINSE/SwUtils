@@ -46,7 +46,7 @@ namespace SWUtils
         /// <summary>인증 여부.</summary>
         public static bool IsAuthenticated => isAuthenticated;
 
-        /// <summary>현재 플랫폼에서 클라우드를 사용 가능한지.</summary>
+        /// <summary>현재 플랫폼에서 클라우드를 사용 가능한지 여부.</summary>
         public static bool IsAvailable
         {
             get
@@ -98,6 +98,8 @@ namespace SWUtils
         /// <summary>
         /// iCloud에서 Base64로 디코딩된 문자열을 가져온다.
         /// </summary>
+        /// <param name="key">저장 키</param>
+        /// <returns>디코딩된 문자열. 실패 시 빈 문자열</returns>
         private static string iCloudGet(string key)
         {
             string raw = _GetiCloudData(key);
@@ -106,9 +108,9 @@ namespace SWUtils
             {
                 return Encoding.UTF8.GetString(Convert.FromBase64String(raw));
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] iCloud Base64 decode failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] iCloud Base64 decode failed: {exception.Message}");
                 return string.Empty;
             }
         }
@@ -116,6 +118,9 @@ namespace SWUtils
         /// <summary>
         /// iCloud에 Base64로 인코딩하여 저장한다.
         /// </summary>
+        /// <param name="key">저장 키</param>
+        /// <param name="value">저장할 값</param>
+        /// <returns>저장 성공 여부</returns>
         private static bool iCloudSet(string key, string value)
         {
             try
@@ -123,9 +128,9 @@ namespace SWUtils
                 string encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
                 return _SetiCloudData(key, encoded);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] iCloud Base64 encode failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] iCloud Base64 encode failed: {exception.Message}");
                 return false;
             }
         }
@@ -179,9 +184,9 @@ namespace SWUtils
         /// <returns>성공 여부</returns>
         public static Task<bool> InitAsync()
         {
-            var tcs = new TaskCompletionSource<bool>();
-            Init(success => tcs.SetResult(success));
-            return tcs.Task;
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+            Init(success => taskCompletionSource.SetResult(success));
+            return taskCompletionSource.Task;
         }
         #endregion // 초기화
 
@@ -248,9 +253,9 @@ namespace SWUtils
                 Debug.Log($"[SWUtilsCloud] iCloud save: {result}");
                 onComplete?.Invoke(result);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] iCloud save failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] iCloud save failed: {exception.Message}");
                 SaveLocal(json, saveName);
                 onComplete?.Invoke(false);
             }
@@ -272,9 +277,9 @@ namespace SWUtils
                 SaveLocal(json, saveName);
                 onComplete?.Invoke(result);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] Steam save failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] Steam save failed: {exception.Message}");
                 SaveLocal(json, saveName);
                 onComplete?.Invoke(false);
             }
@@ -293,9 +298,9 @@ namespace SWUtils
         /// <returns>성공 여부</returns>
         public static Task<bool> SaveAsync(string json, string saveName = DefaultSaveName)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            Save(json, success => tcs.SetResult(success), saveName);
-            return tcs.Task;
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+            Save(json, success => taskCompletionSource.SetResult(success), saveName);
+            return taskCompletionSource.Task;
         }
         #endregion // 저장
 
@@ -364,9 +369,9 @@ namespace SWUtils
                     onComplete?.Invoke(true, json);
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] iCloud load failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] iCloud load failed: {exception.Message}");
                 string local = LoadLocal(saveName);
                 onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
             }
@@ -406,9 +411,9 @@ namespace SWUtils
                 Debug.Log($"[SWUtilsCloud] Steam load success (length: {json.Length})");
                 onComplete?.Invoke(true, json);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] Steam load failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] Steam load failed: {exception.Message}");
                 string local = LoadLocal(saveName);
                 onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
             }
@@ -426,9 +431,9 @@ namespace SWUtils
         /// <returns>(성공 여부, JSON 문자열) 튜플</returns>
         public static Task<(bool success, string json)> LoadAsync(string saveName = DefaultSaveName)
         {
-            var tcs = new TaskCompletionSource<(bool, string)>();
-            Load((success, json) => tcs.SetResult((success, json)), saveName);
-            return tcs.Task;
+            var taskCompletionSource = new TaskCompletionSource<(bool, string)>();
+            Load((success, json) => taskCompletionSource.SetResult((success, json)), saveName);
+            return taskCompletionSource.Task;
         }
         #endregion // 로드
 
@@ -478,9 +483,9 @@ namespace SWUtils
                 Debug.Log("[SWUtilsCloud] iCloud delete success");
                 onComplete?.Invoke(true);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] iCloud delete failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] iCloud delete failed: {exception.Message}");
                 onComplete?.Invoke(false);
             }
 #elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
@@ -493,9 +498,9 @@ namespace SWUtils
                 Debug.Log($"[SWUtilsCloud] Steam delete: {result}");
                 onComplete?.Invoke(result);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SWUtilsCloud] Steam delete failed: {e.Message}");
+                Debug.LogError($"[SWUtilsCloud] Steam delete failed: {exception.Message}");
                 onComplete?.Invoke(false);
             }
 #else
@@ -512,9 +517,9 @@ namespace SWUtils
         /// <returns>성공 여부</returns>
         public static Task<bool> DeleteAsync(string saveName = DefaultSaveName)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            Delete(success => tcs.SetResult(success), saveName);
-            return tcs.Task;
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+            Delete(success => taskCompletionSource.SetResult(success), saveName);
+            return taskCompletionSource.Task;
         }
         #endregion // 삭제
 
@@ -522,6 +527,8 @@ namespace SWUtils
         /// <summary>
         /// 로컬 PlayerPrefs에 폴백 저장한다.
         /// </summary>
+        /// <param name="json">저장할 JSON 문자열</param>
+        /// <param name="saveName">저장 슬롯 이름</param>
         private static void SaveLocal(string json, string saveName)
         {
             PlayerPrefs.SetString($"{LocalFallbackKey}_{saveName}", json);
@@ -531,6 +538,8 @@ namespace SWUtils
         /// <summary>
         /// 로컬 PlayerPrefs에서 폴백 로드한다.
         /// </summary>
+        /// <param name="saveName">저장 슬롯 이름</param>
+        /// <returns>저장된 JSON 문자열</returns>
         private static string LoadLocal(string saveName)
         {
             return PlayerPrefs.GetString($"{LocalFallbackKey}_{saveName}", string.Empty);
@@ -539,6 +548,7 @@ namespace SWUtils
         /// <summary>
         /// 로컬 폴백 데이터를 삭제한다.
         /// </summary>
+        /// <param name="saveName">저장 슬롯 이름</param>
         private static void DeleteLocal(string saveName)
         {
             PlayerPrefs.DeleteKey($"{LocalFallbackKey}_{saveName}");

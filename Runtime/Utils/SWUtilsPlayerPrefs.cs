@@ -8,22 +8,31 @@ using UnityEngine;
 namespace SWUtils
 {
     /// <summary>
-    /// AES 암호화를 적용한 PlayerPrefs
-    /// 키와 값 모두 암호화하여 저장한다
-    /// 전체 데이터를 JSON으로 export/import 할 수 있어 클라우드 동기화에 사용 가능
+    /// AES 암호화를 적용한 PlayerPrefs.
+    /// 키와 값 모두 암호화하여 저장한다.
+    /// 전체 데이터를 JSON으로 export/import 할 수 있어 클라우드 동기화에 사용 가능.
     /// </summary>
     public static class SWUtilsPlayerPrefs
     {
+        /// <summary>
+        /// JSON 직렬화용 데이터 컨테이너.
+        /// </summary>
         [Serializable]
         private class PrefsData
         {
+            /// <summary>저장된 항목 목록.</summary>
             public List<PrefsEntry> entries = new List<PrefsEntry>();
         }
 
+        /// <summary>
+        /// JSON 직렬화용 단일 항목.
+        /// </summary>
         [Serializable]
         private class PrefsEntry
         {
+            /// <summary>저장 키.</summary>
             public string key;
+            /// <summary>저장 값 (평문 상태).</summary>
             public string value;
         }
 
@@ -33,20 +42,20 @@ namespace SWUtils
         /// <summary>관리 중인 키 목록을 저장하는 PlayerPrefs 키.</summary>
         private static string KeyIndexName => $"SwUtilsPrefs_KeyIndex_{currentSlot}";
         /// <summary>암호화된 키 prefix (일반 PlayerPrefs와 구분).</summary>
-        private const string EncPrefix = "SwEnc_";
+        private const string EncryptedPrefix = "SwEnc_";
         /// <summary>관리 중인 키 목록 캐시.</summary>
         private static HashSet<string> keyIndexCache;
 
         /// <summary>현재 활성 슬롯 이름. 모든 키 앞에 자동으로 붙는다.</summary>
         private static string currentSlot = "default";
-
-        /// <summary>현재 활성 슬롯 이름.</summary>
-        public static string CurrentSlot => currentSlot;
         #endregion // 필드
 
         #region 프로퍼티
+        /// <summary>현재 활성 슬롯 이름.</summary>
+        public static string CurrentSlot => currentSlot;
+
         /// <summary>관리 중인 키 목록.</summary>
-        private static HashSet<string> KeyIndex_
+        private static HashSet<string> KeyIndex
         {
             get
             {
@@ -56,9 +65,9 @@ namespace SWUtils
                     string raw = PlayerPrefs.GetString(KeyIndexName, string.Empty);
                     if (!string.IsNullOrEmpty(raw))
                     {
-                        foreach (var k in raw.Split('|'))
+                        foreach (var key in raw.Split('|'))
                         {
-                            if (!string.IsNullOrEmpty(k)) keyIndexCache.Add(k);
+                            if (!string.IsNullOrEmpty(key)) keyIndexCache.Add(key);
                         }
                     }
                 }
@@ -84,6 +93,8 @@ namespace SWUtils
         /// <summary>
         /// AES 키와 IV를 생성한다. 솔트 기반으로 항상 동일한 값을 반환.
         /// </summary>
+        /// <param name="key">생성된 AES 키</param>
+        /// <param name="iv">생성된 AES IV</param>
         private static void GetKeyIV(out byte[] key, out byte[] iv)
         {
             using (var derive = new Rfc2898DeriveBytes(Salt, Encoding.UTF8.GetBytes("SwUtilsIVSalt"), 1000))
@@ -120,9 +131,9 @@ namespace SWUtils
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] Encrypt failed: {e.Message}");
+                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] Encrypt failed: {exception.Message}");
                 return string.Empty;
             }
         }
@@ -154,9 +165,9 @@ namespace SWUtils
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] Decrypt failed: {e.Message}");
+                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] Decrypt failed: {exception.Message}");
                 return string.Empty;
             }
         }
@@ -164,13 +175,15 @@ namespace SWUtils
         /// <summary>
         /// 키를 해시하여 저장용 키로 변환한다.
         /// </summary>
+        /// <param name="key">원본 키</param>
+        /// <returns>해시되어 prefix가 붙은 저장용 키</returns>
         private static string HashKey(string key)
         {
             using (var sha = SHA256.Create())
             {
                 // 슬롯 이름을 해시에 포함 → 슬롯별로 다른 키 생성
                 byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(key + Salt + currentSlot));
-                return EncPrefix + Convert.ToBase64String(bytes)
+                return EncryptedPrefix + Convert.ToBase64String(bytes)
                     .Replace("/", "_").Replace("+", "-").Substring(0, 22);
             }
         }
@@ -180,9 +193,10 @@ namespace SWUtils
         /// <summary>
         /// 키 인덱스에 키를 추가하고 저장한다.
         /// </summary>
+        /// <param name="key">추가할 키</param>
         private static void AddToIndex(string key)
         {
-            if (KeyIndex_.Add(key))
+            if (KeyIndex.Add(key))
             {
                 SaveIndex();
             }
@@ -191,9 +205,10 @@ namespace SWUtils
         /// <summary>
         /// 키 인덱스에서 키를 제거하고 저장한다.
         /// </summary>
+        /// <param name="key">제거할 키</param>
         private static void RemoveFromIndex(string key)
         {
-            if (KeyIndex_.Remove(key))
+            if (KeyIndex.Remove(key))
             {
                 SaveIndex();
             }
@@ -204,7 +219,7 @@ namespace SWUtils
         /// </summary>
         private static void SaveIndex()
         {
-            string joined = string.Join("|", KeyIndex_);
+            string joined = string.Join("|", KeyIndex);
             PlayerPrefs.SetString(KeyIndexName, joined);
         }
         #endregion // 키 인덱스 관리
@@ -217,9 +232,9 @@ namespace SWUtils
         /// <param name="value">저장할 값</param>
         public static void SetString(string key, string value)
         {
-            string encKey = HashKey(key);
-            string encValue = Encrypt(value ?? string.Empty);
-            PlayerPrefs.SetString(encKey, encValue);
+            string encryptedKey = HashKey(key);
+            string encryptedValue = Encrypt(value ?? string.Empty);
+            PlayerPrefs.SetString(encryptedKey, encryptedValue);
             AddToIndex(key);
         }
 
@@ -263,42 +278,51 @@ namespace SWUtils
         /// <returns>복호화된 값</returns>
         public static string GetString(string key, string defaultValue = "")
         {
-            string encKey = HashKey(key);
-            if (!PlayerPrefs.HasKey(encKey)) return defaultValue;
-            string encValue = PlayerPrefs.GetString(encKey, string.Empty);
-            string decrypted = Decrypt(encValue);
+            string encryptedKey = HashKey(key);
+            if (!PlayerPrefs.HasKey(encryptedKey)) return defaultValue;
+            string encryptedValue = PlayerPrefs.GetString(encryptedKey, string.Empty);
+            string decrypted = Decrypt(encryptedValue);
             return string.IsNullOrEmpty(decrypted) ? defaultValue : decrypted;
         }
 
         /// <summary>
         /// 암호화된 정수 값을 복호화하여 반환한다.
         /// </summary>
+        /// <param name="key">저장 키</param>
+        /// <param name="defaultValue">키가 없을 때 반환할 기본값</param>
+        /// <returns>복호화된 값</returns>
         public static int GetInt(string key, int defaultValue = 0)
         {
-            string s = GetString(key, null);
-            if (string.IsNullOrEmpty(s)) return defaultValue;
-            return int.TryParse(s, out int result) ? result : defaultValue;
+            string stored = GetString(key, null);
+            if (string.IsNullOrEmpty(stored)) return defaultValue;
+            return int.TryParse(stored, out int result) ? result : defaultValue;
         }
 
         /// <summary>
         /// 암호화된 실수 값을 복호화하여 반환한다.
         /// </summary>
+        /// <param name="key">저장 키</param>
+        /// <param name="defaultValue">키가 없을 때 반환할 기본값</param>
+        /// <returns>복호화된 값</returns>
         public static float GetFloat(string key, float defaultValue = 0f)
         {
-            string s = GetString(key, null);
-            if (string.IsNullOrEmpty(s)) return defaultValue;
-            return float.TryParse(s, System.Globalization.NumberStyles.Float,
+            string stored = GetString(key, null);
+            if (string.IsNullOrEmpty(stored)) return defaultValue;
+            return float.TryParse(stored, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out float result) ? result : defaultValue;
         }
 
         /// <summary>
         /// 암호화된 bool 값을 복호화하여 반환한다.
         /// </summary>
+        /// <param name="key">저장 키</param>
+        /// <param name="defaultValue">키가 없을 때 반환할 기본값</param>
+        /// <returns>복호화된 값</returns>
         public static bool GetBool(string key, bool defaultValue = false)
         {
-            string s = GetString(key, null);
-            if (string.IsNullOrEmpty(s)) return defaultValue;
-            return s == "1";
+            string stored = GetString(key, null);
+            if (string.IsNullOrEmpty(stored)) return defaultValue;
+            return stored == "1";
         }
         #endregion // Get
 
@@ -306,6 +330,8 @@ namespace SWUtils
         /// <summary>
         /// 키 존재 여부를 확인한다.
         /// </summary>
+        /// <param name="key">확인할 키</param>
+        /// <returns>존재하면 true</returns>
         public static bool HasKey(string key)
         {
             return PlayerPrefs.HasKey(HashKey(key));
@@ -314,6 +340,7 @@ namespace SWUtils
         /// <summary>
         /// 특정 키를 삭제한다.
         /// </summary>
+        /// <param name="key">삭제할 키</param>
         public static void DeleteKey(string key)
         {
             PlayerPrefs.DeleteKey(HashKey(key));
@@ -326,7 +353,7 @@ namespace SWUtils
         /// </summary>
         public static void DeleteAll()
         {
-            foreach (var key in new List<string>(KeyIndex_))
+            foreach (var key in new List<string>(KeyIndex))
             {
                 PlayerPrefs.DeleteKey(HashKey(key));
             }
@@ -353,7 +380,7 @@ namespace SWUtils
         public static string ExportToJson()
         {
             var data = new PrefsData();
-            foreach (var key in KeyIndex_)
+            foreach (var key in KeyIndex)
             {
                 string value = GetString(key, null);
                 if (value != null)
@@ -389,9 +416,9 @@ namespace SWUtils
                 Save();
                 return true;
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] ImportFromJson failed: {e.Message}");
+                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] ImportFromJson failed: {exception.Message}");
                 return false;
             }
         }
@@ -418,9 +445,9 @@ namespace SWUtils
                 Save();
                 return true;
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] MergeFromJson failed: {e.Message}");
+                SWUtilsLog.LogError($"[SWUtilsPlayerPrefs] MergeFromJson failed: {exception.Message}");
                 return false;
             }
         }

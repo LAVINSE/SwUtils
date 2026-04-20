@@ -39,39 +39,39 @@ namespace SWPool
             if (prefab == null || count <= 0) return;
 
             var pool = GetOrCreatePool(prefab);
-            var temp = new GameObject[count];
+            var tempInstances = new GameObject[count];
 
-            for (int i = 0; i < count; i++)
-                temp[i] = pool.Get();
+            for (int index = 0; index < count; index++)
+                tempInstances[index] = pool.Get();
 
-            for (int i = 0; i < count; i++)
-                pool.Release(temp[i]);
+            for (int index = 0; index < count; index++)
+                pool.Release(tempInstances[index]);
         }
 
         /// <inheritdoc/>
-        public GameObject Spawn(GameObject prefab, Vector3 pos = default,
+        public GameObject Spawn(GameObject prefab, Vector3 position = default,
             Quaternion rotation = default, Transform parent = null)
         {
             if (prefab == null) return null;
 
             var pool = GetOrCreatePool(prefab);
-            var obj = pool.Get();
+            var instance = pool.Get();
 
-            var t = obj.transform;
-            t.SetParent(parent != null ? parent : transform, false);
-            t.SetPositionAndRotation(pos, rotation);
+            var instanceTransform = instance.transform;
+            instanceTransform.SetParent(parent != null ? parent : transform, false);
+            instanceTransform.SetPositionAndRotation(position, rotation);
 
-            NotifyPoolables(obj);
+            NotifyPoolables(instance);
 
-            return obj;
+            return instance;
         }
 
         /// <inheritdoc/>
-        public T Spawn<T>(GameObject prefab, Vector3 pos = default,
+        public T Spawn<T>(GameObject prefab, Vector3 position = default,
             Quaternion rotation = default, Transform parent = null) where T : Component
         {
-            var obj = Spawn(prefab, pos, rotation, parent);
-            return obj != null ? obj.GetComponent<T>() : null;
+            var instance = Spawn(prefab, position, rotation, parent);
+            return instance != null ? instance.GetComponent<T>() : null;
         }
 
         /// <inheritdoc/>
@@ -80,9 +80,9 @@ namespace SWPool
             if (instance == null) return;
 
             // 예약된 지연 반납이 있으면 취소
-            if (delayedReleaseDict.TryGetValue(instance, out var coroutine))
+            if (delayedReleaseDict.TryGetValue(instance, out var reservedCoroutine))
             {
-                if (coroutine != null) StopCoroutine(coroutine);
+                if (reservedCoroutine != null) StopCoroutine(reservedCoroutine);
                 delayedReleaseDict.Remove(instance);
             }
 
@@ -117,13 +117,13 @@ namespace SWPool
             }
 
             // 이미 예약되어 있으면 기존 예약 취소
-            if (delayedReleaseDict.TryGetValue(instance, out var existing))
+            if (delayedReleaseDict.TryGetValue(instance, out var existingCoroutine))
             {
-                if (existing != null) StopCoroutine(existing);
+                if (existingCoroutine != null) StopCoroutine(existingCoroutine);
             }
 
-            var coroutine = StartCoroutine(DelayedReleaseRoutine(instance, delay));
-            delayedReleaseDict[instance] = coroutine;
+            var releaseCoroutine = StartCoroutine(DelayedReleaseRoutine(instance, delay));
+            delayedReleaseDict[instance] = releaseCoroutine;
         }
 
         /// <inheritdoc/>
@@ -132,27 +132,27 @@ namespace SWPool
             if (prefab == null || !poolDict.TryGetValue(prefab, out var pool)) return;
 
             // 해당 프리팹의 예약된 지연 반납 취소
-            var toCancel = new List<GameObject>();
-            foreach (var kv in delayedReleaseDict)
+            var instancesToCancel = new List<GameObject>();
+            foreach (var keyValue in delayedReleaseDict)
             {
-                if (instanceToPrefabDict.TryGetValue(kv.Key, out var p) && p == prefab)
-                    toCancel.Add(kv.Key);
+                if (instanceToPrefabDict.TryGetValue(keyValue.Key, out var mappedPrefab) && mappedPrefab == prefab)
+                    instancesToCancel.Add(keyValue.Key);
             }
-            foreach (var obj in toCancel)
+            foreach (var instance in instancesToCancel)
             {
-                if (delayedReleaseDict[obj] != null)
-                    StopCoroutine(delayedReleaseDict[obj]);
-                delayedReleaseDict.Remove(obj);
+                if (delayedReleaseDict[instance] != null)
+                    StopCoroutine(delayedReleaseDict[instance]);
+                delayedReleaseDict.Remove(instance);
             }
 
             pool.Clear();
             poolDict.Remove(prefab);
 
-            var toRemove = new List<GameObject>();
-            foreach (var kv in instanceToPrefabDict)
-                if (kv.Value == prefab) toRemove.Add(kv.Key);
-            foreach (var obj in toRemove)
-                instanceToPrefabDict.Remove(obj);
+            var instancesToRemove = new List<GameObject>();
+            foreach (var keyValue in instanceToPrefabDict)
+                if (keyValue.Value == prefab) instancesToRemove.Add(keyValue.Key);
+            foreach (var instance in instancesToRemove)
+                instanceToPrefabDict.Remove(instance);
         }
 
         /// <inheritdoc/>
@@ -196,12 +196,12 @@ namespace SWPool
         /// <returns>캐시된 WaitForSeconds 인스턴스</returns>
         private WaitForSeconds GetWait(float seconds)
         {
-            if (!waitCacheDict.TryGetValue(seconds, out var wait))
+            if (!waitCacheDict.TryGetValue(seconds, out var waitForSeconds))
             {
-                wait = new WaitForSeconds(seconds);
-                waitCacheDict[seconds] = wait;
+                waitForSeconds = new WaitForSeconds(seconds);
+                waitCacheDict[seconds] = waitForSeconds;
             }
-            return wait;
+            return waitForSeconds;
         }
 
         /// <summary>
@@ -211,8 +211,8 @@ namespace SWPool
         /// <returns>프리팹에 매핑된 ObjectPool</returns>
         private ObjectPool<GameObject> GetOrCreatePool(GameObject prefab)
         {
-            if (poolDict.TryGetValue(prefab, out var existing))
-                return existing;
+            if (poolDict.TryGetValue(prefab, out var existingPool))
+                return existingPool;
 
             GameObject capturedPrefab = prefab;
 
@@ -237,59 +237,59 @@ namespace SWPool
         /// <returns>생성된 인스턴스</returns>
         private GameObject CreatePooled(GameObject prefab)
         {
-            var obj = Instantiate(prefab, transform);
-            obj.name = prefab.name;
-            instanceToPrefabDict[obj] = prefab;
-            return obj;
+            var instance = Instantiate(prefab, transform);
+            instance.name = prefab.name;
+            instanceToPrefabDict[instance] = prefab;
+            return instance;
         }
 
         /// <summary>
         /// 풀러블 컴포넌트들에게 풀 참조를 전달하고 Spawn 콜백을 호출한다.
         /// </summary>
-        /// <param name="obj">대상 오브젝트</param>
-        private void NotifyPoolables(GameObject obj)
+        /// <param name="instance">대상 오브젝트</param>
+        private void NotifyPoolables(GameObject instance)
         {
-            var poolables = obj.GetComponentsInChildren<IPoolable>(true);
-            for (int i = 0; i < poolables.Length; i++)
+            var poolables = instance.GetComponentsInChildren<IPoolable>(true);
+            for (int index = 0; index < poolables.Length; index++)
             {
-                poolables[i].SetPool(this);
-                poolables[i].OnSpawnFromPool();
+                poolables[index].SetPool(this);
+                poolables[index].OnSpawnFromPool();
             }
         }
 
         /// <summary>
         /// ObjectPool의 Get 호출 시 자동으로 실행된다.
         /// </summary>
-        /// <param name="obj">꺼내진 오브젝트</param>
-        private void OnGetFromPool(GameObject obj)
+        /// <param name="instance">꺼내진 오브젝트</param>
+        private void OnGetFromPool(GameObject instance)
         {
-            obj.SetActive(true);
+            instance.SetActive(true);
         }
 
         /// <summary>
         /// ObjectPool의 Release 호출 시 자동으로 실행된다.
         /// </summary>
-        /// <param name="obj">반납된 오브젝트</param>
-        private void OnReleaseToPool(GameObject obj)
+        /// <param name="instance">반납된 오브젝트</param>
+        private void OnReleaseToPool(GameObject instance)
         {
-            var poolables = obj.GetComponentsInChildren<IPoolable>(true);
-            for (int i = 0; i < poolables.Length; i++)
-                poolables[i].OnReturnToPool();
+            var poolables = instance.GetComponentsInChildren<IPoolable>(true);
+            for (int index = 0; index < poolables.Length; index++)
+                poolables[index].OnReturnToPool();
 
-            obj.SetActive(false);
-            obj.transform.SetParent(transform, false);
+            instance.SetActive(false);
+            instance.transform.SetParent(transform, false);
         }
 
         /// <summary>
         /// ObjectPool의 최대 크기 초과 시 자동으로 실행된다.
         /// </summary>
-        /// <param name="obj">파괴할 오브젝트</param>
-        private void OnDestroyPooled(GameObject obj)
+        /// <param name="instance">파괴할 오브젝트</param>
+        private void OnDestroyPooled(GameObject instance)
         {
-            if (obj != null)
+            if (instance != null)
             {
-                instanceToPrefabDict.Remove(obj);
-                Destroy(obj);
+                instanceToPrefabDict.Remove(instance);
+                Destroy(instance);
             }
         }
         #endregion // 내부

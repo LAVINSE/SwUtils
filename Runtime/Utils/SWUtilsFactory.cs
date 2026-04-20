@@ -1,98 +1,106 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SWUtils
 {
+    /// <summary>
+    /// 게임 오브젝트 생성을 편리하게 처리하는 팩토리.
+    /// 일반 생성, 프리팹 복제, 제네릭 컴포넌트 반환을 지원한다.
+    /// </summary>
     public class SWUtilsFactory : MonoBehaviour
     {
         #region 함수
         /// <summary>
-        /// 게임 객체를 생성한다
+        /// 게임 객체를 생성한다.
         /// </summary>
-        /// <param name="objName">객체 이름</param>
-        /// <param name="parentObj">부모 객체</param>
-        /// <param name="pos">위치</param>
+        /// <param name="objectName">객체 이름</param>
+        /// <param name="parentObject">부모 객체</param>
+        /// <param name="position">위치</param>
         /// <param name="scale">크기</param>
-        /// <param name="rotate">회전</param>
-        /// <param name="isStayWorldPos"></param>
-        /// <returns></returns>
-        public static GameObject CreateGameObj(string objName,
-            GameObject parentObj, Vector3 pos, Vector3 scale, Vector3 rotate,
-            bool isStayWorldPos = false)
+        /// <param name="rotation">회전</param>
+        /// <param name="isStayWorldPosition">부모 변경 시 월드 좌표 유지 여부</param>
+        /// <returns>생성된 게임 오브젝트</returns>
+        public static GameObject CreateGameObj(string objectName,
+            GameObject parentObject, Vector3 position, Vector3 scale, Vector3 rotation,
+            bool isStayWorldPosition = false)
         {
-            var oGameObj = new GameObject(objName);
-            oGameObj.transform.SetParent(parentObj?.transform, isStayWorldPos);
+            var gameObject = new GameObject(objectName);
+            gameObject.transform.SetParent(parentObject?.transform, isStayWorldPosition);
 
-            oGameObj.transform.localScale = scale;
-            oGameObj.transform.localPosition = pos;
-            oGameObj.transform.localEulerAngles = rotate;
+            gameObject.transform.localScale = scale;
+            gameObject.transform.localPosition = position;
+            gameObject.transform.localEulerAngles = rotation;
 
-            return oGameObj;
+            return gameObject;
         }
 
         /// <summary>
-        /// 사본 객체를 생성한다
+        /// 프리팹을 복제하여 사본 객체를 생성한다.
         /// </summary>
-        /// <param name="objName">객체 이름</param>
-        /// <param name="parentObj">부모 객체</param>
-        /// <param name="pos">위치</param>
+        /// <param name="objectName">객체 이름</param>
+        /// <param name="prefabObject">복제할 프리팹</param>
+        /// <param name="parentObject">부모 객체</param>
+        /// <param name="position">위치</param>
         /// <param name="scale">크기</param>
-        /// <param name="rotate">회전</param>
-        /// <param name="isStayWorldPos"></param>
-        /// <returns></returns>
-        public static GameObject CreateCloneGameObj(string objName,
-            GameObject prefabObj, GameObject parentObj, Vector3 pos,
-            Vector3 scale, Vector3 rotate, bool isStayWorldPos = false)
+        /// <param name="rotation">회전</param>
+        /// <param name="isStayWorldPosition">부모 변경 시 월드 좌표 유지 여부</param>
+        /// <returns>생성된 게임 오브젝트</returns>
+        public static GameObject CreateCloneGameObj(string objectName,
+            GameObject prefabObject, GameObject parentObject, Vector3 position,
+            Vector3 scale, Vector3 rotation, bool isStayWorldPosition = false)
         {
-            var oGameObj = GameObject.Instantiate(prefabObj, Vector3.zero, Quaternion.identity);
-            oGameObj.name = objName;
-            oGameObj.transform.SetParent(parentObj?.transform, isStayWorldPos);
+            var gameObject = GameObject.Instantiate(prefabObject, Vector3.zero, Quaternion.identity);
+            gameObject.name = objectName;
+            gameObject.transform.SetParent(parentObject?.transform, isStayWorldPosition);
 
-            oGameObj.transform.localScale = scale;
-            oGameObj.transform.localPosition = pos;
-            oGameObj.transform.localEulerAngles = rotate;
+            gameObject.transform.localScale = scale;
+            gameObject.transform.localPosition = position;
+            gameObject.transform.localEulerAngles = rotation;
 
-            return oGameObj;
+            return gameObject;
         }
 
         /// <summary>
-        /// 게임 객체를 생성한다 <제네릭>
+        /// 게임 객체를 생성한다. (제네릭, 컴포넌트 반환)
         /// </summary>
-        /// <param name="objName">객체 이름</param>
-        /// <param name="parentObj">부모 객체</param>
-        /// <param name="pos">위치</param>
+        /// <typeparam name="T">반환할 컴포넌트 타입</typeparam>
+        /// <param name="objectName">객체 이름</param>
+        /// <param name="parentObject">부모 객체</param>
+        /// <param name="position">위치</param>
         /// <param name="scale">크기</param>
-        /// <param name="rotate">회전</param>
-        /// <param name="isStayWorldPos"></param>
-        public static T CreateGameObj<T>(string objName,
-            GameObject parentObj, Vector3 pos, Vector3 scale, Vector3 rotate,
-            bool isStayWorldPos = false) where T : Component
+        /// <param name="rotation">회전</param>
+        /// <param name="isStayWorldPosition">부모 변경 시 월드 좌표 유지 여부</param>
+        /// <returns>생성된 게임 오브젝트에 부착된 컴포넌트</returns>
+        public static T CreateGameObj<T>(string objectName,
+            GameObject parentObject, Vector3 position, Vector3 scale, Vector3 rotation,
+            bool isStayWorldPosition = false) where T : Component
         {
-            var oGameObject = SWUtilsFactory.CreateGameObj(objName,
-                parentObj, pos, scale, rotate, isStayWorldPos);
+            var gameObject = SWUtilsFactory.CreateGameObj(objectName,
+                parentObject, position, scale, rotation, isStayWorldPosition);
 
-            return oGameObject.GetComponent<T>() ?? oGameObject.AddComponent<T>();
+            return gameObject.GetComponent<T>() ?? gameObject.AddComponent<T>();
         }
 
         /// <summary>
-        /// 사본 객체를 생성한다 <제네릭>
+        /// 프리팹을 복제하여 사본 객체를 생성한다. (제네릭, 컴포넌트 반환)
         /// </summary>
-        /// <param name="objName">객체 이름</param>
-        /// <param name="parentObj">부모 객체</param>
-        /// <param name="pos">위치</param>
+        /// <typeparam name="T">반환할 컴포넌트 타입</typeparam>
+        /// <param name="objectName">객체 이름</param>
+        /// <param name="prefabObject">복제할 프리팹</param>
+        /// <param name="parentObject">부모 객체</param>
+        /// <param name="position">위치</param>
         /// <param name="scale">크기</param>
-        /// <param name="rotate">회전</param>
-        /// <param name="isStayWorldPos"></param>
-        public static T CreateCloneGameObj<T>(string objName,
-            GameObject prefabObj, GameObject parentObj, Vector3 pos,
-            Vector3 scale, Vector3 rotate,
-            bool isStayWorldPos = false) where T : Component
+        /// <param name="rotation">회전</param>
+        /// <param name="isStayWorldPosition">부모 변경 시 월드 좌표 유지 여부</param>
+        /// <returns>생성된 게임 오브젝트에 부착된 컴포넌트</returns>
+        public static T CreateCloneGameObj<T>(string objectName,
+            GameObject prefabObject, GameObject parentObject, Vector3 position,
+            Vector3 scale, Vector3 rotation,
+            bool isStayWorldPosition = false) where T : Component
         {
-            var oGameObject = SWUtilsFactory.CreateCloneGameObj(objName,
-                prefabObj, parentObj, pos, scale, rotate, isStayWorldPos);
+            var gameObject = SWUtilsFactory.CreateCloneGameObj(objectName,
+                prefabObject, parentObject, position, scale, rotation, isStayWorldPosition);
 
-            return oGameObject.GetComponent<T>() ?? oGameObject.AddComponent<T>();
+            return gameObject.GetComponent<T>() ?? gameObject.AddComponent<T>();
         }
         #endregion // 함수
     }

@@ -39,12 +39,12 @@ namespace SWCoroutine
         /// <returns>캐시된 WaitForSeconds 인스턴스</returns>
         public WaitForSeconds Wait(float seconds)
         {
-            if (!waitDict.TryGetValue(seconds, out var wait))
+            if (!waitDict.TryGetValue(seconds, out var waitForSeconds))
             {
-                wait = new WaitForSeconds(seconds);
-                waitDict[seconds] = wait;
+                waitForSeconds = new WaitForSeconds(seconds);
+                waitDict[seconds] = waitForSeconds;
             }
-            return wait;
+            return waitForSeconds;
         }
 
         /// <summary>
@@ -54,12 +54,12 @@ namespace SWCoroutine
         /// <returns>캐시된 WaitForSecondsRealtime 인스턴스</returns>
         public WaitForSecondsRealtime WaitRealtime(float seconds)
         {
-            if (!waitRealtimeCacheDict.TryGetValue(seconds, out var wait))
+            if (!waitRealtimeCacheDict.TryGetValue(seconds, out var waitForSecondsRealtime))
             {
-                wait = new WaitForSecondsRealtime(seconds);
-                waitRealtimeCacheDict[seconds] = wait;
+                waitForSecondsRealtime = new WaitForSecondsRealtime(seconds);
+                waitRealtimeCacheDict[seconds] = waitForSecondsRealtime;
             }
-            return wait;
+            return waitForSecondsRealtime;
         }
         #endregion // Wait 캐시
 
@@ -218,13 +218,13 @@ namespace SWCoroutine
         /// <returns>IEnumerator</returns>
         private IEnumerator RepeatRoutine(float interval, int count, Action<int> action)
         {
-            int i = 0;
-            var wait = Wait(interval);
-            while (count <= 0 || i < count)
+            int index = 0;
+            var waitForSeconds = Wait(interval);
+            while (count <= 0 || index < count)
             {
-                action?.Invoke(i);
-                i++;
-                yield return wait;
+                action?.Invoke(index);
+                index++;
+                yield return waitForSeconds;
             }
         }
 

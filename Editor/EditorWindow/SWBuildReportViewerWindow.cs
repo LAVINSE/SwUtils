@@ -3,7 +3,7 @@
 // ============================================================================
 // 사용자가 직접 지정한 .buildreport 파일을 파싱해 에셋별 크기를 보여주고,
 // 두 개의 리포트를 비교해 크기 변화/신규/삭제 에셋을 확인할 수 있습니다.
-// 탭바: 일반 / 비교
+// 탭바: 일반 / 비교  (SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일)
 // ============================================================================
 
 using System.Collections.Generic;
@@ -22,8 +22,8 @@ namespace SWTools
     {
         #region 필드
         // 슬롯 A (기본 / Base)
-        private BuildReport reportA;      // Project 내 에셋을 드래그했을 때만 유효. Load...로 불러온 경우 null.
-        private bool hasDataA;            // 파싱된 데이터가 있는지 여부
+        private BuildReport reportA;
+        private bool hasDataA;
         private ReportData dataA = new();
 
         // 슬롯 B (비교 대상 / Compare)
@@ -33,7 +33,11 @@ namespace SWTools
 
         private Vector2 scrollPosition;
         private string searchFilter = "";
-        private TabMode tabMode = TabMode.Normal;
+
+        // 탭바 (GUILayout.Toolbar 스타일)
+        private int selectedTab = 0;
+        private static readonly string[] tabNames = { "일반", "비교" };
+
         private NormalSubMode normalSubMode = NormalSubMode.AllAssets;
         private SortMode sortMode = SortMode.Size;
         private bool sortDescending = true;
@@ -44,7 +48,6 @@ namespace SWTools
         private bool diffSortDescending = true;
         private DiffFilter diffFilter = DiffFilter.All;
 
-        private enum TabMode { Normal, Compare }
         private enum NormalSubMode { AllAssets, ByCategory }
         private enum SortMode { Size, Name, Category }
         private enum DiffSortMode { SizeDelta, SizeA, SizeB, Name }
@@ -93,7 +96,7 @@ namespace SWTools
             public string category;
             public long sizeA;
             public long sizeB;
-            public long delta;       // sizeB - sizeA
+            public long delta;
             public DiffStatus status;
         }
         #endregion // 필드
@@ -109,12 +112,6 @@ namespace SWTools
         }
 
         #region 로드 로직
-        /// <summary>
-        /// OS 파일 선택창을 통해 .buildreport 파일을 선택하고 지정된 슬롯에 로드합니다.
-        /// Unity는 BuildReport를 AssetDatabase에 임포트해야 접근 가능하므로,
-        /// Assets 폴더 바깥 파일은 임시 복사 → 임포트 → 파싱 → 즉시 삭제합니다.
-        /// 파싱된 데이터는 ReportData에 모두 복사되므로 삭제 후에도 조회·비교에 문제 없습니다.
-        /// </summary>
         private void LoadReportFromFileDialog(bool isSlotA)
         {
             string path = EditorUtility.OpenFilePanel(
@@ -148,13 +145,11 @@ namespace SWTools
                     return;
                 }
 
-                // 데이터는 ParseReport에서 값 타입으로 복사되므로
-                // 이후 에셋이 삭제돼도 dataA/dataB는 유효.
                 ReportData data = ParseReport(loaded, sourcePath);
 
                 if (isSlotA)
                 {
-                    reportA = null;      // 임시 에셋이므로 참조 유지 금지 (Missing 방지)
+                    reportA = null;
                     hasDataA = true;
                     dataA = data;
                     SortEntries(dataA);
@@ -174,7 +169,6 @@ namespace SWTools
             }
             finally
             {
-                // 파싱이 끝났으면 임시 에셋 즉시 삭제
                 if (File.Exists(tempAssetPath))
                 {
                     AssetDatabase.DeleteAsset(tempAssetPath);
@@ -182,10 +176,6 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// ObjectField에 끌어다 놓은 BuildReport 에셋을 로드합니다.
-        /// Project 내부에 원래부터 존재하는 에셋만 처리 (삭제하지 않음).
-        /// </summary>
         private void LoadReportFromAsset(BuildReport asset, bool isSlotA)
         {
             if (asset == null)
@@ -238,7 +228,6 @@ namespace SWTools
 
                     string category = GetCategoryFromPath(path);
 
-                    // 동일 경로가 여러 번 등장할 수 있으므로 합산.
                     if (data.entryByPath.TryGetValue(path, out AssetEntry existing))
                     {
                         existing.size += (long)info.packedSize;
@@ -305,10 +294,6 @@ namespace SWTools
             });
         }
 
-        /// <summary>
-        /// 두 리포트의 에셋을 경로 기준으로 비교해 diffEntries를 구성합니다.
-        /// delta = sizeB - sizeA (양수 = B에서 증가)
-        /// </summary>
         private void BuildDiff()
         {
             diffEntries.Clear();
@@ -364,12 +349,26 @@ namespace SWTools
         #region GUI
         private void OnGUI()
         {
-            DrawTabBar();
+            EditorGUILayout.Space(5);
+
+            // SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일 탭바
+            int newTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
+            if (newTab != selectedTab)
+            {
+                selectedTab = newTab;
+                if (selectedTab == 1 && hasDataA && hasDataB)
+                {
+                    BuildDiff();
+                }
+            }
+
+            EditorGUILayout.Space(10);
+
             DrawReportSlots();
             DrawToolbar();
             EditorGUILayout.Space(5);
 
-            if (tabMode == TabMode.Normal)
+            if (selectedTab == 0)
             {
                 DrawNormalTab();
             }
@@ -379,50 +378,11 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// 상단 탭바. 일반 / 비교 두 개의 탭을 버튼 형태로 표시합니다.
-        /// </summary>
-        private void DrawTabBar()
-        {
-            EditorGUILayout.BeginHorizontal();
-            if (DrawTabButton("일반", tabMode == TabMode.Normal))
-            {
-                tabMode = TabMode.Normal;
-            }
-            if (DrawTabButton("비교", tabMode == TabMode.Compare))
-            {
-                tabMode = TabMode.Compare;
-                if (hasDataA && hasDataB) BuildDiff();
-            }
-            EditorGUILayout.EndHorizontal();
-
-            Rect lineRect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(lineRect, new Color(0.15f, 0.15f, 0.15f, 1f));
-        }
-
-        private bool DrawTabButton(string label, bool active)
-        {
-            Color prevBg = GUI.backgroundColor;
-            GUI.backgroundColor = active
-                ? new Color(0.45f, 0.65f, 0.9f)
-                : new Color(0.75f, 0.75f, 0.75f);
-
-            GUIStyle style = new(EditorStyles.toolbarButton)
-            {
-                fontStyle = active ? FontStyle.Bold : FontStyle.Normal,
-                fixedHeight = 24,
-            };
-
-            bool clicked = GUILayout.Button(label, style, GUILayout.Height(24));
-            GUI.backgroundColor = prevBg;
-            return clicked;
-        }
-
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (tabMode == TabMode.Normal)
+            if (selectedTab == 0)
             {
                 GUILayout.Label("보기:", GUILayout.Width(40));
                 NormalSubMode newSub = (NormalSubMode)EditorGUILayout.EnumPopup(normalSubMode,
@@ -484,15 +444,12 @@ namespace SWTools
             EditorGUILayout.EndHorizontal();
         }
 
-        /// <summary>
-        /// 리포트 A / B 슬롯 UI. ObjectField + Load 버튼 + Clear 버튼 제공.
-        /// </summary>
         private void DrawReportSlots()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             DrawReportSlot("Report A", ref reportA, dataA, hasDataA, true);
 
-            if (tabMode == TabMode.Compare)
+            if (selectedTab == 1)
             {
                 EditorGUILayout.Space(2);
                 DrawReportSlot("Report B", ref reportB, dataB, hasDataB, false);
@@ -525,7 +482,6 @@ namespace SWTools
 
             if (hasData)
             {
-                // Load...로 불러온 경우 ObjectField는 비어있으므로, 파일 경로를 라벨로 보여준다.
                 if (slot == null)
                 {
                     EditorGUILayout.LabelField(
@@ -646,7 +602,6 @@ namespace SWTools
                 return;
             }
 
-            // 합계 비교 요약
             long deltaTotal = dataB.totalSize - dataA.totalSize;
             string sign = deltaTotal >= 0 ? "+" : "";
 
@@ -669,7 +624,6 @@ namespace SWTools
 
             EditorGUILayout.Space(5);
 
-            // 헤더 행
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("상태", GUILayout.Width(60));
             GUILayout.Label("A (KB)", GUILayout.Width(70));
