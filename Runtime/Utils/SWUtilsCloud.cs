@@ -90,9 +90,6 @@ namespace SWUtils
         private static extern bool _SetiCloudData(string key, string value);
 
         [DllImport("__Internal")]
-        private static extern void _DeleteiCloudData();
-
-        [DllImport("__Internal")]
         private static extern void _ForceSynciCloudData();
 
         /// <summary>
@@ -199,6 +196,8 @@ namespace SWUtils
         /// <param name="saveName">저장 슬롯 이름</param>
         public static void Save(string json, Action<bool> onComplete = null, string saveName = DefaultSaveName)
         {
+            saveName = NormalizeSaveName(saveName);
+
             if (string.IsNullOrEmpty(json))
             {
                 Debug.LogError("[SWUtilsCloud] Save failed: empty json");
@@ -212,8 +211,7 @@ namespace SWUtils
             if (!isAuthenticated)
             {
                 Debug.LogWarning("[SWUtilsCloud] GPGS not authenticated. Saving local only.");
-                SaveLocal(json, saveName);
-                onComplete?.Invoke(false);
+                SaveLocalAndComplete(json, saveName, onComplete, false);
                 return;
             }
 
@@ -226,8 +224,7 @@ namespace SWUtils
                     if (status != SavedGameRequestStatus.Success)
                     {
                         Debug.LogError($"[SWUtilsCloud] GPGS open failed: {status}");
-                        SaveLocal(json, saveName);
-                        onComplete?.Invoke(false);
+                        SaveLocalAndComplete(json, saveName, onComplete, false);
                         return;
                     }
 
@@ -240,8 +237,7 @@ namespace SWUtils
                     {
                         bool success = commitStatus == SavedGameRequestStatus.Success;
                         Debug.Log($"[SWUtilsCloud] GPGS commit: {commitStatus}");
-                        SaveLocal(json, saveName);
-                        onComplete?.Invoke(success);
+                        SaveLocalAndComplete(json, saveName, onComplete, success);
                     });
                 });
 #elif UNITY_IOS && !UNITY_EDITOR
@@ -249,22 +245,19 @@ namespace SWUtils
             {
                 bool result = iCloudSet(saveName, json);
                 _ForceSynciCloudData();
-                SaveLocal(json, saveName);
                 Debug.Log($"[SWUtilsCloud] iCloud save: {result}");
-                onComplete?.Invoke(result);
+                SaveLocalAndComplete(json, saveName, onComplete, result);
             }
             catch (Exception exception)
             {
                 Debug.LogError($"[SWUtilsCloud] iCloud save failed: {exception.Message}");
-                SaveLocal(json, saveName);
-                onComplete?.Invoke(false);
+                SaveLocalAndComplete(json, saveName, onComplete, false);
             }
 #elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
             if (!SteamManager.Initialized)
             {
                 Debug.LogWarning("[SWUtilsCloud] Steam not initialized. Saving local only.");
-                SaveLocal(json, saveName);
-                onComplete?.Invoke(false);
+                SaveLocalAndComplete(json, saveName, onComplete, false);
                 return;
             }
 
@@ -274,19 +267,16 @@ namespace SWUtils
                 string fileName = saveName + ".json";
                 bool result = SteamRemoteStorage.FileWrite(fileName, data, data.Length);
                 Debug.Log($"[SWUtilsCloud] Steam save: {result}");
-                SaveLocal(json, saveName);
-                onComplete?.Invoke(result);
+                SaveLocalAndComplete(json, saveName, onComplete, result);
             }
             catch (Exception exception)
             {
                 Debug.LogError($"[SWUtilsCloud] Steam save failed: {exception.Message}");
-                SaveLocal(json, saveName);
-                onComplete?.Invoke(false);
+                SaveLocalAndComplete(json, saveName, onComplete, false);
             }
 #else
-            SaveLocal(json, saveName);
             Debug.Log("[SWUtilsCloud] Local fallback save");
-            onComplete?.Invoke(true);
+            SaveLocalAndComplete(json, saveName, onComplete, true);
 #endif
         }
 
@@ -312,14 +302,14 @@ namespace SWUtils
         /// <param name="saveName">저장 슬롯 이름</param>
         public static void Load(Action<bool, string> onComplete, string saveName = DefaultSaveName)
         {
+            saveName = NormalizeSaveName(saveName);
             Debug.Log($"[SWUtilsCloud] Load begin (provider: {ProviderName})");
 
 #if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
             if (!isAuthenticated)
             {
                 Debug.LogWarning("[SWUtilsCloud] GPGS not authenticated. Loading local only.");
-                string local = LoadLocal(saveName);
-                onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                LoadLocalAndComplete(saveName, onComplete);
                 return;
             }
 
@@ -332,8 +322,7 @@ namespace SWUtils
                     if (status != SavedGameRequestStatus.Success)
                     {
                         Debug.LogError($"[SWUtilsCloud] GPGS open failed: {status}");
-                        string local = LoadLocal(saveName);
-                        onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                        LoadLocalAndComplete(saveName, onComplete);
                         return;
                     }
 
@@ -342,14 +331,13 @@ namespace SWUtils
                         if (readStatus != SavedGameRequestStatus.Success || data == null || data.Length == 0)
                         {
                             Debug.LogWarning($"[SWUtilsCloud] GPGS read empty: {readStatus}");
-                            string local = LoadLocal(saveName);
-                            onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                            LoadLocalAndComplete(saveName, onComplete);
                             return;
                         }
 
                         string json = Encoding.UTF8.GetString(data);
                         Debug.Log($"[SWUtilsCloud] GPGS load success (length: {json.Length})");
-                        onComplete?.Invoke(true, json);
+                        SaveLocalAndComplete(json, saveName, onComplete, true);
                     });
                 });
 #elif UNITY_IOS && !UNITY_EDITOR
@@ -360,27 +348,24 @@ namespace SWUtils
                 if (string.IsNullOrEmpty(json))
                 {
                     Debug.LogWarning("[SWUtilsCloud] iCloud empty, fallback to local");
-                    string local = LoadLocal(saveName);
-                    onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                    LoadLocalAndComplete(saveName, onComplete);
                 }
                 else
                 {
                     Debug.Log($"[SWUtilsCloud] iCloud load success (length: {json.Length})");
-                    onComplete?.Invoke(true, json);
+                    SaveLocalAndComplete(json, saveName, onComplete, true);
                 }
             }
             catch (Exception exception)
             {
                 Debug.LogError($"[SWUtilsCloud] iCloud load failed: {exception.Message}");
-                string local = LoadLocal(saveName);
-                onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                LoadLocalAndComplete(saveName, onComplete);
             }
 #elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
             if (!SteamManager.Initialized)
             {
                 Debug.LogWarning("[SWUtilsCloud] Steam not initialized. Loading local only.");
-                string local = LoadLocal(saveName);
-                onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                LoadLocalAndComplete(saveName, onComplete);
                 return;
             }
 
@@ -390,8 +375,7 @@ namespace SWUtils
                 if (!SteamRemoteStorage.FileExists(fileName))
                 {
                     Debug.LogWarning("[SWUtilsCloud] Steam file not found, fallback to local");
-                    string local = LoadLocal(saveName);
-                    onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                    LoadLocalAndComplete(saveName, onComplete);
                     return;
                 }
 
@@ -402,25 +386,21 @@ namespace SWUtils
                 if (read <= 0)
                 {
                     Debug.LogWarning("[SWUtilsCloud] Steam read empty, fallback to local");
-                    string local = LoadLocal(saveName);
-                    onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                    LoadLocalAndComplete(saveName, onComplete);
                     return;
                 }
 
                 string json = Encoding.UTF8.GetString(data);
                 Debug.Log($"[SWUtilsCloud] Steam load success (length: {json.Length})");
-                onComplete?.Invoke(true, json);
+                SaveLocalAndComplete(json, saveName, onComplete, true);
             }
             catch (Exception exception)
             {
                 Debug.LogError($"[SWUtilsCloud] Steam load failed: {exception.Message}");
-                string local = LoadLocal(saveName);
-                onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+                LoadLocalAndComplete(saveName, onComplete);
             }
 #else
-            string fallback = LoadLocal(saveName);
-            Debug.Log($"[SWUtilsCloud] Local fallback load (length: {fallback?.Length ?? 0})");
-            onComplete?.Invoke(!string.IsNullOrEmpty(fallback), fallback);
+            LoadLocalAndComplete(saveName, onComplete);
 #endif
         }
 
@@ -445,6 +425,7 @@ namespace SWUtils
         /// <param name="saveName">저장 슬롯 이름</param>
         public static void Delete(Action<bool> onComplete = null, string saveName = DefaultSaveName)
         {
+            saveName = NormalizeSaveName(saveName);
             Debug.Log($"[SWUtilsCloud] Delete begin (provider: {ProviderName})");
 
 #if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
@@ -477,11 +458,11 @@ namespace SWUtils
 #elif UNITY_IOS && !UNITY_EDITOR
             try
             {
-                _DeleteiCloudData();
+                bool result = iCloudSet(saveName, string.Empty);
                 _ForceSynciCloudData();
                 DeleteLocal(saveName);
-                Debug.Log("[SWUtilsCloud] iCloud delete success");
-                onComplete?.Invoke(true);
+                Debug.Log($"[SWUtilsCloud] iCloud delete success: {result}");
+                onComplete?.Invoke(result);
             }
             catch (Exception exception)
             {
@@ -521,6 +502,70 @@ namespace SWUtils
             Delete(success => taskCompletionSource.SetResult(success), saveName);
             return taskCompletionSource.Task;
         }
+
+        #region JSON Helper
+        public static void SaveJson<T>(T data, Action<bool> onComplete = null, string saveName = DefaultSaveName)
+        {
+            if (data == null)
+            {
+                Debug.LogError("[SWUtilsCloud] SaveJson failed: data is null");
+                onComplete?.Invoke(false);
+                return;
+            }
+
+            Save(JsonUtility.ToJson(data), onComplete, saveName);
+        }
+
+        public static Task<bool> SaveJsonAsync<T>(T data, string saveName = DefaultSaveName)
+        {
+            if (data == null)
+            {
+                Debug.LogError("[SWUtilsCloud] SaveJsonAsync failed: data is null");
+                return Task.FromResult(false);
+            }
+
+            return SaveAsync(JsonUtility.ToJson(data), saveName);
+        }
+
+        public static void LoadJson<T>(Action<bool, T> onComplete, string saveName = DefaultSaveName) where T : class
+        {
+            Load((success, json) =>
+            {
+                if (!success || string.IsNullOrEmpty(json))
+                {
+                    onComplete?.Invoke(false, default);
+                    return;
+                }
+
+                try
+                {
+                    T data = JsonUtility.FromJson<T>(json);
+                    onComplete?.Invoke(data != null, data);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[SWUtilsCloud] LoadJson failed: {exception.Message}");
+                    onComplete?.Invoke(false, default);
+                }
+            }, saveName);
+        }
+
+        public static async Task<(bool success, T data)> LoadJsonAsync<T>(string saveName = DefaultSaveName) where T : class
+        {
+            var (success, json) = await LoadAsync(saveName);
+            if (!success || string.IsNullOrEmpty(json)) return (false, default);
+
+            try
+            {
+                T data = JsonUtility.FromJson<T>(json);
+                return (data != null, data);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[SWUtilsCloud] LoadJsonAsync failed: {exception.Message}");
+                return (false, default);
+            }
+        }
         #endregion // 삭제
 
         #region 로컬 폴백
@@ -529,6 +574,39 @@ namespace SWUtils
         /// </summary>
         /// <param name="json">저장할 JSON 문자열</param>
         /// <param name="saveName">저장 슬롯 이름</param>
+        /// <summary>
+        /// 비어 있거나 공백인 저장 이름을 기본값으로 정규화한다.
+        /// </summary>
+        /// <param name="saveName">저장 이름</param>
+        private static string NormalizeSaveName(string saveName)
+        {
+            return string.IsNullOrWhiteSpace(saveName) ? DefaultSaveName : saveName.Trim();
+        }
+
+        private static void SaveLocalAndComplete(string json, string saveName, Action<bool> onComplete, bool success)
+        {
+            SaveLocal(json, saveName);
+            onComplete?.Invoke(success);
+        }
+
+        private static void SaveLocalAndComplete(string json, string saveName, Action<bool, string> onComplete, bool success)
+        {
+            SaveLocal(json, saveName);
+            onComplete?.Invoke(success, json);
+        }
+
+        private static void LoadLocalAndComplete(string saveName, Action<bool, string> onComplete)
+        {
+            string local = LoadLocal(saveName);
+            Debug.Log($"[SWUtilsCloud] Local fallback load (length: {local?.Length ?? 0})");
+            onComplete?.Invoke(!string.IsNullOrEmpty(local), local);
+        }
+
+        /// <summary>
+        /// 로컬 PlayerPrefs에 fallback 데이터를 저장한다.
+        /// </summary>
+        /// <param name="json">저장할 JSON 문자열</param>
+        /// <param name="saveName">저장 이름</param>
         private static void SaveLocal(string json, string saveName)
         {
             PlayerPrefs.SetString($"{LocalFallbackKey}_{saveName}", json);

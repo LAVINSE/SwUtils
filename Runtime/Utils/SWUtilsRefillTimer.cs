@@ -152,6 +152,8 @@ namespace SWUtils
         /// <returns>소모 성공 여부</returns>
         public bool Use(int amount)
         {
+            if (amount <= 0) return false;
+
             Tick();
 
             if (count < amount) return false;
@@ -172,6 +174,8 @@ namespace SWUtils
         /// <param name="amount">추가할 수량</param>
         public void Add(int amount)
         {
+            if (amount <= 0) return;
+
             count = Mathf.Min(count + amount, maxCount);
             if (IsFull)
                 lastUseUtc = DateTime.UtcNow;
