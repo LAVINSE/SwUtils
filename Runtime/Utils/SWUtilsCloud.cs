@@ -337,7 +337,7 @@ namespace SWUtils
 
                         string json = Encoding.UTF8.GetString(data);
                         Debug.Log($"[SWUtilsCloud] GPGS load success (length: {json.Length})");
-                        SaveLocalAndComplete(json, saveName, onComplete, true);
+                        CacheLocalAndComplete(json, saveName, onComplete, true);
                     });
                 });
 #elif UNITY_IOS && !UNITY_EDITOR
@@ -353,7 +353,7 @@ namespace SWUtils
                 else
                 {
                     Debug.Log($"[SWUtilsCloud] iCloud load success (length: {json.Length})");
-                    SaveLocalAndComplete(json, saveName, onComplete, true);
+                    CacheLocalAndComplete(json, saveName, onComplete, true);
                 }
             }
             catch (Exception exception)
@@ -390,9 +390,10 @@ namespace SWUtils
                     return;
                 }
 
-                string json = Encoding.UTF8.GetString(data);
+                // FIX: read 바이트 수만큼만 디코딩 (read < size일 수 있음)
+                string json = Encoding.UTF8.GetString(data, 0, read);
                 Debug.Log($"[SWUtilsCloud] Steam load success (length: {json.Length})");
-                SaveLocalAndComplete(json, saveName, onComplete, true);
+                CacheLocalAndComplete(json, saveName, onComplete, true);
             }
             catch (Exception exception)
             {
@@ -502,8 +503,12 @@ namespace SWUtils
             Delete(success => taskCompletionSource.SetResult(success), saveName);
             return taskCompletionSource.Task;
         }
+        #endregion // 삭제
 
         #region JSON Helper
+        /// <summary>
+        /// 객체를 JSON으로 직렬화하여 클라우드에 저장한다. (콜백)
+        /// </summary>
         public static void SaveJson<T>(T data, Action<bool> onComplete = null, string saveName = DefaultSaveName)
         {
             if (data == null)
@@ -516,6 +521,9 @@ namespace SWUtils
             Save(JsonUtility.ToJson(data), onComplete, saveName);
         }
 
+        /// <summary>
+        /// 객체를 JSON으로 직렬화하여 클라우드에 저장한다. (async)
+        /// </summary>
         public static Task<bool> SaveJsonAsync<T>(T data, string saveName = DefaultSaveName)
         {
             if (data == null)
@@ -527,6 +535,9 @@ namespace SWUtils
             return SaveAsync(JsonUtility.ToJson(data), saveName);
         }
 
+        /// <summary>
+        /// 클라우드에서 JSON을 로드하여 객체로 역직렬화한다. (콜백)
+        /// </summary>
         public static void LoadJson<T>(Action<bool, T> onComplete, string saveName = DefaultSaveName) where T : class
         {
             Load((success, json) =>
@@ -550,6 +561,9 @@ namespace SWUtils
             }, saveName);
         }
 
+        /// <summary>
+        /// 클라우드에서 JSON을 로드하여 객체로 역직렬화한다. (async)
+        /// </summary>
         public static async Task<(bool success, T data)> LoadJsonAsync<T>(string saveName = DefaultSaveName) where T : class
         {
             var (success, json) = await LoadAsync(saveName);
@@ -566,35 +580,40 @@ namespace SWUtils
                 return (false, default);
             }
         }
-        #endregion // 삭제
+        #endregion // JSON Helper
 
         #region 로컬 폴백
-        /// <summary>
-        /// 로컬 PlayerPrefs에 폴백 저장한다.
-        /// </summary>
-        /// <param name="json">저장할 JSON 문자열</param>
-        /// <param name="saveName">저장 슬롯 이름</param>
         /// <summary>
         /// 비어 있거나 공백인 저장 이름을 기본값으로 정규화한다.
         /// </summary>
         /// <param name="saveName">저장 이름</param>
+        /// <returns>정규화된 저장 이름</returns>
         private static string NormalizeSaveName(string saveName)
         {
             return string.IsNullOrWhiteSpace(saveName) ? DefaultSaveName : saveName.Trim();
         }
 
+        /// <summary>
+        /// 로컬에 저장하고 Action&lt;bool&gt; 콜백을 호출한다.
+        /// </summary>
         private static void SaveLocalAndComplete(string json, string saveName, Action<bool> onComplete, bool success)
         {
             SaveLocal(json, saveName);
             onComplete?.Invoke(success);
         }
 
-        private static void SaveLocalAndComplete(string json, string saveName, Action<bool, string> onComplete, bool success)
+        /// <summary>
+        /// 클라우드 로드 성공 시 로컬 캐시를 갱신하고 Action&lt;bool, string&gt; 콜백을 호출한다.
+        /// </summary>
+        private static void CacheLocalAndComplete(string json, string saveName, Action<bool, string> onComplete, bool success)
         {
             SaveLocal(json, saveName);
             onComplete?.Invoke(success, json);
         }
 
+        /// <summary>
+        /// 로컬 PlayerPrefs에서 폴백 로드한 뒤 콜백을 호출한다.
+        /// </summary>
         private static void LoadLocalAndComplete(string saveName, Action<bool, string> onComplete)
         {
             string local = LoadLocal(saveName);
