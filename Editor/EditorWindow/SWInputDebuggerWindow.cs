@@ -14,7 +14,6 @@ namespace SWTools
     /// <summary>
     /// 플레이 중에 EventSystem 선택 오브젝트, 마우스/터치, UI Raycast 결과,
     /// InputSystem의 활성 Action Map 등을 실시간으로 보여주는 디버거 창입니다.
-    /// 탭바: EventSystem / Pointer / Raycast / Input  (SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일)
     /// </summary>
     public class SWInputDebuggerWindow : EditorWindow
     {
@@ -43,9 +42,7 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWInputDebuggerWindow window = GetWindow<SWInputDebuggerWindow>();
-            window.titleContent = new GUIContent("SW Input Debugger",
-                EditorGUIUtility.FindTexture("d_EventSystem Icon"));
-            window.minSize = new Vector2(320, 400);
+            SWEditorUtils.SetupWindow(window, "SW Input Debugger", "d_EventSystem Icon", 320, 400);
             window.Show();
         }
 
@@ -63,26 +60,18 @@ namespace SWTools
         {
             if (!Application.isPlaying) return;
 
-            double now = EditorApplication.timeSinceStartup;
-            if (now - lastRepaintTime >= REPAINT_INTERVAL)
+            if (SWEditorUtils.ShouldRepaint(ref lastRepaintTime, REPAINT_INTERVAL))
             {
-                lastRepaintTime = now;
                 Repaint();
             }
         }
 
         private void OnGUI()
         {
-            EditorGUILayout.Space(5);
+            // SWEditorUtils 탭바 사용
+            selectedTab = SWEditorUtils.DrawTabBar(selectedTab, tabNames);
 
-            // SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일 탭바
-            selectedTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
-            EditorGUILayout.Space(10);
-
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.HelpBox("플레이 중에만 실시간 정보가 표시됩니다.", MessageType.Info);
-            }
+            if (SWEditorUtils.DrawPlayModeOnlyNotice()) { /* 안내만 표시 */ }
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
@@ -100,12 +89,12 @@ namespace SWTools
         #region EventSystem 탭
         private void DrawEventSystemTab()
         {
-            DrawHeader("EventSystem");
+            SWEditorUtils.DrawHeader("EventSystem");
 
             EventSystem es = EventSystem.current;
             if (es == null)
             {
-                EditorGUILayout.HelpBox("현재 활성 EventSystem이 없습니다.", MessageType.Warning);
+                SWEditorUtils.DrawEmptyNotice("현재 활성 EventSystem이 없습니다.", MessageType.Warning);
                 return;
             }
 
@@ -122,7 +111,7 @@ namespace SWTools
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Last Click");
+            SWEditorUtils.DrawHeader("Last Click");
             EditorGUILayout.LabelField("Last Clicked", lastClickedObjectName);
             EditorGUILayout.LabelField("Last Click Pos", lastClickPosition.ToString("F0"));
             double ago = EditorApplication.timeSinceStartup - lastClickTime;
@@ -134,7 +123,7 @@ namespace SWTools
         #region Pointer 탭
         private void DrawPointerTab()
         {
-            DrawHeader("Mouse");
+            SWEditorUtils.DrawHeader("Mouse");
 
             Vector2 mousePos = Input.mousePosition;
             EditorGUILayout.LabelField("Mouse Position", mousePos.ToString("F0"));
@@ -143,7 +132,7 @@ namespace SWTools
                            mousePos.y / Mathf.Max(1, Screen.height)).ToString("F2"));
 
             EditorGUILayout.Space(10);
-            DrawHeader("Touch");
+            SWEditorUtils.DrawHeader("Touch");
 
             int touchCount = Input.touchCount;
             EditorGUILayout.LabelField("Touch Count", touchCount.ToString());
@@ -171,18 +160,18 @@ namespace SWTools
         #region Raycast 탭
         private void DrawRaycastTab()
         {
-            DrawHeader("UI Raycast");
+            SWEditorUtils.DrawHeader("UI Raycast");
 
             EventSystem es = EventSystem.current;
             if (es == null)
             {
-                EditorGUILayout.HelpBox("EventSystem이 없습니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("EventSystem이 없습니다.");
                 return;
             }
 
             if (!Application.isPlaying)
             {
-                EditorGUILayout.HelpBox("플레이 중에만 Raycast가 수행됩니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("플레이 중에만 Raycast가 수행됩니다.");
                 return;
             }
 
@@ -199,7 +188,7 @@ namespace SWTools
 
             if (raycastResults.Count == 0)
             {
-                EditorGUILayout.HelpBox("현재 포인터 아래에 닿은 UI가 없습니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("현재 포인터 아래에 닿은 UI가 없습니다.", MessageType.None);
                 return;
             }
 
@@ -211,7 +200,7 @@ namespace SWTools
                 GUILayout.Label(r.gameObject != null ? r.gameObject.name : "(null)",
                     GUILayout.ExpandWidth(true));
                 GUILayout.Label($"d={r.distance:F1}", GUILayout.Width(55));
-                if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(18)))
+                if (SWEditorUtils.SmallButton("Ping", 40f))
                 {
                     if (r.gameObject != null)
                     {
@@ -227,11 +216,11 @@ namespace SWTools
         #region Input 탭 (Keyboard/Mouse + Input System 통합)
         private void DrawInputTab()
         {
-            DrawHeader("Keyboard / Mouse");
+            SWEditorUtils.DrawHeader("Keyboard / Mouse");
 
             if (!Application.isPlaying)
             {
-                EditorGUILayout.HelpBox("플레이 중에만 입력이 표시됩니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("플레이 중에만 입력이 표시됩니다.");
             }
             else
             {
@@ -252,7 +241,7 @@ namespace SWTools
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Input System");
+            SWEditorUtils.DrawHeader("Input System");
             DrawInputSystemInfo();
         }
 
@@ -267,11 +256,7 @@ namespace SWTools
         private void DrawInputSystemInfo()
         {
 #if ENABLE_INPUT_SYSTEM
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.HelpBox("플레이 중에만 표시됩니다.", MessageType.Info);
-                return;
-            }
+            if (SWEditorUtils.DrawPlayModeOnlyNotice()) return;
 
             // 연결된 디바이스
             var devices = InputSystem.devices;
@@ -300,7 +285,7 @@ namespace SWTools
             }
             else
             {
-                EditorGUILayout.HelpBox("활성 PlayerInput 컴포넌트가 없습니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("활성 PlayerInput 컴포넌트가 없습니다.", MessageType.None);
             }
 
             // Pointer / Keyboard 현재값
@@ -315,17 +300,11 @@ namespace SWTools
                     Keyboard.current.anyKey.isPressed ? "● 눌림" : "○");
             }
 #else
-            EditorGUILayout.HelpBox("Input System 패키지가 설치되어 있지 않거나 활성화되지 않았습니다.\n(Project Settings > Player > Active Input Handling)", MessageType.Info);
+            SWEditorUtils.DrawEmptyNotice(
+                "Input System 패키지가 설치되어 있지 않거나 활성화되지 않았습니다.\n" +
+                "(Project Settings > Player > Active Input Handling)");
 #endif
         }
         #endregion
-
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
-        }
     }
 }

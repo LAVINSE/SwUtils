@@ -1,10 +1,3 @@
-// ============================================================================
-// 파일 5: SWQuickAssetPaletteWindow.cs
-// ============================================================================
-// 자주 쓰는 에셋(프리팹, 머티리얼, SO 등)을 즐겨찾기로 등록해놓고
-// 원클릭으로 Ping, Open, Instantiate 할 수 있는 팔레트 창입니다.
-// ============================================================================
-
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -15,7 +8,6 @@ namespace SWTools
     /// <summary>
     /// 자주 쓰는 에셋을 즐겨찾기처럼 등록해두고 원클릭으로
     /// Ping / Open / Instantiate 할 수 있는 팔레트 창입니다.
-    /// SWTestToolsWindow의 Scene 북마크 기능을 에셋으로 확장한 개념.
     /// </summary>
     public class SWQuickAssetPaletteWindow : EditorWindow
     {
@@ -49,9 +41,7 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWQuickAssetPaletteWindow window = GetWindow<SWQuickAssetPaletteWindow>();
-            window.titleContent = new GUIContent("SW Asset Palette",
-                EditorGUIUtility.FindTexture("d_Favorite Icon"));
-            window.minSize = new Vector2(300, 300);
+            SWEditorUtils.SetupWindow(window, "SW Asset Palette", "d_Favorite Icon", 300, 300);
             window.Show();
         }
 
@@ -68,27 +58,12 @@ namespace SWTools
 
         private void LoadPalette()
         {
-            string joined = EditorPrefs.GetString(GetProjectKey(PALETTE_KEY), "");
-            assetGuids.Clear();
-            if (!string.IsNullOrEmpty(joined))
-            {
-                string[] guids = joined.Split('|');
-                foreach (string g in guids)
-                {
-                    if (!string.IsNullOrEmpty(g)) assetGuids.Add(g);
-                }
-            }
+            assetGuids = SWEditorUtils.LoadList(PALETTE_KEY);
         }
 
         private void SavePalette()
         {
-            string joined = string.Join("|", assetGuids);
-            EditorPrefs.SetString(GetProjectKey(PALETTE_KEY), joined);
-        }
-
-        private string GetProjectKey(string key)
-        {
-            return $"{key}.{Application.dataPath.GetHashCode()}";
+            SWEditorUtils.SaveList(PALETTE_KEY, assetGuids);
         }
 
         private void RebuildCache()
@@ -101,7 +76,7 @@ namespace SWTools
                 Object asset = exists ? AssetDatabase.LoadAssetAtPath<Object>(path) : null;
 
                 string displayName = exists ? System.IO.Path.GetFileNameWithoutExtension(path) : "(없음)";
-                Texture icon = asset != null ? AssetPreview.GetMiniThumbnail(asset) : null;
+                Texture icon = SWEditorUtils.GetAssetIcon(asset);
 
                 items.Add(new PaletteItem
                 {
@@ -150,31 +125,20 @@ namespace SWTools
             iconSize = GUILayout.HorizontalSlider(iconSize, MIN_ICON, MAX_ICON, GUILayout.Width(80));
 
             GUILayout.Space(5);
-            searchFilter = GUILayout.TextField(searchFilter,
-                EditorStyles.toolbarSearchField, GUILayout.Width(130));
+            searchFilter = SWEditorUtils.DrawSearchField(searchFilter, 130f);
 
             EditorGUILayout.EndHorizontal();
         }
 
         private void DrawDropArea()
         {
-            Rect dropRect = GUILayoutUtility.GetRect(0, 32, GUILayout.ExpandWidth(true));
-            GUI.Box(dropRect, "여기에 에셋을 드래그해서 등록", EditorStyles.helpBox);
-
-            Event evt = Event.current;
-            if (!dropRect.Contains(evt.mousePosition)) return;
-
-            if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
+            // SWEditorUtils 드래그 앤 드롭 사용
+            Object[] dropped = SWEditorUtils.DrawDropArea("여기에 에셋을 드래그해서 등록");
+            if (dropped != null)
             {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                if (evt.type == EventType.DragPerform)
+                foreach (Object obj in dropped)
                 {
-                    DragAndDrop.AcceptDrag();
-                    foreach (Object obj in DragAndDrop.objectReferences)
-                    {
-                        AddAsset(obj);
-                    }
-                    evt.Use();
+                    AddAsset(obj);
                 }
             }
         }
@@ -183,22 +147,20 @@ namespace SWTools
         {
             if (items.Count == 0)
             {
-                EditorGUILayout.HelpBox("등록된 에셋이 없습니다. 위 드래그 영역이나 '선택 항목 추가'를 사용하세요.",
-                    MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice(
+                    "등록된 에셋이 없습니다. 위 드래그 영역이나 '선택 항목 추가'를 사용하세요.");
                 return;
             }
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-            string filter = searchFilter.Trim().ToLowerInvariant();
             float rowHeight = iconSize + 8f;
 
             for (int i = 0; i < items.Count; i++)
             {
                 PaletteItem item = items[i];
 
-                if (!string.IsNullOrEmpty(filter) &&
-                    (item.content.text == null || !item.content.text.ToLowerInvariant().Contains(filter)))
+                if (!SWEditorUtils.MatchesFilter(item.content.text, searchFilter))
                 {
                     continue;
                 }
@@ -214,39 +176,44 @@ namespace SWTools
                 }
                 else
                 {
-                    EditorGUI.DrawRect(iconRect, new Color(0.2f, 0.2f, 0.2f, 1f));
+                    EditorGUI.DrawRect(iconRect, SWEditorUtils.DarkBgColor);
                 }
-                HandleDragOut(iconRect, item);
+                // SWEditorUtils 드래그 아웃 사용
+                if (item.exists)
+                {
+                    SWEditorUtils.HandleDragOut(iconRect, item.asset, item.content.text);
+                }
 
                 // 이름 + 경로
                 EditorGUILayout.BeginVertical();
-                if (!item.exists) GUI.color = Color.red;
-                GUILayout.Label(item.content.text, EditorStyles.boldLabel);
-                GUI.color = Color.white;
+                using (new SWEditorUtils.GUIColorScope(item.exists ? Color.white : SWEditorUtils.ErrorColor))
+                {
+                    GUILayout.Label(item.content.text, EditorStyles.boldLabel);
+                }
                 GUILayout.Label(item.path, EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
 
                 // 액션 버튼
-                GUI.enabled = item.exists;
-                if (GUILayout.Button("Ping", GUILayout.Width(45), GUILayout.Height(20)))
+                using (new SWEditorUtils.GUIEnabledScope(item.exists))
                 {
-                    EditorGUIUtility.PingObject(item.asset);
-                    Selection.activeObject = item.asset;
-                }
-                if (GUILayout.Button("Open", GUILayout.Width(45), GUILayout.Height(20)))
-                {
-                    AssetDatabase.OpenAsset(item.asset);
-                }
-                if (item.asset is GameObject)
-                {
-                    if (GUILayout.Button("Spawn", GUILayout.Width(55), GUILayout.Height(20)))
+                    if (SWEditorUtils.SmallButton("Ping", 45f))
                     {
-                        InstantiatePrefab(item.asset as GameObject);
+                        SWEditorUtils.PingAndSelect(item.asset);
+                    }
+                    if (SWEditorUtils.SmallButton("Open", 45f))
+                    {
+                        AssetDatabase.OpenAsset(item.asset);
+                    }
+                    if (item.asset is GameObject)
+                    {
+                        if (GUILayout.Button("Spawn", GUILayout.Width(55), GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
+                        {
+                            InstantiatePrefab(item.asset as GameObject);
+                        }
                     }
                 }
-                GUI.enabled = true;
 
-                if (GUILayout.Button("✕", GUILayout.Width(22), GUILayout.Height(20)))
+                if (GUILayout.Button("✕", GUILayout.Width(22), GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
                 {
                     assetGuids.RemoveAt(i);
                     SavePalette();
@@ -260,24 +227,6 @@ namespace SWTools
             EditorGUILayout.EndScrollView();
         }
 
-        /// <summary>
-        /// 아이콘 영역에서 시작되는 드래그를 처리해 외부(씬뷰 등)로 끌어다 놓을 수 있게 합니다.
-        /// </summary>
-        private void HandleDragOut(Rect iconRect, PaletteItem item)
-        {
-            if (!item.exists) return;
-
-            Event evt = Event.current;
-            if (evt.type == EventType.MouseDrag && iconRect.Contains(evt.mousePosition))
-            {
-                DragAndDrop.PrepareStartDrag();
-                DragAndDrop.objectReferences = new[] { item.asset };
-                DragAndDrop.paths = new[] { item.path };
-                DragAndDrop.StartDrag(item.content.text);
-                evt.Use();
-            }
-        }
-
         private void AddSelection()
         {
             foreach (Object obj in Selection.objects)
@@ -289,13 +238,12 @@ namespace SWTools
         private void AddAsset(Object asset)
         {
             if (asset == null) return;
-            string path = AssetDatabase.GetAssetPath(asset);
-            if (string.IsNullOrEmpty(path)) return;
+            string guid = SWEditorUtils.GetAssetGuid(asset);
+            if (string.IsNullOrEmpty(guid)) return;
 
-            string guid = AssetDatabase.AssetPathToGUID(path);
             if (assetGuids.Contains(guid))
             {
-                Debug.Log($"[SWTools] 이미 팔레트에 등록된 에셋: {path}");
+                Debug.Log($"[SWTools] 이미 팔레트에 등록된 에셋: {AssetDatabase.GetAssetPath(asset)}");
                 return;
             }
 
@@ -320,7 +268,7 @@ namespace SWTools
         }
 
         /// <summary>
-        /// 현재 씬에 프리팹 인스턴스를 생성합니다. 선택 오브젝트의 자식으로 생성.
+        /// 현재 씬에 프리팹 인스턴스를 생성합니다.
         /// </summary>
         private void InstantiatePrefab(GameObject prefab)
         {

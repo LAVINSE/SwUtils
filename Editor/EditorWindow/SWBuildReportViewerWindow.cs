@@ -1,11 +1,3 @@
-// ============================================================================
-// 파일 3: SWBuildReportViewerWindow.cs
-// ============================================================================
-// 사용자가 직접 지정한 .buildreport 파일을 파싱해 에셋별 크기를 보여주고,
-// 두 개의 리포트를 비교해 크기 변화/신규/삭제 에셋을 확인할 수 있습니다.
-// 탭바: 일반 / 비교  (SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일)
-// ============================================================================
-
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -34,7 +26,7 @@ namespace SWTools
         private Vector2 scrollPosition;
         private string searchFilter = "";
 
-        // 탭바 (GUILayout.Toolbar 스타일)
+        // 탭바
         private int selectedTab = 0;
         private static readonly string[] tabNames = { "일반", "비교" };
 
@@ -54,9 +46,6 @@ namespace SWTools
         private enum DiffFilter { All, Changed, Added, Removed }
         private enum DiffStatus { Unchanged, Changed, Added, Removed }
 
-        /// <summary>
-        /// 단일 리포트 파싱 결과를 담는 컨테이너.
-        /// </summary>
         private class ReportData
         {
             public List<AssetEntry> entries = new();
@@ -105,9 +94,7 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWBuildReportViewerWindow window = GetWindow<SWBuildReportViewerWindow>();
-            window.titleContent = new GUIContent("SW Build Report",
-                EditorGUIUtility.FindTexture("d_BuildSettings.SelectedIcon"));
-            window.minSize = new Vector2(600, 450);
+            SWEditorUtils.SetupWindow(window, "SW Build Report", "d_BuildSettings.SelectedIcon", 600, 450);
             window.Show();
         }
 
@@ -349,10 +336,8 @@ namespace SWTools
         #region GUI
         private void OnGUI()
         {
-            EditorGUILayout.Space(5);
-
-            // SWTestToolsWindow와 동일한 GUILayout.Toolbar 스타일 탭바
-            int newTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
+            // SWEditorUtils 탭바 사용
+            int newTab = SWEditorUtils.DrawTabBar(selectedTab, tabNames);
             if (newTab != selectedTab)
             {
                 selectedTab = newTab;
@@ -361,8 +346,6 @@ namespace SWTools
                     BuildDiff();
                 }
             }
-
-            EditorGUILayout.Space(10);
 
             DrawReportSlots();
             DrawToolbar();
@@ -438,8 +421,7 @@ namespace SWTools
 
             GUILayout.FlexibleSpace();
             GUILayout.Label("검색:", GUILayout.Width(40));
-            searchFilter = GUILayout.TextField(searchFilter,
-                EditorStyles.toolbarSearchField, GUILayout.Width(150));
+            searchFilter = SWEditorUtils.DrawSearchField(searchFilter, 150f);
 
             EditorGUILayout.EndHorizontal();
         }
@@ -490,7 +472,7 @@ namespace SWTools
                 }
                 EditorGUILayout.LabelField(
                     $"   {data.targetLabel}  |  {data.timeLabel}  |  " +
-                    $"{data.totalCount} assets  |  {data.totalSize / 1024} KB",
+                    $"{data.totalCount} assets  |  {SWEditorUtils.FormatBytes(data.totalSize)}",
                     EditorStyles.miniLabel);
             }
         }
@@ -499,10 +481,9 @@ namespace SWTools
         {
             if (!hasDataA)
             {
-                EditorGUILayout.HelpBox(
+                SWEditorUtils.DrawEmptyNotice(
                     "상단의 'Report A' 슬롯에 .buildreport 파일을 지정하거나\n" +
-                    "'Load...' 버튼을 눌러 파일을 선택하세요.",
-                    MessageType.Info);
+                    "'Load...' 버튼을 눌러 파일을 선택하세요.");
                 return;
             }
 
@@ -523,15 +504,14 @@ namespace SWTools
 
         private void DrawSummary(ReportData data, string title)
         {
-            DrawHeader(title);
+            SWEditorUtils.DrawHeader(title);
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.TextField("Source", data.sourceLabel);
                 EditorGUILayout.TextField("Target", data.targetLabel);
                 EditorGUILayout.TextField("Built At", data.timeLabel);
                 EditorGUILayout.IntField("Asset Count", data.totalCount);
-                EditorGUILayout.LongField("Total Size (KB)", data.totalSize / 1024);
-                EditorGUILayout.LongField("Total Size (MB)", data.totalSize / (1024 * 1024));
+                EditorGUILayout.TextField("Total Size", SWEditorUtils.FormatBytes(data.totalSize));
             }
         }
 
@@ -541,8 +521,7 @@ namespace SWTools
 
             foreach (AssetEntry entry in data.entries)
             {
-                if (!string.IsNullOrEmpty(filter) &&
-                    !entry.path.ToLowerInvariant().Contains(filter))
+                if (!SWEditorUtils.MatchesFilter(entry.path, filter))
                 {
                     continue;
                 }
@@ -561,7 +540,7 @@ namespace SWTools
 
                 EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
                 GUILayout.Label(kv.Key, EditorStyles.boldLabel, GUILayout.Width(130));
-                GUILayout.Label($"{kv.Value / 1024} KB", GUILayout.Width(90));
+                GUILayout.Label(SWEditorUtils.FormatBytes(kv.Value), GUILayout.Width(90));
                 GUILayout.Label($"{pct * 100f:F1}%", GUILayout.Width(55));
 
                 Rect barRect = GUILayoutUtility.GetRect(0, 14, GUILayout.ExpandWidth(true));
@@ -576,18 +555,13 @@ namespace SWTools
         private void DrawAssetRow(AssetEntry entry)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-            GUILayout.Label($"{entry.size / 1024} KB", GUILayout.Width(80));
+            GUILayout.Label(SWEditorUtils.FormatBytes(entry.size), GUILayout.Width(80));
             GUILayout.Label($"[{entry.category}]", GUILayout.Width(110));
             GUILayout.Label(new GUIContent(entry.name, entry.path), GUILayout.ExpandWidth(true));
 
-            if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(18)))
+            if (SWEditorUtils.SmallButton("Ping", 40f))
             {
-                Object asset = AssetDatabase.LoadAssetAtPath<Object>(entry.path);
-                if (asset != null)
-                {
-                    EditorGUIUtility.PingObject(asset);
-                    Selection.activeObject = asset;
-                }
+                SWEditorUtils.PingAssetAtPath(entry.path);
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -596,28 +570,27 @@ namespace SWTools
         {
             if (!hasDataA || !hasDataB)
             {
-                EditorGUILayout.HelpBox(
-                    "비교할 두 개의 .buildreport 파일을 Report A / Report B 슬롯에 지정하세요.",
-                    MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice(
+                    "비교할 두 개의 .buildreport 파일을 Report A / Report B 슬롯에 지정하세요.");
                 return;
             }
 
             long deltaTotal = dataB.totalSize - dataA.totalSize;
             string sign = deltaTotal >= 0 ? "+" : "";
 
-            DrawHeader("Compare Summary (B - A)");
+            SWEditorUtils.DrawHeader("Compare Summary (B - A)");
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField(
-                $"A: {dataA.totalCount} assets, {dataA.totalSize / 1024} KB");
+                $"A: {dataA.totalCount} assets, {SWEditorUtils.FormatBytes(dataA.totalSize)}");
             EditorGUILayout.LabelField(
-                $"B: {dataB.totalCount} assets, {dataB.totalSize / 1024} KB");
+                $"B: {dataB.totalCount} assets, {SWEditorUtils.FormatBytes(dataB.totalSize)}");
 
             Color prev = GUI.contentColor;
             GUI.contentColor = deltaTotal > 0 ? new Color(1f, 0.5f, 0.5f)
                              : deltaTotal < 0 ? new Color(0.5f, 1f, 0.5f)
                              : Color.white;
             EditorGUILayout.LabelField(
-                $"Δ Total: {sign}{deltaTotal / 1024} KB  ({sign}{deltaTotal} bytes)",
+                $"Δ Total: {sign}{SWEditorUtils.FormatBytes(System.Math.Abs(deltaTotal))}  ({sign}{deltaTotal} bytes)",
                 EditorStyles.boldLabel);
             GUI.contentColor = prev;
             EditorGUILayout.EndVertical();
@@ -626,9 +599,9 @@ namespace SWTools
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("상태", GUILayout.Width(60));
-            GUILayout.Label("A (KB)", GUILayout.Width(70));
-            GUILayout.Label("B (KB)", GUILayout.Width(70));
-            GUILayout.Label("Δ (KB)", GUILayout.Width(80));
+            GUILayout.Label("A", GUILayout.Width(70));
+            GUILayout.Label("B", GUILayout.Width(70));
+            GUILayout.Label("Δ", GUILayout.Width(80));
             GUILayout.Label("[Category] 에셋", GUILayout.ExpandWidth(true));
             EditorGUILayout.EndHorizontal();
 
@@ -638,8 +611,7 @@ namespace SWTools
             foreach (DiffEntry d in diffEntries)
             {
                 if (!PassesDiffFilter(d)) continue;
-                if (!string.IsNullOrEmpty(filter) &&
-                    !d.path.ToLowerInvariant().Contains(filter))
+                if (!SWEditorUtils.MatchesFilter(d.path, filter))
                 {
                     continue;
                 }
@@ -690,37 +662,24 @@ namespace SWTools
             GUILayout.Label(statusLabel, EditorStyles.boldLabel, GUILayout.Width(60));
             GUI.contentColor = prev;
 
-            GUILayout.Label($"{d.sizeA / 1024}", GUILayout.Width(70));
-            GUILayout.Label($"{d.sizeB / 1024}", GUILayout.Width(70));
+            GUILayout.Label(SWEditorUtils.FormatBytes(d.sizeA), GUILayout.Width(70));
+            GUILayout.Label(SWEditorUtils.FormatBytes(d.sizeB), GUILayout.Width(70));
 
             string deltaSign = d.delta >= 0 ? "+" : "";
             GUI.contentColor = d.delta > 0 ? new Color(1f, 0.6f, 0.6f)
                             : d.delta < 0 ? new Color(0.6f, 1f, 0.6f)
                             : Color.white;
-            GUILayout.Label($"{deltaSign}{d.delta / 1024}", GUILayout.Width(80));
+            GUILayout.Label($"{deltaSign}{SWEditorUtils.FormatBytes(System.Math.Abs(d.delta))}", GUILayout.Width(80));
             GUI.contentColor = prev;
 
             GUILayout.Label(new GUIContent($"[{d.category}] {d.name}", d.path),
                 GUILayout.ExpandWidth(true));
 
-            if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(18)))
+            if (SWEditorUtils.SmallButton("Ping", 40f))
             {
-                Object asset = AssetDatabase.LoadAssetAtPath<Object>(d.path);
-                if (asset != null)
-                {
-                    EditorGUIUtility.PingObject(asset);
-                    Selection.activeObject = asset;
-                }
+                SWEditorUtils.PingAssetAtPath(d.path);
             }
             EditorGUILayout.EndHorizontal();
-        }
-
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
         }
         #endregion // GUI
     }

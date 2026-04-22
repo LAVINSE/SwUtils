@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,7 +6,6 @@ namespace SWTools
     [InitializeOnLoad]
     public class SWShowWarningComponentEditor
     {
-        private const int IconSize = 16;
         private static readonly GUIContent WarningIcon = new GUIContent("⚠️", "This GameObject has missing scripts");
 
         static SWShowWarningComponentEditor()
@@ -20,20 +18,20 @@ namespace SWTools
             GameObject obj = EditorUtility.EntityIdToObject(instanceID) as GameObject;
             if (obj == null) return;
 
-            if (HasMissingScripts(obj))
+            // SWEditorUtils의 Missing Script 확인 사용
+            if (SWEditorUtils.HasMissingScripts(obj))
             {
                 DrawWarningIcon(selectionRect);
             }
         }
 
-        private static bool HasMissingScripts(GameObject obj)
-        {
-            return obj.GetComponents<MonoBehaviour>().Any(x => x == null);
-        }
-
         private static void DrawWarningIcon(Rect selectionRect)
         {
-            Rect iconRect = new Rect(selectionRect.xMax - IconSize, selectionRect.y, IconSize, IconSize);
+            Rect iconRect = new Rect(
+                selectionRect.xMax - SWEditorUtils.DefaultIconSize,
+                selectionRect.y,
+                SWEditorUtils.DefaultIconSize,
+                SWEditorUtils.DefaultIconSize);
             GUI.Label(iconRect, WarningIcon);
         }
     }

@@ -44,7 +44,7 @@ namespace SWTools
         private float fpsUpdateTimer;
         private double lastEditorTime;
 
-        // FPS 통계 (플레이 시작 후 누적)
+        // FPS 통계
         private float fpsMin = float.MaxValue;
         private float fpsMax = 0f;
         private float fpsAvgAccumulator;
@@ -60,24 +60,23 @@ namespace SWTools
         private int selectedTab = 0;
         private static readonly string[] tabNames = { "Time", "Performance", "Scene", "Utility" };
 
-        // Scene 탭: 등록된 씬 목록
+        // Scene 탭
         private List<string> registeredScenePaths = new();
         private SceneAsset sceneToAdd;
         private Vector2 sceneListScroll;
-
-        // Scene 탭: BuildSettings 씬 표시 토글
         private bool showBuildSettingsScenes = false;
         private Vector2 buildScenesScroll;
 
         // Scene 탭: GameObject 북마크 (씬경로|하이어라키경로 형식으로 저장)
+        // 참고: ";;" 구분자 사용 (엔트리에 '|'가 포함되므로)
         private List<string> bookmarkedObjects = new();
         private Vector2 bookmarkScroll;
 
-        // 캐시된 문자열 (OnGUI에서의 할당 최소화용)
+        // 캐시된 문자열
         private string cachedRegisteredScenesHeader;
         private int lastRegisteredSceneCount = -1;
 
-        // 씬별 캐시 (이름 / GUIContent)
+        // 씬별 캐시
         private readonly List<SceneDisplayCache> sceneDisplayCaches = new();
 
         // Screen 정보 캐시
@@ -87,7 +86,7 @@ namespace SWTools
         private int lastScreenHeight = -1;
         private float lastScreenDpi = -1f;
 
-        // 메모리 표시 캐시 (주기적 갱신)
+        // 메모리 표시 캐시
         private long cachedTotalMemoryMB;
         private double lastMemoryUpdateTime;
         private const double MEMORY_UPDATE_INTERVAL = 1.0;
@@ -117,18 +116,16 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWTestToolsWindow window = GetWindow<SWTestToolsWindow>();
-            window.titleContent = new GUIContent("SW Test Tools", EditorGUIUtility.FindTexture("d_SettingsIcon"));
-            window.minSize = new Vector2(320, 400);
+            SWEditorUtils.SetupWindow(window, "SW Test Tools", "d_SettingsIcon", 320, 400);
             window.Show();
         }
 
         private void OnEnable()
         {
-            // 저장된 설정 불러오기
-            timeScale = EditorPrefs.GetFloat(TIME_SCALE_KEY, 1f);
-            vSyncCount = EditorPrefs.GetInt(VSYNC_KEY, 0);
-            targetFrameRate = EditorPrefs.GetInt(TARGET_FPS_KEY, -1);
-            slowMoScale = EditorPrefs.GetFloat(SLOWMO_SCALE_KEY, 0.1f);
+            timeScale = SWEditorUtils.LoadPref(TIME_SCALE_KEY, 1f);
+            vSyncCount = SWEditorUtils.LoadPref(VSYNC_KEY, 0);
+            targetFrameRate = SWEditorUtils.LoadPref(TARGET_FPS_KEY, -1);
+            slowMoScale = SWEditorUtils.LoadPref(SLOWMO_SCALE_KEY, 0.1f);
 
             originalFixedDeltaTime = Time.fixedDeltaTime;
             customFixedDeltaTime = Time.fixedDeltaTime;
@@ -148,10 +145,10 @@ namespace SWTools
 
         private void OnDisable()
         {
-            EditorPrefs.SetFloat(TIME_SCALE_KEY, timeScale);
-            EditorPrefs.SetInt(VSYNC_KEY, vSyncCount);
-            EditorPrefs.SetInt(TARGET_FPS_KEY, targetFrameRate);
-            EditorPrefs.SetFloat(SLOWMO_SCALE_KEY, slowMoScale);
+            SWEditorUtils.SavePref(TIME_SCALE_KEY, timeScale);
+            SWEditorUtils.SavePref(VSYNC_KEY, vSyncCount);
+            SWEditorUtils.SavePref(TARGET_FPS_KEY, targetFrameRate);
+            SWEditorUtils.SavePref(SLOWMO_SCALE_KEY, slowMoScale);
 
             SaveRegisteredScenes();
             SaveBookmarkedObjects();
@@ -160,9 +157,6 @@ namespace SWTools
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
         }
 
-        /// <summary>
-        /// 플레이 상태 변경 시 FPS 통계를 리셋합니다.
-        /// </summary>
         private void OnPlayModeStateChanged(PlayModeStateChange state)
         {
             if (state == PlayModeStateChange.EnteredPlayMode)
@@ -182,9 +176,6 @@ namespace SWTools
             fpsHistoryIndex = 0;
         }
 
-        /// <summary>
-        /// UnityStats 내부 API를 리플렉션으로 초기화합니다.
-        /// </summary>
         private void InitializeUnityStats()
         {
             if (unityStatsInitialized) return;
@@ -202,9 +193,6 @@ namespace SWTools
             unityStatsInitialized = true;
         }
 
-        /// <summary>
-        /// FPS 측정 및 주기적 리페인트
-        /// </summary>
         private void OnEditorUpdate()
         {
             double now = EditorApplication.timeSinceStartup;
@@ -224,14 +212,12 @@ namespace SWTools
                     fpsFrameCount = 0;
                     fpsUpdateTimer = 0f;
 
-                    // 통계 업데이트
                     if (currentFps < fpsMin) fpsMin = currentFps;
                     if (currentFps > fpsMax) fpsMax = currentFps;
                     fpsAvgAccumulator += currentFps;
                     fpsAvgCount++;
                     fpsAverage = fpsAvgAccumulator / fpsAvgCount;
 
-                    // 히스토리 업데이트 (원형 버퍼)
                     fpsHistory[fpsHistoryIndex] = currentFps;
                     fpsHistoryIndex = (fpsHistoryIndex + 1) % FPS_HISTORY_SIZE;
 
@@ -244,9 +230,7 @@ namespace SWTools
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-            EditorGUILayout.Space(5);
-            selectedTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
-            EditorGUILayout.Space(10);
+            selectedTab = SWEditorUtils.DrawTabBar(selectedTab, tabNames);
 
             switch (selectedTab)
             {
@@ -260,12 +244,9 @@ namespace SWTools
         }
 
         #region Time 탭
-        /// <summary>
-        /// 타임스케일 조작 탭
-        /// </summary>
         private void DrawTimeTab()
         {
-            DrawHeader("Time Scale");
+            SWEditorUtils.DrawHeader("Time Scale");
 
             if (!Application.isPlaying)
             {
@@ -279,7 +260,6 @@ namespace SWTools
                 Time.timeScale = timeScale;
             }
 
-            // 프리셋 버튼
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("Presets", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
@@ -310,42 +290,41 @@ namespace SWTools
 
             // Step Frame
             EditorGUILayout.Space(10);
-            DrawHeader("Step Frame");
+            SWEditorUtils.DrawHeader("Step Frame");
             EditorGUILayout.HelpBox("일시정지 상태에서 1프레임씩 진행합니다.", MessageType.None);
 
-            GUI.enabled = Application.isPlaying;
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("⏸ Pause & Step", GUILayout.Height(28)))
+            using (new SWEditorUtils.GUIEnabledScope(Application.isPlaying))
             {
-                EditorApplication.isPaused = true;
-                EditorApplication.Step();
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("⏸ Pause & Step", GUILayout.Height(28)))
+                {
+                    EditorApplication.isPaused = true;
+                    EditorApplication.Step();
+                }
+                if (GUILayout.Button("▶ Step (1 Frame)", GUILayout.Height(28)))
+                {
+                    if (!EditorApplication.isPaused) EditorApplication.isPaused = true;
+                    EditorApplication.Step();
+                }
+                EditorGUILayout.EndHorizontal();
             }
-            if (GUILayout.Button("▶ Step (1 Frame)", GUILayout.Height(28)))
-            {
-                if (!EditorApplication.isPaused) EditorApplication.isPaused = true;
-                EditorApplication.Step();
-            }
-            EditorGUILayout.EndHorizontal();
-            GUI.enabled = true;
 
             // Slow Motion 토글
             EditorGUILayout.Space(10);
-            DrawHeader("Slow Motion Toggle");
+            SWEditorUtils.DrawHeader("Slow Motion Toggle");
             slowMoScale = EditorGUILayout.Slider("Slow Mo Scale", slowMoScale, 0.01f, 1f);
 
-            GUI.backgroundColor = isSlowMoActive ? Color.cyan : Color.white;
             string slowMoLabel = isSlowMoActive
                 ? $"■ Slow Motion ON ({slowMoScale}x) - 클릭해서 끄기"
                 : $"▶ Slow Motion OFF - 클릭해서 켜기 ({slowMoScale}x)";
-            if (GUILayout.Button(slowMoLabel, GUILayout.Height(32)))
+            if (SWEditorUtils.ToggleButton(slowMoLabel, isSlowMoActive, SWEditorUtils.ActiveBgColor, 32f))
             {
                 ToggleSlowMotion();
             }
-            GUI.backgroundColor = Color.white;
 
             // Fixed DeltaTime
             EditorGUILayout.Space(10);
-            DrawHeader("Fixed DeltaTime (물리)");
+            SWEditorUtils.DrawHeader("Fixed DeltaTime (물리)");
             EditorGUILayout.HelpBox($"기본값: {originalFixedDeltaTime:F4}s ({1f / originalFixedDeltaTime:F0} Hz)", MessageType.None);
 
             EditorGUI.BeginChangeCheck();
@@ -365,7 +344,7 @@ namespace SWTools
 
             // 현재 상태 표시
             EditorGUILayout.Space(10);
-            DrawHeader("Current State");
+            SWEditorUtils.DrawHeader("Current State");
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.FloatField("Time.timeScale", Application.isPlaying ? Time.timeScale : timeScale);
@@ -398,12 +377,9 @@ namespace SWTools
         #endregion // Time 탭
 
         #region Performance 탭
-        /// <summary>
-        /// 성능 관련 설정 및 모니터링
-        /// </summary>
         private void DrawPerformanceTab()
         {
-            DrawHeader("Frame Rate");
+            SWEditorUtils.DrawHeader("Frame Rate");
 
             EditorGUI.BeginChangeCheck();
             targetFrameRate = EditorGUILayout.IntField("Target FPS (-1 = 무제한)", targetFrameRate);
@@ -429,7 +405,7 @@ namespace SWTools
 
             // Quality Level
             EditorGUILayout.Space(10);
-            DrawHeader("Quality Level");
+            SWEditorUtils.DrawHeader("Quality Level");
             int currentQuality = QualitySettings.GetQualityLevel();
             EditorGUI.BeginChangeCheck();
             int newQuality = EditorGUILayout.Popup("Level", currentQuality, qualityLevelNames);
@@ -440,12 +416,12 @@ namespace SWTools
 
             // FPS 그래프
             EditorGUILayout.Space(10);
-            DrawHeader("FPS Graph");
+            SWEditorUtils.DrawHeader("FPS Graph");
             DrawFpsGraph();
 
             // FPS 통계
             EditorGUILayout.Space(5);
-            DrawHeader("FPS Statistics");
+            SWEditorUtils.DrawHeader("FPS Statistics");
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.FloatField("Current", currentFps);
@@ -460,12 +436,12 @@ namespace SWTools
 
             // 렌더링 통계
             EditorGUILayout.Space(10);
-            DrawHeader("Rendering Stats");
+            SWEditorUtils.DrawHeader("Rendering Stats");
             DrawRenderingStats();
 
             // 메모리
             EditorGUILayout.Space(10);
-            DrawHeader("Memory");
+            SWEditorUtils.DrawHeader("Memory");
 
             double now = EditorApplication.timeSinceStartup;
             if (now - lastMemoryUpdateTime >= MEMORY_UPDATE_INTERVAL)
@@ -494,9 +470,6 @@ namespace SWTools
             EditorGUILayout.EndHorizontal();
         }
 
-        /// <summary>
-        /// FPS 히스토리를 간단한 막대 그래프로 그립니다.
-        /// </summary>
         private void DrawFpsGraph()
         {
             const float labelWidth = 32f;
@@ -510,11 +483,9 @@ namespace SWTools
 
             float graphMaxFps = Mathf.Max(fpsMax * 1.1f, 60f);
 
-            // 히스토리 막대 (기준선보다 먼저 그려서 선이 위에 보이도록)
             float barWidth = graphRect.width / FPS_HISTORY_SIZE;
             for (int i = 0; i < FPS_HISTORY_SIZE; i++)
             {
-                // 원형 버퍼를 시간순으로 읽기
                 int idx = (fpsHistoryIndex + i) % FPS_HISTORY_SIZE;
                 float value = fpsHistory[idx];
                 if (value <= 0f) continue;
@@ -535,7 +506,6 @@ namespace SWTools
                 EditorGUI.DrawRect(bar, barColor);
             }
 
-            // 기준선 + 라벨용 스타일 (우측 정렬, 작은 글씨)
             GUIStyle labelStyle = new GUIStyle(EditorStyles.miniLabel);
             labelStyle.alignment = TextAnchor.MiddleRight;
             labelStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f, 1f);
@@ -546,9 +516,6 @@ namespace SWTools
                 new Color(0.7f, 0.6f, 0.2f, 0.7f), labelStyle);
         }
 
-        /// <summary>
-        /// FPS 그래프에 기준선 하나와 해당 숫자 라벨을 그립니다.
-        /// </summary>
         private void DrawFpsGuideLine(Rect graphRect, float labelX, float labelWidth,
             float fps, float graphMaxFps, Color lineColor, GUIStyle labelStyle)
         {
@@ -561,22 +528,15 @@ namespace SWTools
             GUI.Label(labelRect, ((int)fps).ToString(), labelStyle);
         }
 
-        /// <summary>
-        /// UnityStats로부터 렌더링 통계를 표시합니다.
-        /// </summary>
         private void DrawRenderingStats()
         {
             if (unityStatsType == null)
             {
-                EditorGUILayout.HelpBox("UnityStats API에 접근할 수 없습니다.", MessageType.Warning);
+                SWEditorUtils.DrawEmptyNotice("UnityStats API에 접근할 수 없습니다.", MessageType.Warning);
                 return;
             }
 
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.HelpBox("플레이 중에만 렌더링 통계가 표시됩니다.", MessageType.Info);
-                return;
-            }
+            if (SWEditorUtils.DrawPlayModeOnlyNotice("플레이 중에만 렌더링 통계가 표시됩니다.")) return;
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -601,12 +561,9 @@ namespace SWTools
         #endregion // Performance 탭
 
         #region Scene 탭
-        /// <summary>
-        /// 사용자가 자주 쓰는 씬들을 등록/저장/로드할 수 있는 탭
-        /// </summary>
         private void DrawSceneTab()
         {
-            DrawHeader("Current Scene");
+            SWEditorUtils.DrawHeader("Current Scene");
 
             Scene activeScene = SceneManager.GetActiveScene();
             using (new EditorGUI.DisabledScope(true))
@@ -626,25 +583,32 @@ namespace SWTools
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(10);
-            DrawHeader("Register Scene");
+            SWEditorUtils.DrawHeader("Register Scene");
 
             // ObjectField를 통한 추가
             EditorGUILayout.BeginHorizontal();
             sceneToAdd = (SceneAsset)EditorGUILayout.ObjectField(sceneToAdd, typeof(SceneAsset), false);
-            GUI.enabled = sceneToAdd != null;
-            if (GUILayout.Button("추가", GUILayout.Width(60), GUILayout.Height(18)))
+            using (new SWEditorUtils.GUIEnabledScope(sceneToAdd != null))
             {
-                string path = AssetDatabase.GetAssetPath(sceneToAdd);
-                RegisterScene(path);
-                sceneToAdd = null;
+                if (GUILayout.Button("추가", GUILayout.Width(60), GUILayout.Height(18)))
+                {
+                    string path = AssetDatabase.GetAssetPath(sceneToAdd);
+                    RegisterScene(path);
+                    sceneToAdd = null;
+                }
             }
-            GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
             // 드래그앤드롭 영역
-            Rect dropRect = GUILayoutUtility.GetRect(0, 40, GUILayout.ExpandWidth(true));
-            GUI.Box(dropRect, "여기에 Scene Asset을 드래그하세요", EditorStyles.helpBox);
-            HandleSceneDragAndDrop(dropRect);
+            var droppedScenes = SWEditorUtils.DrawDropArea<SceneAsset>("여기에 Scene Asset을 드래그하세요", 40f);
+            if (droppedScenes != null)
+            {
+                foreach (SceneAsset sa in droppedScenes)
+                {
+                    string path = AssetDatabase.GetAssetPath(sa);
+                    RegisterScene(path);
+                }
+            }
 
             EditorGUILayout.Space(10);
 
@@ -654,11 +618,11 @@ namespace SWTools
                 lastRegisteredSceneCount = registeredScenePaths.Count;
                 cachedRegisteredScenesHeader = $"Registered Scenes ({lastRegisteredSceneCount})";
             }
-            DrawHeader(cachedRegisteredScenesHeader);
+            SWEditorUtils.DrawHeader(cachedRegisteredScenesHeader);
 
             if (registeredScenePaths.Count == 0)
             {
-                EditorGUILayout.HelpBox("등록된 씬이 없습니다. 위에서 씬을 추가하세요.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("등록된 씬이 없습니다. 위에서 씬을 추가하세요.");
             }
             else
             {
@@ -678,37 +642,42 @@ namespace SWTools
 
                     GUILayout.Label(isActive ? "▶" : "  ", GUILayout.Width(15));
 
-                    if (!cache.exists) GUI.color = Color.red;
-                    GUILayout.Label(cache.content, GUILayout.ExpandWidth(true));
-                    GUI.color = Color.white;
-
-                    GUI.enabled = i > 0;
-                    if (GUILayout.Button("▲", GUILayout.Width(22), GUILayout.Height(18)))
+                    using (new SWEditorUtils.GUIColorScope(cache.exists ? Color.white : SWEditorUtils.ErrorColor))
                     {
-                        MoveScene(i, i - 1);
-                        GUIUtility.ExitGUI();
-                    }
-                    GUI.enabled = i < registeredScenePaths.Count - 1;
-                    if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(18)))
-                    {
-                        MoveScene(i, i + 1);
-                        GUIUtility.ExitGUI();
-                    }
-                    GUI.enabled = true;
-
-                    GUI.enabled = cache.exists && !isActive;
-                    if (GUILayout.Button("Load", GUILayout.Width(45), GUILayout.Height(18)))
-                    {
-                        LoadScene(path);
-                        GUIUtility.ExitGUI();
+                        GUILayout.Label(cache.content, GUILayout.ExpandWidth(true));
                     }
 
-                    if (GUILayout.Button("+", GUILayout.Width(22), GUILayout.Height(18)))
+                    using (new SWEditorUtils.GUIEnabledScope(i > 0))
                     {
-                        LoadSceneAdditive(path);
-                        GUIUtility.ExitGUI();
+                        if (GUILayout.Button("▲", GUILayout.Width(22), GUILayout.Height(18)))
+                        {
+                            MoveScene(i, i - 1);
+                            GUIUtility.ExitGUI();
+                        }
                     }
-                    GUI.enabled = true;
+                    using (new SWEditorUtils.GUIEnabledScope(i < registeredScenePaths.Count - 1))
+                    {
+                        if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(18)))
+                        {
+                            MoveScene(i, i + 1);
+                            GUIUtility.ExitGUI();
+                        }
+                    }
+
+                    using (new SWEditorUtils.GUIEnabledScope(cache.exists && !isActive))
+                    {
+                        if (GUILayout.Button("Load", GUILayout.Width(45), GUILayout.Height(18)))
+                        {
+                            LoadScene(path);
+                            GUIUtility.ExitGUI();
+                        }
+
+                        if (GUILayout.Button("+", GUILayout.Width(22), GUILayout.Height(18)))
+                        {
+                            LoadSceneAdditive(path);
+                            GUIUtility.ExitGUI();
+                        }
+                    }
 
                     if (GUILayout.Button("◎", GUILayout.Width(22), GUILayout.Height(18)))
                     {
@@ -730,23 +699,20 @@ namespace SWTools
 
                 EditorGUILayout.Space(5);
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("모두 삭제", GUILayout.Height(22)))
+                if (SWEditorUtils.DangerButton("모두 삭제", "확인",
+                    "등록된 모든 씬을 목록에서 제거하시겠습니까?\n(씬 파일 자체는 삭제되지 않습니다)", "삭제", "취소"))
                 {
-                    if (EditorUtility.DisplayDialog("확인",
-                        "등록된 모든 씬을 목록에서 제거하시겠습니까?\n(씬 파일 자체는 삭제되지 않습니다)", "삭제", "취소"))
-                    {
-                        registeredScenePaths.Clear();
-                        SaveRegisteredScenes();
-                        RebuildSceneDisplayCaches();
-                    }
+                    registeredScenePaths.Clear();
+                    SaveRegisteredScenes();
+                    RebuildSceneDisplayCaches();
                 }
-                if (GUILayout.Button("존재하지 않는 항목 정리", GUILayout.Height(22)))
+                if (GUILayout.Button("존재하지 않는 항목 정리", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                 {
                     registeredScenePaths.RemoveAll(p => !File.Exists(p));
                     SaveRegisteredScenes();
                     RebuildSceneDisplayCaches();
                 }
-                if (GUILayout.Button("새로고침", GUILayout.Height(22)))
+                if (GUILayout.Button("새로고침", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                 {
                     RebuildSceneDisplayCaches();
                 }
@@ -764,19 +730,16 @@ namespace SWTools
 
             // GameObject Bookmarks
             EditorGUILayout.Space(10);
-            DrawHeader($"GameObject Bookmarks ({bookmarkedObjects.Count})");
+            SWEditorUtils.DrawHeader($"GameObject Bookmarks ({bookmarkedObjects.Count})");
             DrawBookmarkedObjects();
         }
 
-        /// <summary>
-        /// BuildSettings에 등록된 씬들을 표시합니다.
-        /// </summary>
         private void DrawBuildSettingsScenes(string activeScenePath)
         {
             EditorBuildSettingsScene[] buildScenes = EditorBuildSettings.scenes;
             if (buildScenes.Length == 0)
             {
-                EditorGUILayout.HelpBox("Build Settings에 등록된 씬이 없습니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("Build Settings에 등록된 씬이 없습니다.");
                 return;
             }
 
@@ -793,7 +756,7 @@ namespace SWTools
                 GUILayout.Label($"[{i}]", GUILayout.Width(28));
                 GUILayout.Label(isActive ? "▶" : "  ", GUILayout.Width(15));
 
-                if (!exists) GUI.color = Color.red;
+                if (!exists) GUI.color = SWEditorUtils.ErrorColor;
                 else if (!bScene.enabled) GUI.color = Color.gray;
 
                 string name = Path.GetFileNameWithoutExtension(bScene.path);
@@ -801,18 +764,19 @@ namespace SWTools
                 GUILayout.Label(name, GUILayout.ExpandWidth(true));
                 GUI.color = Color.white;
 
-                GUI.enabled = exists && !isActive;
-                if (GUILayout.Button("Load", GUILayout.Width(45), GUILayout.Height(18)))
+                using (new SWEditorUtils.GUIEnabledScope(exists && !isActive))
                 {
-                    LoadScene(bScene.path);
-                    GUIUtility.ExitGUI();
+                    if (GUILayout.Button("Load", GUILayout.Width(45), GUILayout.Height(18)))
+                    {
+                        LoadScene(bScene.path);
+                        GUIUtility.ExitGUI();
+                    }
+                    if (GUILayout.Button("+", GUILayout.Width(22), GUILayout.Height(18)))
+                    {
+                        LoadSceneAdditive(bScene.path);
+                        GUIUtility.ExitGUI();
+                    }
                 }
-                if (GUILayout.Button("+", GUILayout.Width(22), GUILayout.Height(18)))
-                {
-                    LoadSceneAdditive(bScene.path);
-                    GUIUtility.ExitGUI();
-                }
-                GUI.enabled = true;
 
                 if (GUILayout.Button("★", GUILayout.Width(22), GUILayout.Height(18)))
                 {
@@ -825,23 +789,21 @@ namespace SWTools
             EditorGUILayout.EndScrollView();
         }
 
-        /// <summary>
-        /// 북마크된 GameObject 목록을 그립니다.
-        /// </summary>
         private void DrawBookmarkedObjects()
         {
             EditorGUILayout.BeginHorizontal();
-            GUI.enabled = Selection.activeGameObject != null;
-            if (GUILayout.Button("선택한 GameObject 북마크", GUILayout.Height(22)))
+            using (new SWEditorUtils.GUIEnabledScope(Selection.activeGameObject != null))
             {
-                BookmarkSelectedObject();
+                if (GUILayout.Button("선택한 GameObject 북마크", GUILayout.Height(22)))
+                {
+                    BookmarkSelectedObject();
+                }
             }
-            GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
             if (bookmarkedObjects.Count == 0)
             {
-                EditorGUILayout.HelpBox("북마크된 GameObject가 없습니다. 씬에서 오브젝트를 선택한 후 위 버튼을 누르세요.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("북마크된 GameObject가 없습니다. 씬에서 오브젝트를 선택한 후 위 버튼을 누르세요.");
                 return;
             }
 
@@ -887,13 +849,10 @@ namespace SWTools
 
             if (bookmarkedObjects.Count > 0)
             {
-                if (GUILayout.Button("북마크 모두 삭제", GUILayout.Height(20)))
+                if (SWEditorUtils.DangerButton("북마크 모두 삭제", "확인", "모든 GameObject 북마크를 삭제하시겠습니까?", "삭제", "취소"))
                 {
-                    if (EditorUtility.DisplayDialog("확인", "모든 GameObject 북마크를 삭제하시겠습니까?", "삭제", "취소"))
-                    {
-                        bookmarkedObjects.Clear();
-                        SaveBookmarkedObjects();
-                    }
+                    bookmarkedObjects.Clear();
+                    SaveBookmarkedObjects();
                 }
             }
         }
@@ -978,7 +937,6 @@ namespace SWTools
             string[] parts = hierarchyPath.Split('/');
             if (parts.Length == 0) return null;
 
-            // 루트 찾기
             Scene active = SceneManager.GetActiveScene();
             GameObject[] roots = active.GetRootGameObjects();
             GameObject current = null;
@@ -1003,15 +961,18 @@ namespace SWTools
             return current;
         }
 
+        /// <summary>
+        /// 북마크는 ";;" 구분자 사용 (엔트리 내부에 '|' 포함)
+        /// </summary>
         private void SaveBookmarkedObjects()
         {
             string joined = string.Join(";;", bookmarkedObjects);
-            EditorPrefs.SetString(GetProjectKey(BOOKMARKED_OBJECTS_KEY), joined);
+            EditorPrefs.SetString(SWEditorUtils.GetProjectKey(BOOKMARKED_OBJECTS_KEY), joined);
         }
 
         private void LoadBookmarkedObjects()
         {
-            string joined = EditorPrefs.GetString(GetProjectKey(BOOKMARKED_OBJECTS_KEY), "");
+            string joined = EditorPrefs.GetString(SWEditorUtils.GetProjectKey(BOOKMARKED_OBJECTS_KEY), "");
             bookmarkedObjects.Clear();
             if (!string.IsNullOrEmpty(joined))
             {
@@ -1020,38 +981,6 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// 드래그앤드롭으로 SceneAsset을 등록 목록에 추가합니다.
-        /// </summary>
-        private void HandleSceneDragAndDrop(Rect dropRect)
-        {
-            Event evt = Event.current;
-            if (!dropRect.Contains(evt.mousePosition)) return;
-
-            if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-
-                if (evt.type == EventType.DragPerform)
-                {
-                    DragAndDrop.AcceptDrag();
-
-                    foreach (Object obj in DragAndDrop.objectReferences)
-                    {
-                        if (obj is SceneAsset)
-                        {
-                            string path = AssetDatabase.GetAssetPath(obj);
-                            RegisterScene(path);
-                        }
-                    }
-                    evt.Use();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 씬 경로를 등록 목록에 추가합니다. 중복은 무시됩니다.
-        /// </summary>
         private void RegisterScene(string path)
         {
             if (string.IsNullOrEmpty(path)) return;
@@ -1066,9 +995,6 @@ namespace SWTools
             RebuildSceneDisplayCaches();
         }
 
-        /// <summary>
-        /// 등록된 씬의 순서를 변경합니다.
-        /// </summary>
         private void MoveScene(int from, int to)
         {
             string item = registeredScenePaths[from];
@@ -1078,9 +1004,6 @@ namespace SWTools
             RebuildSceneDisplayCaches();
         }
 
-        /// <summary>
-        /// 씬 표시용 캐시를 재구성합니다.
-        /// </summary>
         private void RebuildSceneDisplayCaches()
         {
             sceneDisplayCaches.Clear();
@@ -1100,9 +1023,6 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// 지정된 씬을 단일 모드로 엽니다. 변경사항은 저장 여부를 확인합니다.
-        /// </summary>
         private void LoadScene(string path)
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -1111,98 +1031,54 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// 지정된 씬을 Additive 모드로 추가 로드합니다.
-        /// </summary>
         private void LoadSceneAdditive(string path)
         {
             EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
         }
 
-        /// <summary>
-        /// 프로젝트 창에서 해당 씬 에셋을 하이라이트합니다.
-        /// </summary>
         private void PingScene(string path)
         {
             SceneAsset asset = AssetDatabase.LoadAssetAtPath<SceneAsset>(path);
-            if (asset != null)
-            {
-                EditorGUIUtility.PingObject(asset);
-                Selection.activeObject = asset;
-            }
+            SWEditorUtils.PingAndSelect(asset);
         }
 
-        /// <summary>
-        /// EditorPrefs에 등록된 씬 목록을 저장합니다. 구분자로 '|' 사용.
-        /// </summary>
         private void SaveRegisteredScenes()
         {
-            string joined = string.Join("|", registeredScenePaths);
-            EditorPrefs.SetString(GetProjectKey(REGISTERED_SCENES_KEY), joined);
+            SWEditorUtils.SaveList(REGISTERED_SCENES_KEY, registeredScenePaths);
         }
 
-        /// <summary>
-        /// EditorPrefs에서 등록된 씬 목록을 불러옵니다.
-        /// </summary>
         private void LoadRegisteredScenes()
         {
-            string joined = EditorPrefs.GetString(GetProjectKey(REGISTERED_SCENES_KEY), "");
-            registeredScenePaths.Clear();
-
-            if (!string.IsNullOrEmpty(joined))
-            {
-                string[] paths = joined.Split('|');
-                foreach (string path in paths)
-                {
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        registeredScenePaths.Add(path);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 프로젝트별로 고유한 EditorPrefs 키를 생성합니다.
-        /// </summary>
-        private string GetProjectKey(string key)
-        {
-            return $"{key}.{Application.dataPath.GetHashCode()}";
+            registeredScenePaths = SWEditorUtils.LoadList(REGISTERED_SCENES_KEY);
         }
         #endregion // Scene 탭
 
         #region Utility 탭
-        /// <summary>
-        /// 기타 테스트 유틸리티
-        /// </summary>
         private void DrawUtilityTab()
         {
-            DrawHeader("PlayerPrefs");
-            if (GUILayout.Button("PlayerPrefs.DeleteAll", GUILayout.Height(25)))
+            SWEditorUtils.DrawHeader("PlayerPrefs");
+            if (SWEditorUtils.DangerButton("PlayerPrefs.DeleteAll", "PlayerPrefs 삭제",
+                "모든 PlayerPrefs를 삭제하시겠습니까?", "삭제", "취소"))
             {
-                if (EditorUtility.DisplayDialog("PlayerPrefs 삭제",
-                    "모든 PlayerPrefs를 삭제하시겠습니까?", "삭제", "취소"))
-                {
-                    PlayerPrefs.DeleteAll();
-                    PlayerPrefs.Save();
-                    Debug.Log("[SWTestTools] PlayerPrefs 전체 삭제됨");
-                }
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+                Debug.Log("[SWTestTools] PlayerPrefs 전체 삭제됨");
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Editor");
-            if (GUILayout.Button("Console Clear", GUILayout.Height(25)))
+            SWEditorUtils.DrawHeader("Editor");
+            if (SWEditorUtils.Button("Console Clear"))
             {
-                ClearConsole();
+                SWEditorUtils.ClearConsole();
             }
 
-            if (GUILayout.Button("GameObject 선택 해제", GUILayout.Height(25)))
+            if (SWEditorUtils.Button("GameObject 선택 해제"))
             {
                 Selection.activeObject = null;
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Screen");
+            SWEditorUtils.DrawHeader("Screen");
 
             if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
             {
@@ -1219,28 +1095,6 @@ namespace SWTools
             EditorGUILayout.LabelField(cachedScreenInfo);
             EditorGUILayout.LabelField(cachedDpiInfo);
         }
-
-        /// <summary>
-        /// 리플렉션을 사용해 Console을 클리어합니다.
-        /// </summary>
-        private void ClearConsole()
-        {
-            var logEntries = System.Type.GetType("UnityEditor.LogEntries, UnityEditor");
-            var clearMethod = logEntries?.GetMethod("Clear",
-                BindingFlags.Static | BindingFlags.Public);
-            clearMethod?.Invoke(null, null);
-        }
         #endregion // Utility 탭
-
-        /// <summary>
-        /// 섹션 헤더를 그립니다.
-        /// </summary>
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
-        }
     }
 }

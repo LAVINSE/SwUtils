@@ -8,7 +8,6 @@ namespace SWTools
 {
     /// <summary>
     /// 선택한 에셋을 참조하는 다른 에셋/씬/프리팹을 역방향으로 찾아주는 윈도우입니다.
-    /// Unity 기본 "Select Dependencies"의 반대 방향 기능을 제공합니다.
     /// </summary>
     public class SWReferenceFinderWindow : EditorWindow
     {
@@ -16,8 +15,6 @@ namespace SWTools
         private const string INCLUDE_PACKAGES_KEY = "SWTools.ReferenceFinder.IncludePackages";
         private const string SEARCH_EXTENSIONS_KEY = "SWTools.ReferenceFinder.SearchExtensions";
 
-        // 검색 대상 확장자 (이 파일들 내부의 참조를 스캔)
-        // .unity, .prefab, .asset, .mat, .controller, .playable, .spriteatlas 등
         private static readonly string[] defaultSearchExtensions =
         {
             ".unity", ".prefab", ".asset", ".mat", ".controller",
@@ -30,7 +27,7 @@ namespace SWTools
         private bool includePackages = false;
         private string searchExtensionsRaw;
 
-        // 역참조 인덱스 캐시: "참조된 에셋 GUID" -> "참조하는 에셋 경로 리스트"
+        // 역참조 인덱스 캐시
         private Dictionary<string, List<string>> reverseIndex;
         private double lastIndexBuildTime;
         private int indexedAssetCount;
@@ -45,7 +42,7 @@ namespace SWTools
         // 일괄 선택용
         private readonly HashSet<string> selectedResults = new();
 
-        // 필터 (결과 내 검색)
+        // 필터
         private string resultFilter = "";
 
         // 결과 타입별 아이콘 캐시
@@ -56,14 +53,10 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWReferenceFinderWindow window = GetWindow<SWReferenceFinderWindow>();
-            window.titleContent = new GUIContent("Reference Finder", EditorGUIUtility.FindTexture("d_Search Icon"));
-            window.minSize = new Vector2(380, 400);
+            SWEditorUtils.SetupWindow(window, "Reference Finder", "d_Search Icon", 380, 400);
             window.Show();
         }
 
-        /// <summary>
-        /// 프로젝트 창에서 우클릭 > 해당 에셋을 타겟으로 설정하여 창을 엽니다.
-        /// </summary>
         [MenuItem("Assets/SWTools/Find References In Project", false, 25)]
         private static void FindReferencesForSelected()
         {
@@ -71,7 +64,7 @@ namespace SWTools
             if (selected == null) return;
 
             SWReferenceFinderWindow window = GetWindow<SWReferenceFinderWindow>();
-            window.titleContent = new GUIContent("Reference Finder", EditorGUIUtility.FindTexture("d_Search Icon"));
+            SWEditorUtils.SetupWindow(window, "Reference Finder", "d_Search Icon", 380, 400);
             window.targetAsset = selected;
             window.Show();
             window.FindReferences();
@@ -85,14 +78,14 @@ namespace SWTools
 
         private void OnEnable()
         {
-            includePackages = EditorPrefs.GetBool(INCLUDE_PACKAGES_KEY, false);
-            searchExtensionsRaw = EditorPrefs.GetString(SEARCH_EXTENSIONS_KEY, string.Join(",", defaultSearchExtensions));
+            includePackages = SWEditorUtils.LoadPref(INCLUDE_PACKAGES_KEY, false);
+            searchExtensionsRaw = SWEditorUtils.LoadPref(SEARCH_EXTENSIONS_KEY, string.Join(",", defaultSearchExtensions));
         }
 
         private void OnDisable()
         {
-            EditorPrefs.SetBool(INCLUDE_PACKAGES_KEY, includePackages);
-            EditorPrefs.SetString(SEARCH_EXTENSIONS_KEY, searchExtensionsRaw);
+            SWEditorUtils.SavePref(INCLUDE_PACKAGES_KEY, includePackages);
+            SWEditorUtils.SavePref(SEARCH_EXTENSIONS_KEY, searchExtensionsRaw);
         }
 
         private void OnGUI()
@@ -111,24 +104,24 @@ namespace SWTools
         #region Target 섹션
         private void DrawTargetSection()
         {
-            DrawHeader("Target Asset");
+            SWEditorUtils.DrawHeader("Target Asset");
 
             EditorGUI.BeginChangeCheck();
             targetAsset = EditorGUILayout.ObjectField("찾을 에셋", targetAsset, typeof(Object), false);
             if (EditorGUI.EndChangeCheck())
             {
-                // 타겟이 바뀌면 결과 초기화
                 currentResults.Clear();
                 selectedResults.Clear();
             }
 
             EditorGUILayout.BeginHorizontal();
-            GUI.enabled = targetAsset != null;
-            if (GUILayout.Button("참조 찾기", GUILayout.Height(28)))
+            using (new SWEditorUtils.GUIEnabledScope(targetAsset != null))
             {
-                FindReferences();
+                if (GUILayout.Button("참조 찾기", GUILayout.Height(28)))
+                {
+                    FindReferences();
+                }
             }
-            GUI.enabled = true;
 
             if (GUILayout.Button("선택한 에셋으로", GUILayout.Width(120), GUILayout.Height(28)))
             {
@@ -151,7 +144,7 @@ namespace SWTools
         #region Index 섹션
         private void DrawIndexSection()
         {
-            DrawHeader("Index");
+            SWEditorUtils.DrawHeader("Index");
 
             EditorGUILayout.BeginHorizontal();
             includePackages = EditorGUILayout.ToggleLeft("Packages 포함", includePackages, GUILayout.Width(120));
@@ -180,12 +173,12 @@ namespace SWTools
             {
                 EditorGUILayout.HelpBox(
                     $"인덱스: {indexedAssetCount}개 파일 스캔됨, {reverseIndex.Count}개 고유 GUID 참조됨\n" +
-                    $"최근 빌드 시간: {lastIndexBuildTime:F2}초",
+                    $"최근 빌드 시간: {SWEditorUtils.FormatDuration(lastIndexBuildTime)}",
                     MessageType.Info);
             }
             else
             {
-                EditorGUILayout.HelpBox("아직 인덱스가 없습니다. \"참조 찾기\" 또는 \"인덱스 재구축\"을 누르세요.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("아직 인덱스가 없습니다. \"참조 찾기\" 또는 \"인덱스 재구축\"을 누르세요.", MessageType.None);
             }
         }
         #endregion // Index 섹션
@@ -193,11 +186,11 @@ namespace SWTools
         #region 결과 섹션
         private void DrawResultsSection()
         {
-            DrawHeader($"Results ({currentResults.Count})");
+            SWEditorUtils.DrawHeader($"Results ({currentResults.Count})");
 
             if (currentResults.Count == 0)
             {
-                EditorGUILayout.HelpBox("검색 결과가 없습니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("검색 결과가 없습니다.", MessageType.None);
                 return;
             }
 
@@ -222,12 +215,13 @@ namespace SWTools
             {
                 selectedResults.Clear();
             }
-            GUI.enabled = selectedResults.Count > 0;
-            if (GUILayout.Button($"Project에서 선택 ({selectedResults.Count})", GUILayout.Height(20)))
+            using (new SWEditorUtils.GUIEnabledScope(selectedResults.Count > 0))
             {
-                SelectInProject(selectedResults);
+                if (GUILayout.Button($"Project에서 선택 ({selectedResults.Count})", GUILayout.Height(20)))
+                {
+                    SelectInProject(selectedResults);
+                }
             }
-            GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(3);
@@ -245,7 +239,7 @@ namespace SWTools
         private IEnumerable<string> GetFilteredResults()
         {
             if (string.IsNullOrEmpty(resultFilter)) return currentResults;
-            return currentResults.Where(p => p.IndexOf(resultFilter, System.StringComparison.OrdinalIgnoreCase) >= 0);
+            return currentResults.Where(p => SWEditorUtils.MatchesFilter(p, resultFilter));
         }
 
         private void DrawResultRow(string path)
@@ -275,7 +269,7 @@ namespace SWTools
                 if (obj != null) EditorGUIUtility.PingObject(obj);
             }
 
-            if (GUILayout.Button("Open", GUILayout.Width(45), GUILayout.Height(18)))
+            if (SWEditorUtils.SmallButton("Open", 45f))
             {
                 Object obj = AssetDatabase.LoadMainAssetAtPath(path);
                 if (obj != null) AssetDatabase.OpenAsset(obj);
@@ -297,10 +291,6 @@ namespace SWTools
         #endregion // 결과 섹션
 
         #region 인덱스 빌드 / 검색 로직
-        /// <summary>
-        /// 현재 타겟 에셋을 참조하는 에셋들을 찾습니다.
-        /// 인덱스가 없으면 먼저 빌드합니다.
-        /// </summary>
         private void FindReferences()
         {
             if (targetAsset == null) return;
@@ -321,16 +311,12 @@ namespace SWTools
 
             if (reverseIndex.TryGetValue(targetGuid, out List<string> refs))
             {
-                // 자기 자신은 제외하고 정렬
                 currentResults.AddRange(refs.Where(p => p != targetPath).Distinct().OrderBy(p => p));
             }
 
             Debug.Log($"[SWReferenceFinder] '{targetPath}'를 참조하는 에셋 {currentResults.Count}개를 찾았습니다.");
         }
 
-        /// <summary>
-        /// 프로젝트 내 모든 검색 대상 에셋에 대해 의존성을 스캔하여 역방향 인덱스를 만듭니다.
-        /// </summary>
         private void BuildReverseIndex()
         {
             if (isBuilding) return;
@@ -342,7 +328,6 @@ namespace SWTools
             {
                 HashSet<string> extSet = ParseExtensions(searchExtensionsRaw);
 
-                // 모든 에셋 GUID 가져오기
                 string[] allGuids = AssetDatabase.FindAssets("");
                 List<string> pathsToScan = new(allGuids.Length);
 
@@ -379,7 +364,6 @@ namespace SWTools
                         }
                     }
 
-                    // recursive=false: 직접 의존성만 인덱싱 (속도+정확도 균형)
                     string[] deps = AssetDatabase.GetDependencies(path, false);
                     foreach (string dep in deps)
                     {
@@ -397,7 +381,7 @@ namespace SWTools
                 }
 
                 lastIndexBuildTime = EditorApplication.timeSinceStartup - startTime;
-                Debug.Log($"[SWReferenceFinder] 인덱스 빌드 완료: {indexedAssetCount}개 파일, {reverseIndex.Count}개 고유 GUID, {lastIndexBuildTime:F2}초");
+                Debug.Log($"[SWReferenceFinder] 인덱스 빌드 완료: {indexedAssetCount}개 파일, {reverseIndex.Count}개 고유 GUID, {SWEditorUtils.FormatDuration(lastIndexBuildTime)}");
             }
             finally
             {
@@ -422,16 +406,5 @@ namespace SWTools
             return set;
         }
         #endregion // 인덱스 빌드 / 검색 로직
-
-        /// <summary>
-        /// 섹션 헤더를 그립니다.
-        /// </summary>
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
-        }
     }
 }
