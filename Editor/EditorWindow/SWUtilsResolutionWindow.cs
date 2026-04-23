@@ -6,76 +6,54 @@ namespace SWUtils.Editor
 {
     /// <summary>
     /// SWUtilsResolution 기능을 시각적으로 확인하고 테스트할 수 있는 에디터 윈도우.
-    /// 실시간 해상도 모니터링, 기준 해상도 설정, 좌표 변환 테스트, 카메라 FOV 테스트 기능을 제공한다.
-    /// 메뉴: Tools > SWUtils > Resolution Window
     /// </summary>
     public class SWUtilsResolutionWindow : EditorWindow
     {
         #region 필드
-        /// <summary>탭 종류.</summary>
         private enum Tab
         {
-            /// <summary>현재 해상도 정보 모니터링.</summary>
             Monitor,
-            /// <summary>기준 해상도(BaseResolution) 설정.</summary>
             BaseResolution,
-            /// <summary>스크린 ↔ 정규화 좌표 변환 테스트.</summary>
             CoordinateTest,
-            /// <summary>카메라 FOV/Orthographic 테스트.</summary>
             CameraTest,
-            /// <summary>DPI / 물리 크기 변환 테스트.</summary>
             DPITest,
         }
 
-        /// <summary>현재 선택된 탭.</summary>
         private Tab currentTab = Tab.Monitor;
-        /// <summary>스크롤 위치.</summary>
         private Vector2 scrollPosition;
 
         // 좌표 변환 테스트용
-        /// <summary>좌표 변환 테스트 입력 스크린 좌표.</summary>
         private Vector2 testScreenPosition;
-        /// <summary>좌표 변환 테스트 입력 정규화 좌표.</summary>
         private Vector2 testNormalizedPosition;
 
         // 카메라 테스트용
-        /// <summary>카메라 FOV 테스트 대상 카메라.</summary>
         private Camera testCamera;
-        /// <summary>테스트할 수평 FOV 값.</summary>
         private float testHorizontalFov = 60f;
-        /// <summary>테스트할 기준 orthographicSize 값.</summary>
         private float testBaseOrthoSize = 5f;
 
         // DPI 테스트용
-        /// <summary>DPI 테스트 입력 값.</summary>
         private float testDpiInputValue = 10f;
+
+        // 탭 이름
+        private static readonly string[] tabNamesArray = { "모니터", "기준해상도", "좌표변환", "카메라", "DPI" };
         #endregion // 필드
 
         #region 윈도우 열기
-        /// <summary>
-        /// 메뉴에서 윈도우를 연다.
-        /// </summary>
         [MenuItem("SWTools/Resolution Window")]
         public static void OpenWindow()
         {
-            var window = GetWindow<SWUtilsResolutionWindow>("Resolution");
-            window.minSize = new Vector2(360f, 400f);
+            var window = GetWindow<SWUtilsResolutionWindow>();
+            SWTools.SWEditorUtils.SetupWindow(window, "Resolution", null, 360, 400);
             window.Show();
         }
         #endregion // 윈도우 열기
 
         #region GUI
-        /// <summary>
-        /// 매 프레임 갱신하여 실시간 모니터링을 지원한다.
-        /// </summary>
         private void OnInspectorUpdate()
         {
             if (currentTab == Tab.Monitor) Repaint();
         }
 
-        /// <summary>
-        /// 윈도우 GUI를 그린다.
-        /// </summary>
         private void OnGUI()
         {
             DrawHeader();
@@ -96,9 +74,6 @@ namespace SWUtils.Editor
             EditorGUILayout.EndScrollView();
         }
 
-        /// <summary>
-        /// 헤더를 그린다.
-        /// </summary>
         private void DrawHeader()
         {
             EditorGUILayout.Space(4f);
@@ -107,23 +82,17 @@ namespace SWUtils.Editor
             EditorGUILayout.Space(4f);
         }
 
-        /// <summary>
-        /// 탭 버튼을 그린다.
-        /// </summary>
         private void DrawTabs()
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                currentTab = (Tab)GUILayout.Toolbar((int)currentTab,
-                    new[] { "모니터", "기준해상도", "좌표변환", "카메라", "DPI" });
+                int newTab = GUILayout.Toolbar((int)currentTab, tabNamesArray);
+                currentTab = (Tab)newTab;
             }
         }
         #endregion // GUI
 
         #region 모니터 탭
-        /// <summary>
-        /// 실시간 해상도 정보를 표시한다.
-        /// </summary>
         private void DrawMonitorTab()
         {
             EditorGUILayout.LabelField("실시간 화면 정보", EditorStyles.boldLabel);
@@ -154,11 +123,6 @@ namespace SWUtils.Editor
             EditorGUILayout.HelpBox("Game View 또는 Device Simulator 해상도를 변경하면 값이 실시간으로 갱신됩니다.", MessageType.Info);
         }
 
-        /// <summary>
-        /// 한 줄짜리 라벨-값 정보를 그린다.
-        /// </summary>
-        /// <param name="label">라벨</param>
-        /// <param name="value">값</param>
         private void DrawInfo(string label, string value)
         {
             using (new EditorGUILayout.HorizontalScope())
@@ -171,9 +135,6 @@ namespace SWUtils.Editor
         #endregion // 모니터 탭
 
         #region 기준 해상도 탭
-        /// <summary>
-        /// 기준 해상도 설정을 그린다.
-        /// </summary>
         private void DrawBaseResolutionTab()
         {
             EditorGUILayout.LabelField("기준 해상도 (BaseResolution)", EditorStyles.boldLabel);
@@ -234,9 +195,6 @@ namespace SWUtils.Editor
         #endregion // 기준 해상도 탭
 
         #region 좌표 변환 탭
-        /// <summary>
-        /// 좌표 변환 테스트를 그린다.
-        /// </summary>
         private void DrawCoordinateTab()
         {
             EditorGUILayout.LabelField("스크린 → 정규화", EditorStyles.boldLabel);
@@ -269,9 +227,6 @@ namespace SWUtils.Editor
         #endregion // 좌표 변환 탭
 
         #region 카메라 탭
-        /// <summary>
-        /// 카메라 FOV / Orthographic 테스트를 그린다.
-        /// </summary>
         private void DrawCameraTab()
         {
             EditorGUILayout.LabelField("카메라 선택", EditorStyles.boldLabel);
@@ -285,7 +240,7 @@ namespace SWUtils.Editor
 
             if (testCamera == null)
             {
-                EditorGUILayout.HelpBox("카메라를 선택하세요.", MessageType.Warning);
+                SWTools.SWEditorUtils.DrawEmptyNotice("카메라를 선택하세요.", MessageType.Warning);
                 return;
             }
 
@@ -329,9 +284,6 @@ namespace SWUtils.Editor
         #endregion // 카메라 탭
 
         #region DPI 탭
-        /// <summary>
-        /// DPI / 물리 크기 변환 테스트를 그린다.
-        /// </summary>
         private void DrawDpiTab()
         {
             EditorGUILayout.LabelField("DPI 정보", EditorStyles.boldLabel);

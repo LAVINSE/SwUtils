@@ -89,20 +89,15 @@ namespace SWTools
         {
             ObjectFactory.componentWasAdded -= OnComponentAdded;
             ObjectFactory.componentWasAdded += OnComponentAdded;
-
-            // 저장된 기본 폰트 로드
             LoadStaticDefaultFont();
         }
 
         private static void LoadStaticDefaultFont()
         {
-            string guid = EditorPrefs.GetString(DEFAULT_FONT_GUID_KEY, "");
+            string guid = EditorPrefs.GetString(SWEditorUtils.GetProjectKey(DEFAULT_FONT_GUID_KEY), "");
             if (string.IsNullOrEmpty(guid)) { s_autoApplyFont = null; return; }
 
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            s_autoApplyFont = string.IsNullOrEmpty(path)
-                ? null
-                : AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            s_autoApplyFont = SWEditorUtils.LoadAssetFromGuid<TMP_FontAsset>(guid);
         }
 
         /// <summary>
@@ -124,9 +119,7 @@ namespace SWTools
         public static void ShowWindow()
         {
             var window = GetWindow<SWTMPFontAssetManagerWindow>();
-            window.titleContent = new GUIContent("SW TMP Fonts",
-                EditorGUIUtility.FindTexture("d_Text Icon"));
-            window.minSize = new Vector2(420, 450);
+            SWEditorUtils.SetupWindow(window, "SW TMP Fonts", "d_Text Icon", 420, 450);
             window.Show();
         }
 
@@ -146,9 +139,7 @@ namespace SWTools
 
         private void OnGUI()
         {
-            EditorGUILayout.Space(5);
-            selectedTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
-            EditorGUILayout.Space(10);
+            selectedTab = SWEditorUtils.DrawTabBar(selectedTab, tabNames);
 
             switch (selectedTab)
             {
@@ -166,7 +157,7 @@ namespace SWTools
         private void DrawQuickSwapTab()
         {
             // ── 기본 폰트 ──
-            DrawHeader("기본 폰트 (자동 적용)");
+            SWEditorUtils.DrawHeader("기본 폰트 (자동 적용)");
 
             EditorGUILayout.HelpBox(
                 "여기에 폰트를 지정하면 앞으로 생성되는 모든 TextMeshPro 컴포넌트에\n" +
@@ -201,17 +192,23 @@ namespace SWTools
             EditorGUILayout.Space(10);
 
             // ── 등록된 폰트 목록 ──
-            DrawHeader("등록된 폰트");
-            DrawFontDropArea();
+            SWEditorUtils.DrawHeader("등록된 폰트");
+
+            // SWEditorUtils 드래그 앤 드롭 사용
+            var droppedFonts = SWEditorUtils.DrawDropArea<TMP_FontAsset>("여기에 TMP_FontAsset을 드래그해서 등록");
+            if (droppedFonts != null)
+            {
+                foreach (var fa in droppedFonts) RegisterFont(fa);
+            }
+
             EditorGUILayout.Space(3);
 
             if (needsFontCacheRebuild) RebuildFontCache();
 
             if (registeredFontCaches.Count == 0)
             {
-                EditorGUILayout.HelpBox(
-                    "등록된 폰트가 없습니다.\n위 영역에 TMP_FontAsset을 드래그하거나 '선택 항목 추가' 버튼을 사용하세요.",
-                    MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice(
+                    "등록된 폰트가 없습니다.\n위 영역에 TMP_FontAsset을 드래그하거나 '선택 항목 추가' 버튼을 사용하세요.");
             }
             else
             {
@@ -232,31 +229,8 @@ namespace SWTools
 
             // ── 선택된 TMP 오브젝트 정보 ──
             EditorGUILayout.Space(10);
-            DrawHeader("선택된 오브젝트");
+            SWEditorUtils.DrawHeader("선택된 오브젝트");
             DrawSelectedTMPInfo();
-        }
-
-        private void DrawFontDropArea()
-        {
-            Rect dropRect = GUILayoutUtility.GetRect(0, 32, GUILayout.ExpandWidth(true));
-            GUI.Box(dropRect, "여기에 TMP_FontAsset을 드래그해서 등록", EditorStyles.helpBox);
-
-            Event evt = Event.current;
-            if (!dropRect.Contains(evt.mousePosition)) return;
-
-            if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                if (evt.type == EventType.DragPerform)
-                {
-                    DragAndDrop.AcceptDrag();
-                    foreach (Object obj in DragAndDrop.objectReferences)
-                    {
-                        if (obj is TMP_FontAsset fa) RegisterFont(fa);
-                    }
-                    evt.Use();
-                }
-            }
         }
 
         private void DrawRegisteredFontList()
@@ -270,7 +244,7 @@ namespace SWTools
                 EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
 
                 // 아이콘
-                Texture icon = cache.asset != null ? AssetPreview.GetMiniThumbnail(cache.asset) : null;
+                Texture icon = SWEditorUtils.GetAssetIcon(cache.asset);
                 if (icon != null)
                 {
                     Rect iconRect = GUILayoutUtility.GetRect(24, 24, GUILayout.Width(24), GUILayout.Height(24));
@@ -278,61 +252,63 @@ namespace SWTools
                 }
 
                 // 이름
-                if (!cache.exists) GUI.color = Color.red;
-                GUILayout.Label(cache.content, GUILayout.ExpandWidth(true));
-                GUI.color = Color.white;
+                using (new SWEditorUtils.GUIColorScope(cache.exists ? Color.white : SWEditorUtils.ErrorColor))
+                {
+                    GUILayout.Label(cache.content, GUILayout.ExpandWidth(true));
+                }
 
                 // ★ 기본 폰트로 지정
                 bool isDefault = defaultFont != null && cache.asset == defaultFont;
-                GUI.backgroundColor = isDefault ? Color.yellow : Color.white;
-                if (GUILayout.Button(isDefault ? "★" : "☆", GUILayout.Width(24), GUILayout.Height(20)))
+                using (new SWEditorUtils.GUIBgColorScope(isDefault ? Color.yellow : Color.white))
                 {
-                    if (isDefault)
+                    if (GUILayout.Button(isDefault ? "★" : "☆", GUILayout.Width(24), GUILayout.Height(20)))
                     {
-                        defaultFont = null;
-                        s_autoApplyFont = null;
+                        if (isDefault)
+                        {
+                            defaultFont = null;
+                            s_autoApplyFont = null;
+                        }
+                        else
+                        {
+                            defaultFont = cache.asset;
+                            s_autoApplyFont = cache.asset;
+                        }
+                        SaveDefaultFont();
                     }
-                    else
-                    {
-                        defaultFont = cache.asset;
-                        s_autoApplyFont = cache.asset;
-                    }
-                    SaveDefaultFont();
                 }
-                GUI.backgroundColor = Color.white;
 
                 // 적용 버튼
-                GUI.enabled = cache.exists;
-                if (GUILayout.Button("적용", GUILayout.Width(40), GUILayout.Height(20)))
+                using (new SWEditorUtils.GUIEnabledScope(cache.exists))
                 {
-                    ApplyFontToSelection(cache.asset);
+                    if (SWEditorUtils.SmallButton("적용", 40f))
+                    {
+                        ApplyFontToSelection(cache.asset);
+                    }
                 }
-                GUI.enabled = true;
 
                 // Ping
-                if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(20)))
+                if (SWEditorUtils.SmallButton("Ping", 40f))
                 {
-                    if (cache.asset != null)
-                    {
-                        EditorGUIUtility.PingObject(cache.asset);
-                        Selection.activeObject = cache.asset;
-                    }
+                    SWEditorUtils.PingAndSelect(cache.asset);
                 }
 
                 // 순서
-                GUI.enabled = i > 0;
-                if (GUILayout.Button("▲", GUILayout.Width(22), GUILayout.Height(20)))
+                using (new SWEditorUtils.GUIEnabledScope(i > 0))
                 {
-                    SwapFont(i, i - 1);
-                    GUIUtility.ExitGUI();
+                    if (GUILayout.Button("▲", GUILayout.Width(22), GUILayout.Height(20)))
+                    {
+                        SwapFont(i, i - 1);
+                        GUIUtility.ExitGUI();
+                    }
                 }
-                GUI.enabled = i < registeredFontCaches.Count - 1;
-                if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(20)))
+                using (new SWEditorUtils.GUIEnabledScope(i < registeredFontCaches.Count - 1))
                 {
-                    SwapFont(i, i + 1);
-                    GUIUtility.ExitGUI();
+                    if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(20)))
+                    {
+                        SwapFont(i, i + 1);
+                        GUIUtility.ExitGUI();
+                    }
                 }
-                GUI.enabled = true;
 
                 // 삭제
                 if (GUILayout.Button("✕", GUILayout.Width(22), GUILayout.Height(20)))
@@ -354,7 +330,7 @@ namespace SWTools
             var selected = Selection.gameObjects;
             if (selected == null || selected.Length == 0)
             {
-                EditorGUILayout.HelpBox("Hierarchy에서 TextMeshPro가 있는 오브젝트를 선택하세요.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("Hierarchy에서 TextMeshPro가 있는 오브젝트를 선택하세요.", MessageType.None);
                 return;
             }
 
@@ -375,7 +351,7 @@ namespace SWTools
 
             if (tmpCount == 0)
             {
-                EditorGUILayout.HelpBox("선택된 오브젝트에 TMP_Text 컴포넌트가 없습니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("선택된 오브젝트에 TMP_Text 컴포넌트가 없습니다.", MessageType.None);
                 return;
             }
 
@@ -383,9 +359,6 @@ namespace SWTools
             EditorGUILayout.LabelField($"TMP 컴포넌트 {tmpCount}개  |  현재 폰트: {fontInfo}");
         }
 
-        /// <summary>
-        /// 선택된 오브젝트(및 자식)의 모든 TMP_Text에 폰트를 적용합니다.
-        /// </summary>
         private void ApplyFontToSelection(TMP_FontAsset font)
         {
             if (font == null) return;
@@ -417,9 +390,6 @@ namespace SWTools
             Debug.Log($"[SWTools] '{font.name}' 폰트를 {count}개 TMP 컴포넌트에 적용했습니다.");
         }
 
-        /// <summary>
-        /// 씬 내 모든 TMP_Text에 폰트를 적용합니다.
-        /// </summary>
         private void ApplyFontToAllInScene(TMP_FontAsset font)
         {
             if (font == null) return;
@@ -448,10 +418,9 @@ namespace SWTools
         private void RegisterFont(TMP_FontAsset font)
         {
             if (font == null) return;
-            string path = AssetDatabase.GetAssetPath(font);
-            if (string.IsNullOrEmpty(path)) return;
+            string guid = SWEditorUtils.GetAssetGuid(font);
+            if (string.IsNullOrEmpty(guid)) return;
 
-            string guid = AssetDatabase.AssetPathToGUID(path);
             if (registeredFontGuids.Contains(guid))
             {
                 Debug.Log($"[SWTools] 이미 등록된 폰트: {font.name}");
@@ -499,10 +468,10 @@ namespace SWTools
             registeredFontCaches.Clear();
             foreach (string guid in registeredFontGuids)
             {
+                TMP_FontAsset asset = SWEditorUtils.LoadAssetFromGuid<TMP_FontAsset>(guid);
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                bool exists = !string.IsNullOrEmpty(path);
-                TMP_FontAsset asset = exists ? AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path) : null;
-                string displayName = asset != null ? asset.name : "(없음)";
+                bool exists = asset != null;
+                string displayName = exists ? asset.name : "(없음)";
 
                 registeredFontCaches.Add(new RegisteredFontCache
                 {
@@ -510,7 +479,7 @@ namespace SWTools
                     path = path,
                     asset = asset,
                     content = new GUIContent(displayName, path),
-                    exists = exists && asset != null,
+                    exists = exists,
                 });
             }
             needsFontCacheRebuild = false;
@@ -519,56 +488,27 @@ namespace SWTools
         #region 저장 / 로드
         private void SaveDefaultFont()
         {
-            if (defaultFont != null)
-            {
-                string path = AssetDatabase.GetAssetPath(defaultFont);
-                defaultFontGuid = AssetDatabase.AssetPathToGUID(path);
-            }
-            else
-            {
-                defaultFontGuid = "";
-            }
-            EditorPrefs.SetString(GetProjectKey(DEFAULT_FONT_GUID_KEY), defaultFontGuid);
+            defaultFontGuid = defaultFont != null ? SWEditorUtils.GetAssetGuid(defaultFont) ?? "" : "";
+            SWEditorUtils.SavePref(DEFAULT_FONT_GUID_KEY, defaultFontGuid);
         }
 
         private void LoadDefaultFont()
         {
-            defaultFontGuid = EditorPrefs.GetString(GetProjectKey(DEFAULT_FONT_GUID_KEY), "");
-            if (!string.IsNullOrEmpty(defaultFontGuid))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(defaultFontGuid);
-                defaultFont = string.IsNullOrEmpty(path) ? null
-                    : AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
-            }
-            else
-            {
-                defaultFont = null;
-            }
+            defaultFontGuid = SWEditorUtils.LoadPref(DEFAULT_FONT_GUID_KEY, "");
+            defaultFont = !string.IsNullOrEmpty(defaultFontGuid)
+                ? SWEditorUtils.LoadAssetFromGuid<TMP_FontAsset>(defaultFontGuid)
+                : null;
             s_autoApplyFont = defaultFont;
         }
 
         private void SaveRegisteredFonts()
         {
-            string joined = string.Join("|", registeredFontGuids);
-            EditorPrefs.SetString(GetProjectKey(REGISTERED_FONTS_KEY), joined);
+            SWEditorUtils.SaveList(REGISTERED_FONTS_KEY, registeredFontGuids);
         }
 
         private void LoadRegisteredFonts()
         {
-            string joined = EditorPrefs.GetString(GetProjectKey(REGISTERED_FONTS_KEY), "");
-            registeredFontGuids.Clear();
-            if (!string.IsNullOrEmpty(joined))
-            {
-                foreach (string g in joined.Split('|'))
-                {
-                    if (!string.IsNullOrEmpty(g)) registeredFontGuids.Add(g);
-                }
-            }
-        }
-
-        private string GetProjectKey(string key)
-        {
-            return $"{key}.{Application.dataPath.GetHashCode()}";
+            registeredFontGuids = SWEditorUtils.LoadList(REGISTERED_FONTS_KEY);
         }
         #endregion
         #endregion // Quick Swap 탭
@@ -580,15 +520,14 @@ namespace SWTools
 
         private void DrawPresetsTab()
         {
-            DrawHeader("폰트 선택");
+            SWEditorUtils.DrawHeader("폰트 선택");
 
             if (registeredFontCaches.Count == 0 && needsFontCacheRebuild) RebuildFontCache();
 
             if (registeredFontCaches.Count == 0)
             {
-                EditorGUILayout.HelpBox(
-                    "Quick Swap 탭에서 폰트를 먼저 등록하세요.\n등록된 폰트의 Material Preset을 여기서 확인할 수 있습니다.",
-                    MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice(
+                    "Quick Swap 탭에서 폰트를 먼저 등록하세요.\n등록된 폰트의 Material Preset을 여기서 확인할 수 있습니다.");
                 return;
             }
 
@@ -600,21 +539,21 @@ namespace SWTools
                 if (!cache.exists) continue;
 
                 bool isSelected = (presetSelectedFontIndex == i);
-                GUI.backgroundColor = isSelected ? new Color(0.45f, 0.65f, 0.9f) : Color.white;
-
-                if (GUILayout.Button(cache.asset.name, GUILayout.Height(24)))
+                using (new SWEditorUtils.GUIBgColorScope(isSelected ? new Color(0.45f, 0.65f, 0.9f) : Color.white))
                 {
-                    presetSelectedFontIndex = i;
-                    RefreshPresets();
+                    if (GUILayout.Button(cache.asset.name, GUILayout.Height(24)))
+                    {
+                        presetSelectedFontIndex = i;
+                        RefreshPresets();
+                    }
                 }
             }
-            GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
             if (presetSelectedFontIndex < 0 || presetSelectedFontIndex >= registeredFontCaches.Count)
             {
                 EditorGUILayout.Space(10);
-                EditorGUILayout.HelpBox("위에서 폰트를 선택하면 해당 폰트의 Material Preset 목록이 표시됩니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("위에서 폰트를 선택하면 해당 폰트의 Material Preset 목록이 표시됩니다.", MessageType.None);
                 return;
             }
 
@@ -622,7 +561,7 @@ namespace SWTools
             if (!selectedCache.exists || selectedCache.asset == null) return;
 
             EditorGUILayout.Space(10);
-            DrawHeader($"Material Presets - {selectedCache.asset.name}");
+            SWEditorUtils.DrawHeader($"Material Presets - {selectedCache.asset.name}");
 
             // 폰트 기본 정보
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -639,7 +578,7 @@ namespace SWTools
 
             if (cachedPresets.Count == 0)
             {
-                EditorGUILayout.HelpBox("이 폰트에 Material Preset이 없습니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("이 폰트에 Material Preset이 없습니다.");
                 return;
             }
 
@@ -663,23 +602,19 @@ namespace SWTools
 
                 EditorGUILayout.BeginVertical();
                 EditorGUILayout.LabelField(mat.name, EditorStyles.boldLabel);
-
-                // Shader 이름
                 if (mat.shader != null)
                 {
                     EditorGUILayout.LabelField($"Shader: {mat.shader.name}", EditorStyles.miniLabel);
                 }
                 EditorGUILayout.EndVertical();
 
-                // 적용 버튼
                 if (GUILayout.Button("적용", GUILayout.Width(40), GUILayout.Height(28)))
                 {
                     ApplyPresetToSelection(selectedCache.asset, mat);
                 }
                 if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(28)))
                 {
-                    EditorGUIUtility.PingObject(mat);
-                    Selection.activeObject = mat;
+                    SWEditorUtils.PingAndSelect(mat);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -688,10 +623,6 @@ namespace SWTools
             EditorGUILayout.EndScrollView();
         }
 
-        /// <summary>
-        /// 선택된 폰트의 Material Preset 목록을 갱신합니다.
-        /// TMP는 같은 폴더에 동일 폰트를 참조하는 Material들을 Preset으로 취급합니다.
-        /// </summary>
         private void RefreshPresets()
         {
             cachedPresets.Clear();
@@ -701,11 +632,9 @@ namespace SWTools
             var cache = registeredFontCaches[presetSelectedFontIndex];
             if (!cache.exists || cache.asset == null) return;
 
-            // TMP_FontAsset의 material은 기본 머티리얼
             Material baseMat = cache.asset.material;
             if (baseMat != null) cachedPresets.Add(baseMat);
 
-            // 같은 폴더에서 동일 폰트를 참조하는 머티리얼 검색
             string fontPath = AssetDatabase.GetAssetPath(cache.asset);
             string folder = System.IO.Path.GetDirectoryName(fontPath);
 
@@ -717,23 +646,17 @@ namespace SWTools
                     string matPath = AssetDatabase.GUIDToAssetPath(guid);
                     Material mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
                     if (mat == null || mat == baseMat) continue;
-
-                    // TMP 머티리얼인지 확인: shader 이름에 TextMeshPro가 포함되어야 함
                     if (mat.shader == null) continue;
                     if (!mat.shader.name.Contains("TextMeshPro") && !mat.shader.name.Contains("TMP"))
                         continue;
-
                     cachedPresets.Add(mat);
                 }
             }
 
-            // 프로젝트 전체에서 추가 검색 (다른 폴더에 있을 수도 있으므로)
             string[] allMatGuids = AssetDatabase.FindAssets("t:Material");
             foreach (string guid in allMatGuids)
             {
                 string matPath = AssetDatabase.GUIDToAssetPath(guid);
-
-                // 이미 추가된 것은 스킵
                 if (!string.IsNullOrEmpty(folder) && matPath.StartsWith(folder)) continue;
 
                 Material mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
@@ -742,7 +665,6 @@ namespace SWTools
                 if (!mat.shader.name.Contains("TextMeshPro") && !mat.shader.name.Contains("TMP"))
                     continue;
 
-                // 머티리얼 이름이 폰트 이름을 포함하는지 확인 (TMP 규칙)
                 if (mat.name.StartsWith(cache.asset.name))
                 {
                     cachedPresets.Add(mat);
@@ -750,9 +672,6 @@ namespace SWTools
             }
         }
 
-        /// <summary>
-        /// 선택된 오브젝트에 폰트와 Material Preset을 적용합니다.
-        /// </summary>
         private void ApplyPresetToSelection(TMP_FontAsset font, Material preset)
         {
             var selected = Selection.gameObjects;
@@ -774,12 +693,7 @@ namespace SWTools
                     Undo.RecordObject(t, "TMP Preset Apply");
                     t.font = font;
 
-                    // fontSharedMaterial이 preset과 호환되는지 확인 후 적용
-                    if (preset != null && preset.shader == t.fontSharedMaterial?.shader)
-                    {
-                        t.fontSharedMaterial = preset;
-                    }
-                    else if (preset != null)
+                    if (preset != null)
                     {
                         t.fontSharedMaterial = preset;
                     }
@@ -796,7 +710,7 @@ namespace SWTools
         #endregion // Presets 탭
 
         // =====================================================================
-        //  Browser 탭 (기존 기능)
+        //  Browser 탭
         // =====================================================================
         #region Browser 탭
 
@@ -881,18 +795,17 @@ namespace SWTools
             GUILayout.FlexibleSpace();
 
             GUILayout.Label("검색:", GUILayout.Width(40));
-            browserSearchFilter = GUILayout.TextField(browserSearchFilter,
-                EditorStyles.toolbarSearchField, GUILayout.Width(150));
+            browserSearchFilter = SWEditorUtils.DrawSearchField(browserSearchFilter, 150f);
 
             EditorGUILayout.EndHorizontal();
 
             // Summary
-            DrawHeader("Summary");
+            SWEditorUtils.DrawHeader("Summary");
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.IntField("Font Asset 수", browserEntries.Count);
                 EditorGUILayout.IntField("총 글리프 수", totalGlyphs);
-                EditorGUILayout.LongField("추정 총 Atlas 메모리 (KB)", totalAtlasBytes / 1024);
+                EditorGUILayout.TextField("추정 총 Atlas 메모리", SWEditorUtils.FormatBytes(totalAtlasBytes));
             }
 
             EditorGUILayout.Space(5);
@@ -900,12 +813,9 @@ namespace SWTools
             // 리스트
             browserScroll = EditorGUILayout.BeginScrollView(browserScroll);
 
-            string filter = browserSearchFilter.Trim().ToLowerInvariant();
-
             foreach (BrowserEntry entry in browserEntries)
             {
-                if (!string.IsNullOrEmpty(filter) &&
-                    !entry.name.ToLowerInvariant().Contains(filter))
+                if (!SWEditorUtils.MatchesFilter(entry.name, browserSearchFilter))
                 {
                     continue;
                 }
@@ -930,14 +840,13 @@ namespace SWTools
             open = EditorGUILayout.Foldout(open, label, true);
             browserFoldouts[entry.path] = open;
 
-            if (GUILayout.Button("등록", GUILayout.Width(40), GUILayout.Height(18)))
+            if (SWEditorUtils.SmallButton("등록", 40f))
             {
                 RegisterFont(entry.asset);
             }
-            if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(18)))
+            if (SWEditorUtils.SmallButton("Ping", 40f))
             {
-                EditorGUIUtility.PingObject(entry.asset);
-                Selection.activeObject = entry.asset;
+                SWEditorUtils.PingAndSelect(entry.asset);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -952,7 +861,7 @@ namespace SWTools
                     EditorGUILayout.IntField("Atlas Height", entry.atlasHeight);
                     EditorGUILayout.IntField("Glyph Count", entry.glyphCount);
                     EditorGUILayout.IntField("Character Count", entry.characterCount);
-                    EditorGUILayout.LongField("Est. Memory (KB)", entry.estimatedBytes / 1024);
+                    EditorGUILayout.TextField("Est. Memory", SWEditorUtils.FormatBytes(entry.estimatedBytes));
                     EditorGUILayout.IntField("Fallback Count", entry.fallbackCount);
                 }
 
@@ -986,7 +895,7 @@ namespace SWTools
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(depth * 12 + 15);
                 GUILayout.Label($"↳ {fb.name} ({fb.atlasWidth}x{fb.atlasHeight})");
-                if (GUILayout.Button("Ping", GUILayout.Width(40), GUILayout.Height(16)))
+                if (SWEditorUtils.SmallButton("Ping", 40f))
                 {
                     EditorGUIUtility.PingObject(fb);
                 }
@@ -997,17 +906,6 @@ namespace SWTools
         }
 
         #endregion // Browser 탭
-
-        // =====================================================================
-        //  공통
-        // =====================================================================
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
-        }
     }
 }
 #endif // !DISABLE_SW_TMP_MANAGER

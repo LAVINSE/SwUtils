@@ -15,10 +15,6 @@ namespace SWTools
     /// <summary>
     /// Unity Localization 패키지의 StringTableCollection을 대상으로
     /// Export / Import / Smart String 일괄 편집 / 유효성 검증 기능을 제공하는 통합 윈도우입니다.
-    ///
-    /// 사용을 위해서는 com.unity.localization 패키지가 설치되어 있어야 하며,
-    /// 이 파일은 UNITY_LOCALIZATION 심볼이 정의된 경우에만 컴파일됩니다.
-    /// (Localization 패키지를 설치하면 Scripting Define Symbols에 자동으로 추가됩니다.)
     /// </summary>
     public class SWLocalizationToolsWindow : EditorWindow
     {
@@ -107,27 +103,26 @@ namespace SWTools
         public static void ShowWindow()
         {
             SWLocalizationToolsWindow window = GetWindow<SWLocalizationToolsWindow>();
-            window.titleContent = new GUIContent("SW Localization", EditorGUIUtility.FindTexture("d_BuildSettings.Web.Small"));
-            window.minSize = new Vector2(520, 500);
+            SWEditorUtils.SetupWindow(window, "SW Localization", "d_BuildSettings.Web.Small", 520, 500);
             window.Show();
         }
 
         private void OnEnable()
         {
-            exportPath = EditorPrefs.GetString(EXPORT_PATH_KEY, exportPath);
-            exportFormat = (ExportFormat)EditorPrefs.GetInt(EXPORT_FORMAT_KEY, 0);
-            importSavePath = EditorPrefs.GetString(IMPORT_SAVE_PATH_KEY, importSavePath);
-            selectedTab = EditorPrefs.GetInt(LAST_TAB_KEY, 0);
+            exportPath = SWEditorUtils.LoadPref(EXPORT_PATH_KEY, exportPath);
+            exportFormat = (ExportFormat)SWEditorUtils.LoadPref(EXPORT_FORMAT_KEY, 0);
+            importSavePath = SWEditorUtils.LoadPref(IMPORT_SAVE_PATH_KEY, importSavePath);
+            selectedTab = SWEditorUtils.LoadPref(LAST_TAB_KEY, 0);
 
             RefreshLocales();
         }
 
         private void OnDisable()
         {
-            EditorPrefs.SetString(EXPORT_PATH_KEY, exportPath);
-            EditorPrefs.SetInt(EXPORT_FORMAT_KEY, (int)exportFormat);
-            EditorPrefs.SetString(IMPORT_SAVE_PATH_KEY, importSavePath);
-            EditorPrefs.SetInt(LAST_TAB_KEY, selectedTab);
+            SWEditorUtils.SavePref(EXPORT_PATH_KEY, exportPath);
+            SWEditorUtils.SavePref(EXPORT_FORMAT_KEY, (int)exportFormat);
+            SWEditorUtils.SavePref(IMPORT_SAVE_PATH_KEY, importSavePath);
+            SWEditorUtils.SavePref(LAST_TAB_KEY, selectedTab);
         }
 
         /// <summary>
@@ -145,14 +140,12 @@ namespace SWTools
 
         private void OnGUI()
         {
-            EditorGUILayout.Space(5);
-            int newTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(25));
+            int newTab = SWEditorUtils.DrawTabBar(selectedTab, tabNames);
             if (newTab != selectedTab)
             {
                 selectedTab = newTab;
                 exportPreviewDirty = true;
             }
-            EditorGUILayout.Space(10);
 
             switch (selectedTab)
             {
@@ -164,17 +157,6 @@ namespace SWTools
         }
 
         #region 공통 UI
-        /// <summary>
-        /// 섹션 헤더를 그립니다. (SWTestToolsWindow와 동일한 스타일)
-        /// </summary>
-        private void DrawHeader(string title)
-        {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
-            Rect rect = EditorGUILayout.GetControlRect(false, 1);
-            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 1f));
-            EditorGUILayout.Space(3);
-        }
-
         /// <summary>
         /// 컬렉션 선택 ObjectField를 그립니다. 값이 바뀌면 onChanged 콜백이 호출됩니다.
         /// </summary>
@@ -197,7 +179,7 @@ namespace SWTools
             var availableLocales = LocalizationEditorSettings.GetLocales();
             if (availableLocales == null || availableLocales.Count == 0)
             {
-                EditorGUILayout.HelpBox("Localization Settings에서 Locale을 찾을 수 없습니다.", MessageType.Warning);
+                SWEditorUtils.DrawEmptyNotice("Localization Settings에서 Locale을 찾을 수 없습니다.", MessageType.Warning);
                 return;
             }
 
@@ -250,18 +232,18 @@ namespace SWTools
         #region Export 탭
         private void DrawExportTab()
         {
-            DrawHeader("Target Collection");
+            SWEditorUtils.DrawHeader("Target Collection");
 
             selectedCollection = DrawCollectionField("Table Collection", selectedCollection, () => exportPreviewDirty = true);
 
             if (selectedCollection == null)
             {
-                EditorGUILayout.HelpBox("내보낼 String Table Collection을 선택해주세요.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("내보낼 String Table Collection을 선택해주세요.");
                 return;
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Export Settings");
+            SWEditorUtils.DrawHeader("Export Settings");
 
             EditorGUI.BeginChangeCheck();
             exportFormat = (ExportFormat)EditorGUILayout.EnumPopup("파일 형식", exportFormat);
@@ -287,20 +269,21 @@ namespace SWTools
 
             EditorGUILayout.Space(10);
             EditorGUILayout.BeginHorizontal();
-            GUI.enabled = selectedLocales.Count > 0;
-            if (GUILayout.Button("내보내기", GUILayout.Height(30)))
+            using (new SWEditorUtils.GUIEnabledScope(selectedLocales.Count > 0))
             {
-                ExportCollection();
+                if (GUILayout.Button("내보내기", GUILayout.Height(30)))
+                {
+                    ExportCollection();
+                }
+                if (GUILayout.Button("클립보드로 복사 (TSV)", GUILayout.Height(30)))
+                {
+                    CopyToClipboard();
+                }
             }
-            if (GUILayout.Button("클립보드로 복사 (TSV)", GUILayout.Height(30)))
-            {
-                CopyToClipboard();
-            }
-            GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(10);
-            DrawHeader("Preview");
+            SWEditorUtils.DrawHeader("Preview");
             DrawExportPreview();
         }
 
@@ -308,7 +291,7 @@ namespace SWTools
         {
             if (selectedCollection == null || selectedLocales.Count == 0)
             {
-                EditorGUILayout.HelpBox("컬렉션과 언어를 선택하면 미리보기가 표시됩니다.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("컬렉션과 언어를 선택하면 미리보기가 표시됩니다.", MessageType.None);
                 return;
             }
 
@@ -386,7 +369,7 @@ namespace SWTools
         }
 
         /// <summary>
-        /// JSON 형식으로 직렬화합니다. (key -> {locale: value} 형태)
+        /// JSON 형식으로 직렬화합니다.
         /// </summary>
         private string GenerateJsonExportData()
         {
@@ -510,7 +493,7 @@ namespace SWTools
         #region Import 탭
         private void DrawImportTab()
         {
-            DrawHeader("TSV Input");
+            SWEditorUtils.DrawHeader("TSV Input");
             EditorGUILayout.HelpBox(
                 "스프레드시트에서 복사한 TSV 데이터를 붙여넣으세요.\n" +
                 "첫 번째 열은 키, 나머지 열들은 각 언어별 번역입니다.", MessageType.Info);
@@ -520,7 +503,7 @@ namespace SWTools
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.Space(10);
-            DrawHeader("Import Mode");
+            SWEditorUtils.DrawHeader("Import Mode");
             importMode = (ImportMode)EditorGUILayout.EnumPopup("모드", importMode);
 
             if (importMode == ImportMode.CreateNew)
@@ -601,19 +584,20 @@ namespace SWTools
                 ((importMode == ImportMode.CreateNew && !string.IsNullOrEmpty(importCollectionName)) ||
                  (importMode == ImportMode.UpdateExisting && importExistingCollection != null));
 
-            GUI.enabled = canGenerate;
-            string actionLabel = importMode == ImportMode.CreateNew ? "생성" : "업데이트";
-            if (GUILayout.Button(actionLabel, GUILayout.Height(30)))
+            using (new SWEditorUtils.GUIEnabledScope(canGenerate))
             {
-                GenerateLocalizationTables();
+                string actionLabel = importMode == ImportMode.CreateNew ? "생성" : "업데이트";
+                if (GUILayout.Button(actionLabel, GUILayout.Height(30)))
+                {
+                    GenerateLocalizationTables();
+                }
             }
-            GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
             if (importShowPreview && importPreviewEntries.Count > 0)
             {
                 EditorGUILayout.Space(10);
-                DrawHeader("Preview");
+                SWEditorUtils.DrawHeader("Preview");
                 DrawImportPreview();
             }
         }
@@ -679,7 +663,7 @@ namespace SWTools
         }
 
         /// <summary>
-        /// TSV 문자열을 파싱합니다. 셀 내부에 개행이 포함된 경우(탭 개수가 부족하면 다음 줄과 합침) 처리합니다.
+        /// TSV 문자열을 파싱합니다.
         /// </summary>
         private List<ImportEntry> ParseTSVData(string data)
         {
@@ -701,7 +685,6 @@ namespace SWTools
                 string fullLine = lines[currentLine];
                 int tabCount = fullLine.Count(c => c == '\t');
 
-                // 셀 내 개행 처리 - 탭 개수가 부족하면 다음 줄과 합침
                 while (tabCount < expectedColumnCount - 1 && currentLine + 1 < lines.Length)
                 {
                     currentLine++;
@@ -926,10 +909,6 @@ namespace SWTools
             return newCollection;
         }
 
-        /// <summary>
-        /// TSV 컬럼 헤더와 실제 Locale 간의 매칭을 시도합니다.
-        /// 정확 매치 → 언어 코드 매치 → 대소문자 무시 매치 → 이름 매치 순.
-        /// </summary>
         private string FindTranslationForLocale(ImportEntry entry, Locale locale)
         {
             if (entry.translations.TryGetValue(locale.Identifier.Code, out string exact))
@@ -1000,7 +979,7 @@ namespace SWTools
                 "기존 Localization 항목들의 Smart String 설정을 일괄 변경할 수 있습니다.",
                 MessageType.Info);
 
-            DrawHeader("Target Collection");
+            SWEditorUtils.DrawHeader("Target Collection");
 
             var newCollection = DrawCollectionField("컬렉션", selectedCollection);
             if (newCollection != selectedCollection)
@@ -1011,12 +990,12 @@ namespace SWTools
 
             if (selectedCollection == null)
             {
-                EditorGUILayout.HelpBox("String Table Collection을 선택해주세요.", MessageType.Warning);
+                SWEditorUtils.DrawEmptyNotice("String Table Collection을 선택해주세요.", MessageType.Warning);
                 return;
             }
 
             EditorGUILayout.Space(10);
-            DrawHeader("Filter");
+            SWEditorUtils.DrawHeader("Filter");
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             smartSearchFilter = EditorGUILayout.TextField("키 검색", smartSearchFilter);
@@ -1026,7 +1005,6 @@ namespace SWTools
             bool newSmart = EditorGUILayout.ToggleLeft("Smart인 항목만", smartFilterOnlySmart, GUILayout.Width(160));
             EditorGUILayout.EndHorizontal();
 
-            // 두 필터는 동시 활성화 불가
             if (newNonSmart && !smartFilterOnlyNonSmart) smartFilterOnlySmart = false;
             if (newSmart && !smartFilterOnlySmart) smartFilterOnlyNonSmart = false;
             smartFilterOnlyNonSmart = newNonSmart;
@@ -1036,11 +1014,11 @@ namespace SWTools
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.Space(10);
-            DrawHeader("Keys");
+            SWEditorUtils.DrawHeader("Keys");
             DrawSmartKeySelection();
 
             EditorGUILayout.Space(10);
-            DrawHeader("Bulk Actions");
+            SWEditorUtils.DrawHeader("Bulk Actions");
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("선택 항목 Smart 활성화", GUILayout.Height(30)))
@@ -1055,23 +1033,17 @@ namespace SWTools
 
             EditorGUILayout.Space(3);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("전체 키 Smart 활성화", GUILayout.Height(25)))
+            if (SWEditorUtils.DangerButton("전체 키 Smart 활성화", "확인",
+                $"'{selectedCollection.name}' 컬렉션의 모든 키에 Smart String을 활성화하시겠습니까?",
+                "활성화", "취소"))
             {
-                if (EditorUtility.DisplayDialog("확인",
-                    $"'{selectedCollection.name}' 컬렉션의 모든 키에 Smart String을 활성화하시겠습니까?",
-                    "활성화", "취소"))
-                {
-                    ApplySmartStringToAll(true);
-                }
+                ApplySmartStringToAll(true);
             }
-            if (GUILayout.Button("전체 키 Smart 비활성화", GUILayout.Height(25)))
+            if (SWEditorUtils.DangerButton("전체 키 Smart 비활성화", "확인",
+                $"'{selectedCollection.name}' 컬렉션의 모든 키에 Smart String을 비활성화하시겠습니까?",
+                "비활성화", "취소"))
             {
-                if (EditorUtility.DisplayDialog("확인",
-                    $"'{selectedCollection.name}' 컬렉션의 모든 키에 Smart String을 비활성화하시겠습니까?",
-                    "비활성화", "취소"))
-                {
-                    ApplySmartStringToAll(false);
-                }
+                ApplySmartStringToAll(false);
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -1084,8 +1056,7 @@ namespace SWTools
 
             var filteredKeys = allKeys.Where(key =>
             {
-                if (!string.IsNullOrEmpty(smartSearchFilter) &&
-                    key.IndexOf(smartSearchFilter, StringComparison.OrdinalIgnoreCase) < 0)
+                if (!SWEditorUtils.MatchesFilter(key, smartSearchFilter))
                     return false;
 
                 if (smartFilterOnlyNonSmart || smartFilterOnlySmart)
@@ -1099,7 +1070,7 @@ namespace SWTools
 
             if (filteredKeys.Count == 0)
             {
-                EditorGUILayout.HelpBox("필터 조건에 맞는 키가 없습니다.", MessageType.Info);
+                SWEditorUtils.DrawEmptyNotice("필터 조건에 맞는 키가 없습니다.");
                 return;
             }
 
@@ -1119,7 +1090,6 @@ namespace SWTools
 
             EditorGUILayout.Space(3);
 
-            // 첫 번째 로케일 테이블 한 번만 가져와서 재사용 (미리보기용)
             var firstLocale = selectedLocales.FirstOrDefault();
             StringTable previewTable = firstLocale != null
                 ? selectedCollection.GetTable(firstLocale.Identifier) as StringTable
@@ -1254,18 +1224,19 @@ namespace SWTools
         #region Validator 탭
         private void DrawValidatorTab()
         {
-            DrawHeader("Target");
+            SWEditorUtils.DrawHeader("Target");
 
             selectedCollection = DrawCollectionField("Table Collection", selectedCollection);
 
             EditorGUILayout.Space(5);
             EditorGUILayout.BeginHorizontal();
-            GUI.enabled = selectedCollection != null;
-            if (GUILayout.Button("검증 실행", GUILayout.Height(28)))
+            using (new SWEditorUtils.GUIEnabledScope(selectedCollection != null))
             {
-                ValidateCollection();
+                if (GUILayout.Button("검증 실행", GUILayout.Height(28)))
+                {
+                    ValidateCollection();
+                }
             }
-            GUI.enabled = true;
             if (GUILayout.Button("모든 컬렉션 검증", GUILayout.Height(28)))
             {
                 ValidateAllCollections();
@@ -1300,7 +1271,7 @@ namespace SWTools
 
             var filteredResults = GetFilteredValidationResults();
             EditorGUILayout.Space(5);
-            DrawHeader($"Results ({filteredResults.Count}/{validationResults.Count})");
+            SWEditorUtils.DrawHeader($"Results ({filteredResults.Count}/{validationResults.Count})");
             DrawValidationResults(filteredResults);
         }
 
@@ -1422,7 +1393,7 @@ namespace SWTools
                 });
             }
 
-            // 4. Unity가 자동 생성한 것으로 의심되는 키 ("키 1", "키 2" 같은 형태)
+            // 4. Unity가 자동 생성한 것으로 의심되는 키
             var suspiciousPattern = new Regex(@".+ \d+$");
             foreach (var entry in collection.SharedData.Entries)
             {
@@ -1438,7 +1409,7 @@ namespace SWTools
                 }
             }
 
-            // 5. 긴 텍스트 (UI 오버플로우 가능성)
+            // 5. 긴 텍스트
             foreach (var locale in availableLocales)
             {
                 var table = collection.GetTable(locale.Identifier) as StringTable;
@@ -1550,31 +1521,31 @@ namespace SWTools
                 _ => new Color(0.8f, 0.9f, 1f)
             };
 
-            Color original = GUI.backgroundColor;
-            GUI.backgroundColor = bgColor;
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-            string icon = result.level switch
+            using (new SWEditorUtils.GUIBgColorScope(bgColor))
             {
-                ValidationLevel.Error => "[ERROR]",
-                ValidationLevel.Warning => "[WARNING]",
-                _ => "[INFO]"
-            };
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            EditorGUILayout.LabelField($"{icon} {result.message}", EditorStyles.wordWrappedLabel);
+                string icon = result.level switch
+                {
+                    ValidationLevel.Error => "[ERROR]",
+                    ValidationLevel.Warning => "[WARNING]",
+                    _ => "[INFO]"
+                };
 
-            if (!string.IsNullOrEmpty(result.key) || !string.IsNullOrEmpty(result.locale))
-            {
-                EditorGUILayout.BeginHorizontal();
-                if (!string.IsNullOrEmpty(result.key))
-                    EditorGUILayout.LabelField($"키: {result.key}", EditorStyles.miniLabel);
-                if (!string.IsNullOrEmpty(result.locale))
-                    EditorGUILayout.LabelField($"언어: {result.locale}", EditorStyles.miniLabel);
-                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.LabelField($"{icon} {result.message}", EditorStyles.wordWrappedLabel);
+
+                if (!string.IsNullOrEmpty(result.key) || !string.IsNullOrEmpty(result.locale))
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    if (!string.IsNullOrEmpty(result.key))
+                        EditorGUILayout.LabelField($"키: {result.key}", EditorStyles.miniLabel);
+                    if (!string.IsNullOrEmpty(result.locale))
+                        EditorGUILayout.LabelField($"언어: {result.locale}", EditorStyles.miniLabel);
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndVertical();
             }
-
-            EditorGUILayout.EndVertical();
-            GUI.backgroundColor = original;
         }
         #endregion // Validator 탭
     }
