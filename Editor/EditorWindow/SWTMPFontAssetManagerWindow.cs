@@ -1,4 +1,4 @@
-#if !DISABLE_SW_TMP_MANAGER
+#if !SW_TMP_MANAAGER_DISABLE
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -908,4 +908,4 @@ namespace SWTools
         #endregion // Browser 탭
     }
 }
-#endif // !DISABLE_SW_TMP_MANAGER
+#endif // !SW_TMP_MANAAGER_DISABLE

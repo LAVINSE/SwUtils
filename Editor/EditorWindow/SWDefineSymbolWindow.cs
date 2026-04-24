@@ -21,7 +21,10 @@ namespace SWTools
 
         private static readonly string[] defaultPresetSymbols =
         {
-            
+            "SW_DEBUG_MODE",
+            "SW_GOOGLEPLAY_ENABLE",
+            "SW_STEAMWORKS_NET",
+            "SW_TMP_MANAAGER_DISABLE",
         };
 
         private BuildTargetGroup selectedGroup;
@@ -111,7 +114,7 @@ namespace SWTools
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.HelpBox("Use letters, numbers, and underscore only. Example: DebugMode", MessageType.Info);
+            EditorGUILayout.HelpBox("Use letters, numbers, and underscore only. Example: SW_DEBUG_MODE", MessageType.Info);
         }
 
         private void DrawPresetSection()

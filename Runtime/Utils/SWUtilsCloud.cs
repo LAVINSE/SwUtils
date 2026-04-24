@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 using GooglePlayGames.BasicApi.SavedGame;
@@ -13,7 +13,7 @@ using GooglePlayGames.BasicApi.SavedGame;
 using System.Runtime.InteropServices;
 #endif
 
-#if (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#if (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
 using Steamworks;
 #endif
 
@@ -21,9 +21,9 @@ namespace SWUtils
 {
     /// <summary>
     /// 플랫폼별 클라우드 저장소를 통합 관리한다.
-    /// Android: Google Play Games Saved Games (GPGS_ENABLED 디파인 필요)
+    /// Android: Google Play Games Saved Games (SW_GOOGLEPLAY_ENABLE 디파인 필요)
     /// iOS: iCloud Key-Value Storage (네이티브 플러그인 필요)
-    /// Standalone: Steamworks Remote Storage (STEAMWORKS_NET 디파인 필요)
+    /// Standalone: Steamworks Remote Storage (SW_STEAMWORKS_NET 디파인 필요)
     /// SDK가 없거나 에디터에서는 로컬 PlayerPrefs로 폴백한다.
     /// </summary>
     public static class SWUtilsCloud
@@ -51,11 +51,11 @@ namespace SWUtils
         {
             get
             {
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
                 return isAuthenticated;
 #elif UNITY_IOS && !UNITY_EDITOR
                 return true;
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
                 return SteamManager.Initialized;
 #else
                 return false;
@@ -68,11 +68,11 @@ namespace SWUtils
         {
             get
             {
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
                 return "Google Play Games";
 #elif UNITY_IOS && !UNITY_EDITOR
                 return "iCloud";
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
                 return "Steam Cloud";
 #else
                 return "Local Fallback";
@@ -147,7 +147,7 @@ namespace SWUtils
                 return;
             }
 
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
             PlayGamesPlatform.Activate();
             PlayGamesPlatform.Instance.Authenticate((status) =>
             {
@@ -162,7 +162,7 @@ namespace SWUtils
             isInitialized = true;
             Debug.Log("[SWUtilsCloud] iCloud initialized");
             onComplete?.Invoke(true);
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
             isAuthenticated = SteamManager.Initialized;
             isInitialized = true;
             Debug.Log($"[SWUtilsCloud] Steam initialized: {isAuthenticated}");
@@ -207,7 +207,7 @@ namespace SWUtils
 
             Debug.Log($"[SWUtilsCloud] Save begin (length: {json.Length}, provider: {ProviderName})");
 
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
             if (!isAuthenticated)
             {
                 Debug.LogWarning("[SWUtilsCloud] GPGS not authenticated. Saving local only.");
@@ -253,7 +253,7 @@ namespace SWUtils
                 Debug.LogError($"[SWUtilsCloud] iCloud save failed: {exception.Message}");
                 SaveLocalAndComplete(json, saveName, onComplete, false);
             }
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
             if (!SteamManager.Initialized)
             {
                 Debug.LogWarning("[SWUtilsCloud] Steam not initialized. Saving local only.");
@@ -305,7 +305,7 @@ namespace SWUtils
             saveName = NormalizeSaveName(saveName);
             Debug.Log($"[SWUtilsCloud] Load begin (provider: {ProviderName})");
 
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
             if (!isAuthenticated)
             {
                 Debug.LogWarning("[SWUtilsCloud] GPGS not authenticated. Loading local only.");
@@ -361,7 +361,7 @@ namespace SWUtils
                 Debug.LogError($"[SWUtilsCloud] iCloud load failed: {exception.Message}");
                 LoadLocalAndComplete(saveName, onComplete);
             }
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
             if (!SteamManager.Initialized)
             {
                 Debug.LogWarning("[SWUtilsCloud] Steam not initialized. Loading local only.");
@@ -429,7 +429,7 @@ namespace SWUtils
             saveName = NormalizeSaveName(saveName);
             Debug.Log($"[SWUtilsCloud] Delete begin (provider: {ProviderName})");
 
-#if UNITY_ANDROID && GPGS_ENABLED && !UNITY_EDITOR
+#if UNITY_ANDROID && SW_GOOGLEPLAY_ENABLE && !UNITY_EDITOR
             if (!isAuthenticated)
             {
                 DeleteLocal(saveName);
@@ -470,7 +470,7 @@ namespace SWUtils
                 Debug.LogError($"[SWUtilsCloud] iCloud delete failed: {exception.Message}");
                 onComplete?.Invoke(false);
             }
-#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && STEAMWORKS_NET
+#elif (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX) && SW_STEAMWORKS_NET
             try
             {
                 string fileName = saveName + ".json";

@@ -714,9 +714,9 @@ namespace SWUtils
         #region 스톱워치
         /// <summary>
         /// 스톱워치를 시작(또는 재시작)한다.
-        /// DebugMode가 아니면 무시된다.
+        /// SW_DEBUG_MODE가 아니면 무시된다.
         /// </summary>
-        [System.Diagnostics.Conditional("DebugMode")]
+        [System.Diagnostics.Conditional("SW_DEBUG_MODE")]
         public static void StopwatchStart()
         {
             stopWatch.Restart();
@@ -724,12 +724,12 @@ namespace SWUtils
 
         /// <summary>
         /// 스톱워치를 정지하고 경과 시간(ms)을 반환한다.
-        /// DebugMode가 아니면 항상 0을 반환한다.
+        /// SW_DEBUG_MODE가 아니면 항상 0을 반환한다.
         /// </summary>
         /// <returns>경과 시간(밀리초)</returns>
         public static double StopwatchStop()
         {
-#if DebugMode
+#if SW_DEBUG_MODE
             stopWatch.Stop();
             return stopWatch.Elapsed.TotalMilliseconds;
 #else
@@ -739,12 +739,12 @@ namespace SWUtils
 
         /// <summary>
         /// 스톱워치를 정지하지 않고 현재까지의 경과 시간(ms)을 반환한다.
-        /// DebugMode가 아니면 항상 0을 반환한다.
+        /// SW_DEBUG_MODE가 아니면 항상 0을 반환한다.
         /// </summary>
         /// <returns>경과 시간(밀리초)</returns>
         public static double StopwatchLap()
         {
-#if DebugMode
+#if SW_DEBUG_MODE
             return stopWatch.Elapsed.TotalMilliseconds;
 #else
             return 0;
