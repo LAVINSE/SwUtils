@@ -70,7 +70,7 @@ namespace SWTools
 
         private void DrawSlotSection()
         {
-            SWEditorUtils.DrawHeader("=====> Slot <=====");
+            SWEditorUtils.DrawHeader("Slot");
 
             EditorGUILayout.BeginHorizontal();
             slotName = EditorGUILayout.TextField("Current Slot", slotName);
@@ -92,7 +92,7 @@ namespace SWTools
 
         private void DrawEditSection()
         {
-            SWEditorUtils.DrawHeader("=====> Add / Edit <=====");
+            SWEditorUtils.DrawHeader("Add / Edit");
 
             editKey = EditorGUILayout.TextField("Key", editKey);
             editValue = EditorGUILayout.TextField("Value", editValue);
@@ -115,7 +115,7 @@ namespace SWTools
 
         private void DrawListSection()
         {
-            SWEditorUtils.DrawHeader($"=====> Entries ({entries.Count}) <=====");
+            SWEditorUtils.DrawHeader($"Entries ({entries.Count})");
 
             if (entries.Count == 0)
             {
@@ -173,7 +173,7 @@ namespace SWTools
 
         private void DrawJsonSection()
         {
-            SWEditorUtils.DrawHeader("=====> JSON Export / Import <=====");
+            SWEditorUtils.DrawHeader("JSON Export / Import");
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Export", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
