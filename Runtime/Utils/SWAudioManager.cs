@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using SWTools;
 using UnityEngine;
 
 namespace SWUtils
@@ -11,10 +12,13 @@ namespace SWUtils
     public class SWAudioManager : MonoBehaviour
     {
         #region 필드
+        [Header("=====> 라이브러리 <=====")]
+        [SerializeField] private SWAudioLibrary audioLibrary;
+
         [Header("=====> 음악 <=====")]
         [SerializeField] private AudioSource musicSource;
-        [SerializeField] private bool playMusicOnStart;
-        [SerializeField] private AudioClip startMusicClip;
+        [SerializeField,] private bool playMusicOnStart;
+        [SerializeField, SWCondition("playMusicOnStart", true)] private string startMusicKey;
 
         [Header("=====> 효과음 <=====")]
         [SerializeField] private AudioSource sfxSourcePrefab;
@@ -34,6 +38,8 @@ namespace SWUtils
         #endregion // 필드
 
         #region 프로퍼티
+        /// <summary>키 기반 재생에 사용하는 사운드 라이브러리.</summary>
+        public SWAudioLibrary AudioLibrary => audioLibrary;
         /// <summary>음악 재생에 사용하는 AudioSource.</summary>
         public AudioSource MusicSource => musicSource;
         /// <summary>전체 볼륨.</summary>
@@ -56,8 +62,8 @@ namespace SWUtils
 
         private void Start()
         {
-            if (playMusicOnStart && startMusicClip != null)
-                PlayMusic(startMusicClip);
+            if (!playMusicOnStart) return;
+            PlayMusic(startMusicKey);
         }
 
         private void OnDestroy()
@@ -68,39 +74,30 @@ namespace SWUtils
         }
         #endregion // 초기화
 
+        #region 라이브러리
+        /// <summary>
+        /// 런타임에 사용할 사운드 라이브러리를 지정한다.
+        /// </summary>
+        /// <param name="library">BGM/SFX 키가 등록된 라이브러리.</param>
+        public void SetAudioLibrary(SWAudioLibrary library)
+        {
+            audioLibrary = library;
+        }
+        #endregion // 라이브러리
+
         #region 음악
         /// <summary>
-        /// BGM을 재생한다. fadeDuration이 0보다 크면 기존 BGM을 페이드아웃한 뒤 교체한다.
+        /// 라이브러리에 등록된 BGM을 키로 찾아 재생한다.
         /// </summary>
-        /// <param name="clip">재생할 음악 클립.</param>
+        /// <param name="key">라이브러리에 등록된 BGM 키.</param>
         /// <param name="loop">반복 재생 여부.</param>
         /// <param name="fadeDuration">페이드 전환 시간.</param>
-        public void PlayMusic(AudioClip clip, bool loop = true, float fadeDuration = 0f)
+        public void PlayMusic(string key, bool loop = true, float fadeDuration = 0f)
         {
-            if (clip == null)
-            {
-                SWUtilsLog.LogWarning("[SWAudioManager] PlayMusic failed. Clip is null.");
+            if (!TryGetMusicClip(key, out AudioClip clip))
                 return;
-            }
 
-            EnsureMusicSource();
-
-            if (musicFadeRoutine != null)
-                StopCoroutine(musicFadeRoutine);
-
-            if (fadeDuration > 0f && musicSource.isPlaying)
-            {
-                musicFadeRoutine = StartCoroutine(FadeToNewMusicRoutine(clip, loop, fadeDuration));
-                SWUtilsLog.Log($"[SWAudioManager] Fade music to: {clip.name}");
-                return;
-            }
-
-            musicSource.clip = clip;
-            musicSource.loop = loop;
-            musicSource.volume = masterVolume * musicVolume;
-            musicSource.Play();
-
-            SWUtilsLog.Log($"[SWAudioManager] Play music: {clip.name}");
+            PlayMusicClip(clip, loop, fadeDuration);
         }
 
         /// <summary>
@@ -142,50 +139,34 @@ namespace SWUtils
 
         #region 효과음
         /// <summary>
-        /// 재사용 가능한 AudioSource로 2D 효과음을 재생한다.
+        /// 라이브러리에 등록된 2D 효과음을 키로 찾아 재생한다.
         /// </summary>
-        /// <param name="clip">재생할 효과음 클립.</param>
+        /// <param name="key">라이브러리에 등록된 SFX 키.</param>
         /// <param name="volumeScale">효과음 볼륨 배율.</param>
         /// <param name="pitch">재생 피치.</param>
         /// <returns>재생에 사용된 AudioSource.</returns>
-        public AudioSource PlaySfx(AudioClip clip, float volumeScale = 1f, float pitch = 1f)
+        public AudioSource PlaySfx(string key, float volumeScale = 1f, float pitch = 1f)
         {
-            if (clip == null)
-            {
-                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. Clip is null.");
+            if (!TryGetSfxClip(key, out AudioClip clip))
                 return null;
-            }
 
-            AudioSource source = GetAvailableSfxSource();
-            if (source == null)
-            {
-                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. No available SFX source.");
-                return null;
-            }
-
-            source.clip = clip;
-            source.loop = false;
-            source.pitch = pitch;
-            source.volume = masterVolume * sfxVolume * Mathf.Clamp01(volumeScale);
-            source.spatialBlend = 0f;
-            source.transform.SetParent(transform, false);
-            source.Play();
-
-            SWUtilsLog.Log($"[SWAudioManager] Play SFX: {clip.name}");
-            return source;
+            return PlaySfxClip(clip, volumeScale, pitch);
         }
 
         /// <summary>
-        /// 지정한 월드 위치에서 3D 효과음을 재생한다.
+        /// 라이브러리에 등록된 효과음을 키로 찾아 지정한 월드 위치에서 3D 재생한다.
         /// </summary>
-        /// <param name="clip">재생할 효과음 클립.</param>
+        /// <param name="key">라이브러리에 등록된 SFX 키.</param>
         /// <param name="position">재생 위치.</param>
         /// <param name="volumeScale">효과음 볼륨 배율.</param>
         /// <param name="pitch">재생 피치.</param>
         /// <returns>재생에 사용된 AudioSource.</returns>
-        public AudioSource PlaySfxAtPoint(AudioClip clip, Vector3 position, float volumeScale = 1f, float pitch = 1f)
+        public AudioSource PlaySfxAtPoint(string key, Vector3 position, float volumeScale = 1f, float pitch = 1f)
         {
-            AudioSource source = PlaySfx(clip, volumeScale, pitch);
+            if (!TryGetSfxClip(key, out AudioClip clip))
+                return null;
+
+            AudioSource source = PlaySfxClip(clip, volumeScale, pitch);
             if (source == null) return null;
 
             source.transform.position = position;
@@ -269,6 +250,111 @@ namespace SWUtils
         #endregion // 볼륨
 
         #region 내부
+        private bool TryGetMusicClip(string key, out AudioClip clip)
+        {
+            clip = null;
+
+            if (audioLibrary == null)
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlayMusic failed. AudioLibrary is null.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlayMusic failed. Key is empty.");
+                return false;
+            }
+
+            if (!audioLibrary.TryGetMusicClip(key, out clip))
+            {
+                SWUtilsLog.LogWarning($"[SWAudioManager] PlayMusic failed. Music key not found: {key}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryGetSfxClip(string key, out AudioClip clip)
+        {
+            clip = null;
+
+            if (audioLibrary == null)
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. AudioLibrary is null.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. Key is empty.");
+                return false;
+            }
+
+            if (!audioLibrary.TryGetSfxClip(key, out clip))
+            {
+                SWUtilsLog.LogWarning($"[SWAudioManager] PlaySfx failed. SFX key not found: {key}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private void PlayMusicClip(AudioClip clip, bool loop, float fadeDuration)
+        {
+            if (clip == null)
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlayMusic failed. Clip is null.");
+                return;
+            }
+
+            EnsureMusicSource();
+
+            if (musicFadeRoutine != null)
+                StopCoroutine(musicFadeRoutine);
+
+            if (fadeDuration > 0f && musicSource.isPlaying)
+            {
+                musicFadeRoutine = StartCoroutine(FadeToNewMusicRoutine(clip, loop, fadeDuration));
+                SWUtilsLog.Log($"[SWAudioManager] Fade music to: {clip.name}");
+                return;
+            }
+
+            musicSource.clip = clip;
+            musicSource.loop = loop;
+            musicSource.volume = masterVolume * musicVolume;
+            musicSource.Play();
+
+            SWUtilsLog.Log($"[SWAudioManager] Play music: {clip.name}");
+        }
+
+        private AudioSource PlaySfxClip(AudioClip clip, float volumeScale, float pitch)
+        {
+            if (clip == null)
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. Clip is null.");
+                return null;
+            }
+
+            AudioSource source = GetAvailableSfxSource();
+            if (source == null)
+            {
+                SWUtilsLog.LogWarning("[SWAudioManager] PlaySfx failed. No available SFX source.");
+                return null;
+            }
+
+            source.clip = clip;
+            source.loop = false;
+            source.pitch = pitch;
+            source.volume = masterVolume * sfxVolume * Mathf.Clamp01(volumeScale);
+            source.spatialBlend = 0f;
+            source.transform.SetParent(transform, false);
+            source.Play();
+
+            SWUtilsLog.Log($"[SWAudioManager] Play SFX: {clip.name}");
+            return source;
+        }
+
         /// <summary>
         /// 음악용 AudioSource가 없으면 자동으로 생성한다.
         /// </summary>

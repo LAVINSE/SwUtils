@@ -30,17 +30,29 @@ namespace SWUtils
         }
         #endregion // 초기화
 
-        #region 음악
+        #region 라이브러리
         /// <summary>
-        /// BGM을 재생한다.
+        /// 런타임에 사용할 사운드 라이브러리를 지정한다.
         /// </summary>
-        /// <param name="clip">재생할 음악 클립.</param>
-        /// <param name="loop">반복 재생 여부.</param>
-        /// <param name="fadeDuration">페이드 전환 시간.</param>
-        public void PlayMusic(AudioClip clip, bool loop = true, float fadeDuration = 0f)
+        /// <param name="library">BGM/SFX 키가 등록된 라이브러리.</param>
+        public void SetAudioLibrary(SWAudioLibrary library)
         {
             EnsureAudioManager();
-            audioManager.PlayMusic(clip, loop, fadeDuration);
+            audioManager.SetAudioLibrary(library);
+        }
+        #endregion // 라이브러리
+
+        #region 음악
+        /// <summary>
+        /// 라이브러리에 등록된 BGM을 키로 찾아 재생한다.
+        /// </summary>
+        /// <param name="key">라이브러리에 등록된 BGM 키.</param>
+        /// <param name="loop">반복 재생 여부.</param>
+        /// <param name="fadeDuration">페이드 전환 시간.</param>
+        public void PlayMusic(string key, bool loop = true, float fadeDuration = 0f)
+        {
+            EnsureAudioManager();
+            audioManager.PlayMusic(key, loop, fadeDuration);
         }
 
         /// <summary>
@@ -74,30 +86,30 @@ namespace SWUtils
 
         #region 효과음
         /// <summary>
-        /// 2D 효과음을 재생한다.
+        /// 라이브러리에 등록된 2D 효과음을 키로 찾아 재생한다.
         /// </summary>
-        /// <param name="clip">재생할 효과음 클립.</param>
+        /// <param name="key">라이브러리에 등록된 SFX 키.</param>
         /// <param name="volumeScale">효과음 볼륨 배율.</param>
         /// <param name="pitch">재생 피치.</param>
         /// <returns>재생에 사용된 AudioSource.</returns>
-        public AudioSource PlaySfx(AudioClip clip, float volumeScale = 1f, float pitch = 1f)
+        public AudioSource PlaySfx(string key, float volumeScale = 1f, float pitch = 1f)
         {
             EnsureAudioManager();
-            return audioManager.PlaySfx(clip, volumeScale, pitch);
+            return audioManager.PlaySfx(key, volumeScale, pitch);
         }
 
         /// <summary>
-        /// 지정한 월드 위치에서 3D 효과음을 재생한다.
+        /// 라이브러리에 등록된 효과음을 키로 찾아 지정한 월드 위치에서 3D 재생한다.
         /// </summary>
-        /// <param name="clip">재생할 효과음 클립.</param>
+        /// <param name="key">라이브러리에 등록된 SFX 키.</param>
         /// <param name="position">재생 위치.</param>
         /// <param name="volumeScale">효과음 볼륨 배율.</param>
         /// <param name="pitch">재생 피치.</param>
         /// <returns>재생에 사용된 AudioSource.</returns>
-        public AudioSource PlaySfxAtPoint(AudioClip clip, Vector3 position, float volumeScale = 1f, float pitch = 1f)
+        public AudioSource PlaySfxAtPoint(string key, Vector3 position, float volumeScale = 1f, float pitch = 1f)
         {
             EnsureAudioManager();
-            return audioManager.PlaySfxAtPoint(clip, position, volumeScale, pitch);
+            return audioManager.PlaySfxAtPoint(key, position, volumeScale, pitch);
         }
 
         /// <summary>
