@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
@@ -1094,6 +1095,12 @@ namespace SWTools
 
             EditorGUILayout.LabelField(cachedScreenInfo);
             EditorGUILayout.LabelField(cachedDpiInfo);
+
+            EditorGUILayout.Space(10);
+            SWEditorUtils.DrawHeader("Language");
+            EditorGUILayout.LabelField("System Language", Application.systemLanguage.ToString());
+            EditorGUILayout.LabelField("Current Culture", CultureInfo.CurrentCulture.Name);
+            EditorGUILayout.LabelField("Current UI Culture", CultureInfo.CurrentUICulture.Name);
         }
         #endregion // Utility 탭
     }

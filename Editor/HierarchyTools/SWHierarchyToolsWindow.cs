@@ -1,0 +1,414 @@
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+
+namespace SWTools
+{
+    public class SWHierarchyToolsWindow : EditorWindow
+    {
+        private static readonly Color[] Palette =
+        {
+            new(0.96f, 0.32f, 0.32f, 1f),
+            new(1f, 0.62f, 0.2f, 1f),
+            new(1f, 0.84f, 0.24f, 1f),
+            new(0.32f, 0.8f, 0.42f, 1f),
+            new(0.2f, 0.65f, 1f, 1f),
+            new(0.58f, 0.42f, 1f, 1f),
+            new(1f, 0.42f, 0.75f, 1f),
+            new(0.72f, 0.72f, 0.72f, 1f),
+        };
+
+        private static readonly string[] IconNames =
+        {
+            "d_AudioSource Icon",
+            "d_Camera Icon",
+            "d_Canvas Icon",
+            "d_CapsuleCollider Icon",
+            "d_DirectionalLight Icon",
+            "d_EventSystem Icon",
+            "d_Favorite Icon",
+            "d_Folder Icon",
+            "d_GameObject Icon",
+            "d_Light Icon",
+            "d_Material Icon",
+            "d_MeshRenderer Icon",
+            "d_ParticleSystem Icon",
+            "d_Prefab Icon",
+            "d_Rigidbody Icon",
+            "d_SceneAsset Icon",
+            "d_SettingsIcon",
+            "d_SpriteRenderer Icon",
+            "d_Transform Icon",
+        };
+
+        private static readonly string[] TabNames = { "Display", "Apply" };
+        private const string CustomIconGuidsKey = "SWTools.HierarchyTools.CustomIconGuids";
+        private const float LeftPanelWidth = 300f;
+        private const float SplitterWidth = 2f;
+
+        private Color colorA = new(0.2f, 0.65f, 1f, 1f);
+        private Color colorB = new(0.58f, 0.42f, 1f, 1f);
+        private bool useGradient = true;
+        private bool includeChildren;
+        private Texture2D customTextureIcon;
+        private Vector2 registryScroll;
+        private Vector2 customIconScroll;
+        private int selectedTab;
+        private List<string> customIconGuids = new();
+        private bool removeCustomIconMode;
+
+        [MenuItem("SWTools/Hierarchy Tools")]
+        public static void ShowWindow()
+        {
+            SWHierarchyToolsWindow window = GetWindow<SWHierarchyToolsWindow>();
+            SWEditorUtils.SetupWindow(window, "Hierarchy Tools", "d_UnityEditor.HierarchyWindow", 700, 520);
+            window.Show();
+        }
+
+        [MenuItem("GameObject/SWTools/Hierarchy/Clear", false, 30)]
+        private static void ClearMenu()
+        {
+            SWHierarchyTools.Clear(GetSelectedGameObjects(), false);
+        }
+
+        private void OnEnable()
+        {
+            customIconGuids = SWEditorUtils.LoadList(CustomIconGuidsKey);
+        }
+
+        private void OnDisable()
+        {
+            SaveCustomIcons();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            DrawRegistryPanel();
+
+            Rect splitter = EditorGUILayout.GetControlRect(false, GUILayout.Width(SplitterWidth), GUILayout.ExpandHeight(true));
+            EditorGUI.DrawRect(splitter, SWEditorUtils.HeaderLineColor);
+
+            DrawMainPanel();
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawRegistryPanel()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.Width(LeftPanelWidth));
+
+            List<(GameObject gameObject, SWHierarchyTools.Entry entry, Color colorA, Color colorB)> entries = SWHierarchyTools.GetEntries();
+            SWEditorUtils.DrawHeader($"Registry ({entries.Count})");
+
+            if (entries.Count == 0)
+            {
+                SWEditorUtils.DrawEmptyNotice("No registered hierarchy items.", MessageType.None);
+            }
+            else
+            {
+                DrawRegistryList(entries);
+            }
+
+            GUILayout.FlexibleSpace();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Clean Missing", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
+                SWHierarchyTools.CleanMissing();
+
+            if (GUILayout.Button("Clear All", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
+            {
+                if (EditorUtility.DisplayDialog("Clear Hierarchy Tools", "Clear all hierarchy decorations?", "Clear", "Cancel"))
+                    SWHierarchyTools.ClearAll();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawRegistryList(List<(GameObject gameObject, SWHierarchyTools.Entry entry, Color colorA, Color colorB)> entries)
+        {
+            registryScroll = EditorGUILayout.BeginScrollView(registryScroll);
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var item = entries[i];
+                bool exists = item.gameObject != null;
+
+                Rect rowRect = EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+
+                Rect swatchRect = GUILayoutUtility.GetRect(18f, 18f, GUILayout.Width(18f), GUILayout.Height(18f));
+                SWEditorUtils.DrawColorSwatch(swatchRect, item.colorA, item.entry.useGradient ? item.colorB : item.colorA);
+
+                using (new SWEditorUtils.GUIColorScope(exists ? Color.white : SWEditorUtils.ErrorColor))
+                {
+                    string label = exists ? item.gameObject.name : $"{item.entry.name} (missing)";
+                    if (GUILayout.Button(label, EditorStyles.label, GUILayout.ExpandWidth(true), GUILayout.Height(18f)))
+                    {
+                        if (exists)
+                            SelectAndPing(item.gameObject);
+                    }
+                }
+
+                if (GUILayout.Button("x", GUILayout.Width(18f), GUILayout.Height(18f)))
+                {
+                    if (exists)
+                        SWHierarchyTools.Clear(item.gameObject);
+                    else
+                        SWHierarchyTools.CleanMissing();
+
+                    GUIUtility.ExitGUI();
+                }
+
+                EditorGUILayout.EndHorizontal();
+
+                if (Event.current.type == EventType.MouseDown
+                    && Event.current.clickCount == 2
+                    && rowRect.Contains(Event.current.mousePosition)
+                    && exists)
+                {
+                    SelectAndPing(item.gameObject);
+                    Event.current.Use();
+                }
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawMainPanel()
+        {
+            EditorGUILayout.BeginVertical();
+
+            selectedTab = SWEditorUtils.DrawTabBar(selectedTab, TabNames);
+            if (selectedTab == 0)
+                DrawDisplayTab();
+            else
+                DrawApplyTab();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawDisplayTab()
+        {
+            SWEditorUtils.DrawHeader("Display");
+
+            EditorGUI.BeginChangeCheck();
+            bool enabled = DrawToggleRow("Enabled", "Enable hierarchy tools", SWHierarchyTools.Enabled);
+            bool background = DrawToggleRow("Background Tint", "Draw row background tint", SWHierarchyTools.DrawBackground);
+            bool gradientDefault = DrawToggleRow("Gradient Default", "Use gradient for new decorations", SWHierarchyTools.UseGradientByDefault);
+            bool componentIcons = DrawToggleRow("Component Icons", "Draw component icons on right", SWHierarchyTools.DrawComponentIcons);
+            bool minimap = DrawToggleRow("Component Dots", "Draw small component dots", SWHierarchyTools.DrawComponentMinimap);
+            bool warning = DrawToggleRow("Missing Warning", "Draw missing script warning", SWHierarchyTools.DrawMissingScriptWarning);
+            bool activeToggle = DrawToggleRow("Active Toggle", "Draw active toggle on right", SWHierarchyTools.DrawActiveToggle);
+            bool zebra = DrawToggleRow("Zebra Rows", "Draw alternating row tint", SWHierarchyTools.DrawZebraRows);
+            bool shortcuts = DrawToggleRow("Hovered Shortcuts", "Enable hovered object shortcuts", SWHierarchyTools.EnableShortcuts);
+            float lineWidth = EditorGUILayout.Slider("Line Width", SWHierarchyTools.LineWidth, 1f, 12f);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                SWHierarchyTools.Enabled = enabled;
+                SWHierarchyTools.DrawBackground = background;
+                SWHierarchyTools.UseGradientByDefault = gradientDefault;
+                SWHierarchyTools.DrawComponentIcons = componentIcons;
+                SWHierarchyTools.DrawComponentMinimap = minimap;
+                SWHierarchyTools.DrawMissingScriptWarning = warning;
+                SWHierarchyTools.DrawActiveToggle = activeToggle;
+                SWHierarchyTools.DrawZebraRows = zebra;
+                SWHierarchyTools.EnableShortcuts = shortcuts;
+                SWHierarchyTools.LineWidth = lineWidth;
+            }
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.HelpBox("Object Icon replaces Unity's default GameObject icon. The right side is reserved for component icons, warnings, and toggles.", MessageType.None);
+        }
+
+        private void DrawApplyTab()
+        {
+            SWEditorUtils.DrawHeader("Apply");
+
+            List<GameObject> selected = GetSelectedGameObjects();
+            EditorGUILayout.LabelField($"Selected GameObjects: {selected.Count}");
+            includeChildren = DrawToggleRow("Include Children", "Apply to child objects", includeChildren);
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Quick Colors", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            foreach (Color color in Palette)
+            {
+                using (new SWEditorUtils.GUIBgColorScope(color))
+                {
+                    if (GUILayout.Button(GUIContent.none, GUILayout.Height(24f)))
+                    {
+                        colorA = color;
+                        SWHierarchyTools.Apply(selected, colorA, colorB, false, includeChildren);
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(4);
+            useGradient = EditorGUILayout.Toggle("Use Gradient", useGradient);
+            colorA = EditorGUILayout.ColorField("Color A", colorA);
+            using (new SWEditorUtils.GUIEnabledScope(useGradient))
+                colorB = EditorGUILayout.ColorField("Color B", colorB);
+
+            if (GUILayout.Button("Apply Color", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                SWHierarchyTools.Apply(selected, colorA, colorB, useGradient, includeChildren);
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Unity Object Icons", EditorStyles.boldLabel);
+            DrawBuiltinIconPalette(selected);
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("Custom Texture Icons", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            customTextureIcon = (Texture2D)EditorGUILayout.ObjectField(customTextureIcon, typeof(Texture2D), false);
+            using (new SWEditorUtils.GUIEnabledScope(customTextureIcon != null))
+            {
+                if (GUILayout.Button("Add", GUILayout.Width(55), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                    RegisterCustomIcon(customTextureIcon);
+
+                if (GUILayout.Button("Apply", GUILayout.Width(60), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                    SWHierarchyTools.SetAssetIcon(selected, customTextureIcon, includeChildren);
+            }
+            EditorGUILayout.EndHorizontal();
+            DrawCustomIconPalette(selected);
+
+            EditorGUILayout.Space(8);
+            SWEditorUtils.DrawHeader("Create");
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Folder", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                SWHierarchyTools.CreateStyledObject("Folder", SWHierarchyTools.RowStyle.Folder, colorA, colorB, useGradient, "d_Folder Icon");
+            if (GUILayout.Button("Example Divider", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                SWHierarchyTools.CreateStyledObject("--------------- Example ---------------", SWHierarchyTools.RowStyle.Normal, colorA, colorB, useGradient, "");
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawBuiltinIconPalette(List<GameObject> selected)
+        {
+            const int iconsPerRow = 10;
+            int column = 0;
+
+            EditorGUILayout.BeginHorizontal();
+            foreach (string iconName in IconNames)
+            {
+                if (GUILayout.Button(EditorGUIUtility.IconContent(iconName), GUILayout.Width(32f), GUILayout.Height(26f)))
+                    SWHierarchyTools.SetIcon(selected, iconName, includeChildren);
+
+                column++;
+                if (column % iconsPerRow == 0)
+                {
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawCustomIconPalette(List<GameObject> selected)
+        {
+            if (customIconGuids.Count == 0)
+            {
+                SWEditorUtils.DrawEmptyNotice("No custom icons registered.", MessageType.None);
+                return;
+            }
+
+            removeCustomIconMode = DrawToggleRow("Remove Mode", "Click a custom icon to remove it", removeCustomIconMode);
+            customIconScroll = EditorGUILayout.BeginScrollView(customIconScroll, GUILayout.MaxHeight(82f));
+            int column = 0;
+            EditorGUILayout.BeginHorizontal();
+
+            for (int i = 0; i < customIconGuids.Count; i++)
+            {
+                string guid = customIconGuids[i];
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                Texture2D icon = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+                if (icon == null)
+                {
+                    if (GUILayout.Button("x", GUILayout.Width(32f), GUILayout.Height(26f)))
+                    {
+                        customIconGuids.RemoveAt(i);
+                        SaveCustomIcons();
+                        GUIUtility.ExitGUI();
+                    }
+                }
+                else
+                {
+                    GUIContent content = removeCustomIconMode
+                        ? new GUIContent("x", path)
+                        : new GUIContent(icon, path);
+
+                    if (GUILayout.Button(content, GUILayout.Width(32f), GUILayout.Height(26f)))
+                    {
+                        if (removeCustomIconMode)
+                        {
+                            customIconGuids.RemoveAt(i);
+                            SaveCustomIcons();
+                            GUIUtility.ExitGUI();
+                        }
+                        else
+                        {
+                            SWHierarchyTools.SetAssetIcon(selected, icon, includeChildren);
+                        }
+                    }
+                }
+
+                column++;
+                if (column % 10 == 0)
+                {
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void RegisterCustomIcon(Texture2D icon)
+        {
+            string path = AssetDatabase.GetAssetPath(icon);
+            if (string.IsNullOrEmpty(path)) return;
+
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            if (string.IsNullOrEmpty(guid) || customIconGuids.Contains(guid)) return;
+
+            customIconGuids.Add(guid);
+            SaveCustomIcons();
+        }
+
+        private void SaveCustomIcons()
+        {
+            SWEditorUtils.SaveList(CustomIconGuidsKey, customIconGuids);
+        }
+
+        private static bool DrawToggleRow(string label, string description, bool value)
+        {
+            EditorGUILayout.BeginHorizontal();
+            bool newValue = EditorGUILayout.Toggle(value, GUILayout.Width(18f));
+            EditorGUILayout.LabelField(label, GUILayout.Width(140f));
+            EditorGUILayout.LabelField(description, EditorStyles.miniLabel);
+            EditorGUILayout.EndHorizontal();
+            return newValue;
+        }
+
+        private static void SelectAndPing(GameObject gameObject)
+        {
+            Selection.activeGameObject = gameObject;
+            EditorGUIUtility.PingObject(gameObject);
+        }
+
+        private static List<GameObject> GetSelectedGameObjects()
+        {
+            List<GameObject> result = new();
+            foreach (GameObject gameObject in Selection.gameObjects)
+            {
+                if (gameObject != null)
+                    result.Add(gameObject);
+            }
+            return result;
+        }
+    }
+}
