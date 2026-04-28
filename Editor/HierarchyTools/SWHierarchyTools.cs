@@ -274,7 +274,7 @@ namespace SWTools
 
         private static void OnHierarchyGUI(int instanceId, Rect rowRect)
         {
-            GameObject gameObject = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+            GameObject gameObject = EntityIdToObject(instanceId) as GameObject;
             if (gameObject == null)
                 return;
 
@@ -713,6 +713,15 @@ namespace SWTools
         private static void DrawFullRow(Rect rowRect, Color color)
         {
             EditorGUI.DrawRect(new Rect(0f, rowRect.y, rowRect.xMax + 260f, rowRect.height), color);
+        }
+
+        private static UnityEngine.Object EntityIdToObject(int instanceId)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(instanceId);
+#else
+            return EditorUtility.InstanceIDToObject(instanceId);
+#endif
         }
 
         private static void DrawGradientRect(Rect rect, Color left, Color right)
