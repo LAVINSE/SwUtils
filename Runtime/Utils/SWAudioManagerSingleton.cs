@@ -3,8 +3,8 @@ using UnityEngine;
 namespace SWUtils
 {
     /// <summary>
-    /// DI를 사용하지 않는 프로젝트에서 SWAudioManager를 전역 싱글톤처럼 사용하기 위한 래퍼.
-    /// 실제 오디오 기능은 SWAudioManager가 담당한다.
+    /// 기존 SWAudioManagerSingleton 호출부를 유지하기 위한 호환 래퍼.
+    /// 새 코드에서는 SWAudioManager.Instance를 사용한다.
     /// </summary>
     public class SWAudioManagerSingleton : SWSingleton<SWAudioManagerSingleton>
     {

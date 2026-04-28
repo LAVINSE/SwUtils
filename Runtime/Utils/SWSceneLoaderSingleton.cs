@@ -5,8 +5,8 @@ using UnityEngine.SceneManagement;
 namespace SWUtils
 {
     /// <summary>
-    /// DI를 사용하지 않는 프로젝트에서 SWSceneLoader를 전역 싱글톤처럼 사용하기 위한 래퍼.
-    /// 실제 씬 로딩 기능은 SWSceneLoader가 담당한다.
+    /// 기존 SWSceneLoaderSingleton 호출부를 유지하기 위한 호환 래퍼.
+    /// 새 코드에서는 SWSceneLoader.Instance를 사용한다.
     /// </summary>
     public class SWSceneLoaderSingleton : SWSingleton<SWSceneLoaderSingleton>
     {

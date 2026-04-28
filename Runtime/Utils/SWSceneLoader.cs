@@ -7,9 +7,9 @@ namespace SWUtils
 {
     /// <summary>
     /// 씬 로드/언로드, 진행률 콜백, 중복 로딩 방지를 처리하는 씬 로더.
-    /// 씬에 직접 배치하거나 VContainer 같은 DI 컨테이너에 등록해서 사용한다.
+    /// SWSceneLoader.Instance로 전역 접근하거나 씬에 직접 배치해서 사용한다.
     /// </summary>
-    public class SWSceneLoader : MonoBehaviour
+    public class SWSceneLoader : SWSingleton<SWSceneLoader>
     {
         #region 필드
         [Header("=====> 설정 <=====")]
@@ -46,8 +46,10 @@ namespace SWUtils
         #endregion // 이벤트
 
         #region 초기화
-        private void Awake()
+        public override void Awake()
         {
+            base.Awake();
+            if (Instance != this) return;
         }
 
         private void OnDestroy()

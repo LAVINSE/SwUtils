@@ -73,6 +73,10 @@ namespace SWUtils
                 instance = this as T;
                 DontDestroyOnLoad(this.gameObject);
             }
+            else if (instance == this)
+            {
+                DontDestroyOnLoad(this.gameObject);
+            }
             else
             {
                 Destroy(this.gameObject);

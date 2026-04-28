@@ -7,9 +7,9 @@ namespace SWUtils
 {
     /// <summary>
     /// BGM/SFX 재생, 볼륨 조절, 페이드, AudioSource 재사용을 처리하는 오디오 매니저.
-    /// 씬에 직접 배치하거나 VContainer 같은 DI 컨테이너에 등록해서 사용한다.
+    /// SWAudioManager.Instance로 전역 접근하거나 씬에 직접 배치해서 사용한다.
     /// </summary>
-    public class SWAudioManager : MonoBehaviour
+    public class SWAudioManager : SWSingleton<SWAudioManager>
     {
         #region 필드
         [Header("=====> 라이브러리 <=====")]
@@ -51,8 +51,11 @@ namespace SWUtils
         #endregion // 프로퍼티
 
         #region 초기화
-        private void Awake()
+        public override void Awake()
         {
+            base.Awake();
+            if (Instance != this) return;
+
             EnsureMusicSource();
             PrewarmSfxSources(initialSfxSources);
             ApplyVolumes();
