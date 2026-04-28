@@ -7,8 +7,8 @@ namespace SWUtils
     /// <summary>
     /// 키 기반 팝업 프리팹과 표시 옵션을 관리하는 ScriptableObject입니다.
     /// </summary>
-    [CreateAssetMenu(menuName = "SWUtils/Popup Catalog", fileName = "PopupCatalog")]
-    public class PopupCatalog : ScriptableObject
+    [CreateAssetMenu(menuName = "SWUtils/Popup Catalog", fileName = "SWPopupCatalog")]
+    public class SWPopupCatalog : ScriptableObject
     {
         #region 데이터
         /// <summary>
@@ -21,7 +21,7 @@ namespace SWUtils
             public string key;
 
             /// <summary>생성할 팝업 프리팹입니다.</summary>
-            public PopupBase prefab;
+            public SWPopupBase prefab;
 
             /// <summary>닫힌 팝업을 파괴하지 않고 재사용할지 여부입니다.</summary>
             public bool useCache;
@@ -68,7 +68,7 @@ namespace SWUtils
         /// <param name="key">조회할 팝업 키입니다.</param>
         /// <param name="prefab">조회된 팝업 프리팹입니다.</param>
         /// <returns>유효한 프리팹이 있으면 true입니다.</returns>
-        public bool TryGetPrefab(string key, out PopupBase prefab)
+        public bool TryGetPrefab(string key, out SWPopupBase prefab)
         {
             prefab = null;
 
@@ -80,3 +80,4 @@ namespace SWUtils
         #endregion // 조회
     }
 }
+

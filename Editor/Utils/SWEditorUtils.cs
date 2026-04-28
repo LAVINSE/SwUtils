@@ -99,6 +99,37 @@ namespace SWTools
             DrawSeparator(height);
             EditorGUILayout.Space(spaceAfter);
         }
+
+        /// <summary>
+        /// 지정된 Rect에 단색 또는 좌우 그라데이션 색상 견본을 그립니다.
+        /// </summary>
+        public static void DrawColorSwatch(Rect rect, Color colorA, Color colorB)
+        {
+            if (Mathf.Approximately(colorA.r, colorB.r) &&
+                Mathf.Approximately(colorA.g, colorB.g) &&
+                Mathf.Approximately(colorA.b, colorB.b) &&
+                Mathf.Approximately(colorA.a, colorB.a))
+            {
+                EditorGUI.DrawRect(rect, colorA);
+            }
+            else
+            {
+                int steps = Mathf.Max(1, Mathf.RoundToInt(rect.width));
+                float stepWidth = rect.width / steps;
+
+                for (int i = 0; i < steps; i++)
+                {
+                    float t = steps <= 1 ? 0f : i / (steps - 1f);
+                    Rect stepRect = new(rect.x + i * stepWidth, rect.y, stepWidth + 1f, rect.height);
+                    EditorGUI.DrawRect(stepRect, Color.Lerp(colorA, colorB, t));
+                }
+            }
+
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, 1f), HeaderLineColor);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 1f, rect.width, 1f), HeaderLineColor);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 1f, rect.height), HeaderLineColor);
+            EditorGUI.DrawRect(new Rect(rect.xMax - 1f, rect.y, 1f, rect.height), HeaderLineColor);
+        }
         #endregion // 헤더 & 구분선
 
         #region 탭바

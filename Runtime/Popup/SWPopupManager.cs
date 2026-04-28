@@ -12,7 +12,7 @@ namespace SWUtils
     /// 프리팹 직접 표시, 이미 생성된 인스턴스 표시, 카탈로그 키 기반 표시를 모두 지원합니다.
     /// 닫힘 완료를 Task로 기다릴 수 있어 확인창, 보상창처럼 순서가 중요한 UI 흐름에 사용할 수 있습니다.
     /// </remarks>
-    public class PopupManager : SWSingleton<PopupManager>
+    public class SWPopupManager : SWSingleton<SWPopupManager>
     {
         #region 데이터
         /// <summary>
@@ -32,15 +32,15 @@ namespace SWUtils
         [DisallowMultipleComponent]
         private sealed class PopupLifecycleWatcher : MonoBehaviour
         {
-            private PopupManager owner;
-            private PopupBase popup;
+            private SWPopupManager owner;
+            private SWPopupBase popup;
 
             /// <summary>
             /// 감시할 팝업과 숨김 완료를 처리할 관리자를 설정합니다.
             /// </summary>
             /// <param name="popupManager">숨김 완료를 통지받을 팝업 관리자입니다.</param>
             /// <param name="popupBase">감시할 팝업 인스턴스입니다.</param>
-            public void Initialize(PopupManager popupManager, PopupBase popupBase)
+            public void Initialize(SWPopupManager popupManager, SWPopupBase popupBase)
             {
                 owner = popupManager;
                 popup = popupBase;
@@ -70,22 +70,22 @@ namespace SWUtils
         [SerializeField] private Transform defaultParent;
 
         [Header("=====> 카탈로그 <=====")]
-        [SerializeField] private PopupCatalog catalog;
+        [SerializeField] private SWPopupCatalog catalog;
 
-        private readonly Dictionary<string, PopupBase> registeredPrefabs = new();
-        private readonly Dictionary<string, PopupCatalog.Entry> registeredEntries = new();
-        private readonly Dictionary<string, PopupBase> cachedPopups = new();
-        private readonly Dictionary<PopupBase, PopupRecord> activeRecords = new();
-        private readonly List<PopupBase> activePopups = new();
+        private readonly Dictionary<string, SWPopupBase> registeredPrefabs = new();
+        private readonly Dictionary<string, SWPopupCatalog.Entry> registeredEntries = new();
+        private readonly Dictionary<string, SWPopupBase> cachedPopups = new();
+        private readonly Dictionary<SWPopupBase, PopupRecord> activeRecords = new();
+        private readonly List<SWPopupBase> activePopups = new();
         private readonly HashSet<string> unregisteredKeys = new();
         #endregion // 필드
 
         #region 이벤트
         /// <summary>팝업이 표시된 직후 호출됩니다.</summary>
-        public event Action<PopupBase> PopupShown;
+        public event Action<SWPopupBase> PopupShown;
 
         /// <summary>팝업이 숨김 완료 처리된 직후 호출됩니다.</summary>
-        public event Action<PopupBase> PopupHidden;
+        public event Action<SWPopupBase> PopupHidden;
         #endregion // 이벤트
 
         #region 프로퍼티
@@ -100,7 +100,7 @@ namespace SWUtils
         }
 
         /// <summary>현재 표시 중인 팝업 목록입니다. 뒤쪽 항목일수록 화면 위에 표시됩니다.</summary>
-        public IReadOnlyList<PopupBase> ActivePopups
+        public IReadOnlyList<SWPopupBase> ActivePopups
         {
             get
             {
@@ -134,7 +134,7 @@ namespace SWUtils
         /// <summary>
         /// 팝업 프리팹을 생성하고 표시합니다.
         /// </summary>
-        public T Show<T>(T prefab, Transform parent = null) where T : PopupBase
+        public T Show<T>(T prefab, Transform parent = null) where T : SWPopupBase
         {
             return Show(prefab, null, parent);
         }
@@ -142,7 +142,7 @@ namespace SWUtils
         /// <summary>
         /// 팝업 프리팹을 생성하고 초기화한 뒤 표시합니다.
         /// </summary>
-        public T Show<T>(T prefab, Action<T> setup, Transform parent = null) where T : PopupBase
+        public T Show<T>(T prefab, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
             if (prefab == null) return null;
 
@@ -156,7 +156,7 @@ namespace SWUtils
         /// <summary>
         /// 이미 존재하는 팝업 인스턴스를 표시합니다.
         /// </summary>
-        public T ShowExisting<T>(T popup, Transform parent = null) where T : PopupBase
+        public T ShowExisting<T>(T popup, Transform parent = null) where T : SWPopupBase
         {
             return ShowExisting(popup, null, parent);
         }
@@ -164,7 +164,7 @@ namespace SWUtils
         /// <summary>
         /// 이미 존재하는 팝업 인스턴스를 초기화한 뒤 표시합니다.
         /// </summary>
-        public T ShowExisting<T>(T popup, Action<T> setup, Transform parent = null) where T : PopupBase
+        public T ShowExisting<T>(T popup, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
             if (popup == null) return null;
 
@@ -177,31 +177,31 @@ namespace SWUtils
         /// <summary>
         /// 키로 등록된 팝업을 표시합니다.
         /// </summary>
-        public PopupBase Show(string key, Transform parent = null)
+        public SWPopupBase Show(string key, Transform parent = null)
         {
-            if (!TryGetEntry(key, out PopupCatalog.Entry entry)) return null;
+            if (!TryGetEntry(key, out SWPopupCatalog.Entry entry)) return null;
 
             Transform targetParent = ResolveParent(parent);
             if (targetParent == null) return null;
 
-            PopupBase popup = GetOrCreatePopup(key, entry, targetParent);
+            SWPopupBase popup = GetOrCreatePopup(key, entry, targetParent);
             return ShowPopup(popup, targetParent, key, entry.useCache, true);
         }
 
         /// <summary>
         /// 키로 등록된 팝업을 가져와 지정한 타입으로 초기화한 뒤 표시합니다.
         /// </summary>
-        public T Show<T>(string key, Action<T> setup = null, Transform parent = null) where T : PopupBase
+        public T Show<T>(string key, Action<T> setup = null, Transform parent = null) where T : SWPopupBase
         {
-            if (!TryGetEntry(key, out PopupCatalog.Entry entry)) return null;
+            if (!TryGetEntry(key, out SWPopupCatalog.Entry entry)) return null;
 
             Transform targetParent = ResolveParent(parent);
             if (targetParent == null) return null;
 
-            PopupBase popup = GetOrCreatePopup(key, entry, targetParent);
+            SWPopupBase popup = GetOrCreatePopup(key, entry, targetParent);
             if (popup is not T typedPopup)
             {
-                SWUtilsLog.LogWarning($"[PopupManager] Popup type mismatch. Key: {key}, Expected: {typeof(T).Name}, Actual: {popup.GetType().Name}");
+                SWUtilsLog.LogWarning($"[SWPopupManager] Popup type mismatch. Key: {key}, Expected: {typeof(T).Name}, Actual: {popup.GetType().Name}");
                 return null;
             }
 
@@ -211,9 +211,9 @@ namespace SWUtils
         /// <summary>
         /// 팝업 프리팹을 표시하고 숨겨질 때까지 기다립니다.
         /// </summary>
-        public async Task ShowAsync(PopupBase prefab, Transform parent = null)
+        public async Task ShowAsync(SWPopupBase prefab, Transform parent = null)
         {
-            PopupBase popup = Show(prefab, parent);
+            SWPopupBase popup = Show(prefab, parent);
             if (popup == null) return;
 
             await GetHiddenTask(popup);
@@ -222,7 +222,7 @@ namespace SWUtils
         /// <summary>
         /// 팝업 프리팹을 초기화하고 표시한 뒤 숨겨질 때까지 기다립니다.
         /// </summary>
-        public async Task ShowAsync<T>(T prefab, Action<T> setup, Transform parent = null) where T : PopupBase
+        public async Task ShowAsync<T>(T prefab, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
             T popup = Show(prefab, setup, parent);
             if (popup == null) return;
@@ -235,7 +235,7 @@ namespace SWUtils
         /// </summary>
         public async Task ShowAsync(string key, Transform parent = null)
         {
-            PopupBase popup = Show(key, parent);
+            SWPopupBase popup = Show(key, parent);
             if (popup == null) return;
 
             await GetHiddenTask(popup);
@@ -244,7 +244,7 @@ namespace SWUtils
         /// <summary>
         /// 키로 등록된 팝업을 초기화하고 표시한 뒤 숨겨질 때까지 기다립니다.
         /// </summary>
-        public async Task ShowAsync<T>(string key, Action<T> setup, Transform parent = null) where T : PopupBase
+        public async Task ShowAsync<T>(string key, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
             T popup = Show(key, setup, parent);
             if (popup == null) return;
@@ -257,7 +257,7 @@ namespace SWUtils
         /// <summary>
         /// 지정한 팝업을 숨깁니다.
         /// </summary>
-        public bool Hide(PopupBase popup)
+        public bool Hide(SWPopupBase popup)
         {
             if (popup == null) return false;
             if (!activeRecords.ContainsKey(popup)) return false;
@@ -272,7 +272,7 @@ namespace SWUtils
         /// </summary>
         public bool Hide(string key)
         {
-            return TryGetActive(key, out PopupBase popup) && Hide(popup);
+            return TryGetActive(key, out SWPopupBase popup) && Hide(popup);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace SWUtils
             RemoveNullPopups();
             if (activePopups.Count == 0) return false;
 
-            PopupBase popup = activePopups[activePopups.Count - 1];
+            SWPopupBase popup = activePopups[activePopups.Count - 1];
             return Hide(popup);
         }
 
@@ -292,7 +292,7 @@ namespace SWUtils
         /// </summary>
         public void HideAll()
         {
-            PopupBase[] popups = activePopups.ToArray();
+            SWPopupBase[] popups = activePopups.ToArray();
             for (int i = popups.Length - 1; i >= 0; i--)
             {
                 Hide(popups[i]);
@@ -304,7 +304,7 @@ namespace SWUtils
         /// <summary>
         /// 팝업 프리팹을 키로 등록합니다.
         /// </summary>
-        public void Register(string key, PopupBase prefab)
+        public void Register(string key, SWPopupBase prefab)
         {
             if (string.IsNullOrEmpty(key) || prefab == null) return;
 
@@ -335,7 +335,7 @@ namespace SWUtils
         /// <summary>
         /// 키로 등록된 팝업 프리팹을 가져옵니다.
         /// </summary>
-        public bool TryGetPrefab(string key, out PopupBase prefab)
+        public bool TryGetPrefab(string key, out SWPopupBase prefab)
         {
             prefab = null;
             if (string.IsNullOrEmpty(key)) return false;
@@ -379,7 +379,7 @@ namespace SWUtils
         /// <summary>
         /// 키로 표시된 가장 위쪽 활성 팝업을 가져옵니다.
         /// </summary>
-        public bool TryGetActive(string key, out PopupBase popup)
+        public bool TryGetActive(string key, out SWPopupBase popup)
         {
             popup = null;
             if (string.IsNullOrEmpty(key)) return false;
@@ -387,7 +387,7 @@ namespace SWUtils
             RemoveNullPopups();
             for (int i = activePopups.Count - 1; i >= 0; i--)
             {
-                PopupBase current = activePopups[i];
+                SWPopupBase current = activePopups[i];
                 if (current == null) continue;
                 if (!activeRecords.TryGetValue(current, out PopupRecord record)) continue;
                 if (record.Key != key) continue;
@@ -406,14 +406,14 @@ namespace SWUtils
         {
             if (string.IsNullOrEmpty(key))
             {
-                foreach (PopupBase cachedPopup in cachedPopups.Values)
+                foreach (SWPopupBase cachedPopup in cachedPopups.Values)
                     DestroyCachedPopup(cachedPopup);
 
                 cachedPopups.Clear();
                 return;
             }
 
-            if (!cachedPopups.TryGetValue(key, out PopupBase popup)) return;
+            if (!cachedPopups.TryGetValue(key, out SWPopupBase popup)) return;
 
             cachedPopups.Remove(key);
             DestroyCachedPopup(popup);
@@ -431,7 +431,7 @@ namespace SWUtils
         /// <param name="useCache">숨김 후 인스턴스를 캐시에 남길지 여부입니다.</param>
         /// <param name="ownedByManager">관리자가 생성한 인스턴스라서 숨김 후 파괴할 수 있는지 여부입니다.</param>
         /// <returns>표시된 팝업 인스턴스입니다.</returns>
-        private T ShowPopup<T>(T popup, Transform parent, string key, bool useCache, bool ownedByManager) where T : PopupBase
+        private T ShowPopup<T>(T popup, Transform parent, string key, bool useCache, bool ownedByManager) where T : SWPopupBase
         {
             return ShowPopup(popup, parent, key, useCache, ownedByManager, null);
         }
@@ -447,7 +447,7 @@ namespace SWUtils
         /// <param name="ownedByManager">관리자가 생성한 인스턴스라서 숨김 후 파괴할 수 있는지 여부입니다.</param>
         /// <param name="setup">팝업이 표시되기 전에 실행할 초기화 콜백입니다.</param>
         /// <returns>표시된 팝업 인스턴스입니다.</returns>
-        private T ShowPopup<T>(T popup, Transform parent, string key, bool useCache, bool ownedByManager, Action<T> setup) where T : PopupBase
+        private T ShowPopup<T>(T popup, Transform parent, string key, bool useCache, bool ownedByManager, Action<T> setup) where T : SWPopupBase
         {
             if (popup == null) return null;
 
@@ -483,12 +483,12 @@ namespace SWUtils
         /// <param name="entry">카탈로그 또는 런타임 등록에서 가져온 팝업 정보입니다.</param>
         /// <param name="parent">새로 생성할 때 사용할 부모 Transform입니다.</param>
         /// <returns>재사용 또는 생성된 팝업 인스턴스입니다.</returns>
-        private PopupBase GetOrCreatePopup(string key, PopupCatalog.Entry entry, Transform parent)
+        private SWPopupBase GetOrCreatePopup(string key, SWPopupCatalog.Entry entry, Transform parent)
         {
-            if (entry.useCache && cachedPopups.TryGetValue(key, out PopupBase cachedPopup) && cachedPopup != null)
+            if (entry.useCache && cachedPopups.TryGetValue(key, out SWPopupBase cachedPopup) && cachedPopup != null)
                 return cachedPopup;
 
-            PopupBase popup = Instantiate(entry.prefab, parent);
+            SWPopupBase popup = Instantiate(entry.prefab, parent);
 
             if (entry.useCache)
                 cachedPopups[key] = popup;
@@ -501,7 +501,7 @@ namespace SWUtils
         /// </summary>
         /// <param name="popup">대기할 팝업 인스턴스입니다.</param>
         /// <returns>활성 팝업이면 숨김 완료 Task, 아니면 완료된 Task입니다.</returns>
-        private Task GetHiddenTask(PopupBase popup)
+        private Task GetHiddenTask(SWPopupBase popup)
         {
             return popup != null && activeRecords.TryGetValue(popup, out PopupRecord record)
                 ? record.HideCompletionSource.Task
@@ -512,7 +512,7 @@ namespace SWUtils
         /// 팝업 GameObject에 lifecycle 감시자를 추가하거나 기존 감시자를 갱신합니다.
         /// </summary>
         /// <param name="popup">감시자를 연결할 팝업 인스턴스입니다.</param>
-        private void EnsureLifecycleWatcher(PopupBase popup)
+        private void EnsureLifecycleWatcher(SWPopupBase popup)
         {
             PopupLifecycleWatcher watcher = popup.GetComponent<PopupLifecycleWatcher>();
             if (watcher == null)
@@ -544,7 +544,7 @@ namespace SWUtils
 
             if (popupCanvas == null)
             {
-                SWUtilsLog.LogWarning("[PopupManager] Popup Canvas is null. Assign a global popup Canvas or default parent.");
+                SWUtilsLog.LogWarning("[SWPopupManager] Popup Canvas is null. Assign a global popup Canvas or default parent.");
                 return null;
             }
 
@@ -559,7 +559,7 @@ namespace SWUtils
         {
             if (catalog == null) return;
 
-            foreach (PopupCatalog.Entry entry in catalog.Entries)
+            foreach (SWPopupCatalog.Entry entry in catalog.Entries)
             {
                 if (entry == null || string.IsNullOrEmpty(entry.key) || entry.prefab == null) continue;
 
@@ -574,7 +574,7 @@ namespace SWUtils
         /// <param name="key">조회할 팝업 키입니다.</param>
         /// <param name="entry">조회된 팝업 등록 정보입니다.</param>
         /// <returns>유효한 등록 정보가 있으면 true입니다.</returns>
-        private bool TryGetEntry(string key, out PopupCatalog.Entry entry)
+        private bool TryGetEntry(string key, out SWPopupCatalog.Entry entry)
         {
             entry = null;
             if (string.IsNullOrEmpty(key)) return false;
@@ -583,9 +583,9 @@ namespace SWUtils
             if (registeredEntries.TryGetValue(key, out entry) && entry != null && entry.prefab != null)
                 return true;
 
-            if (registeredPrefabs.TryGetValue(key, out PopupBase prefab) && prefab != null)
+            if (registeredPrefabs.TryGetValue(key, out SWPopupBase prefab) && prefab != null)
             {
-                entry = new PopupCatalog.Entry
+                entry = new SWPopupCatalog.Entry
                 {
                     key = key,
                     prefab = prefab,
@@ -616,7 +616,7 @@ namespace SWUtils
         /// 활성 상태가 아닌 캐시 팝업 인스턴스를 파괴합니다.
         /// </summary>
         /// <param name="popup">파괴할 캐시 팝업 인스턴스입니다.</param>
-        private void DestroyCachedPopup(PopupBase popup)
+        private void DestroyCachedPopup(SWPopupBase popup)
         {
             if (popup == null) return;
             if (activeRecords.ContainsKey(popup)) return;
@@ -629,7 +629,7 @@ namespace SWUtils
         /// </summary>
         /// <param name="popup">숨김 처리가 완료된 팝업 인스턴스입니다.</param>
         /// <param name="destroyed">팝업 GameObject가 이미 파괴되는 중이면 true입니다.</param>
-        internal void CompletePopupHidden(PopupBase popup, bool destroyed)
+        internal void CompletePopupHidden(SWPopupBase popup, bool destroyed)
         {
             if (popup == null) return;
             if (!activeRecords.TryGetValue(popup, out PopupRecord record)) return;
@@ -652,3 +652,4 @@ namespace SWUtils
         #endregion // 내부
     }
 }
+
