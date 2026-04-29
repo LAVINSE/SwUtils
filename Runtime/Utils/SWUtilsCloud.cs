@@ -628,8 +628,8 @@ namespace SWUtils
         /// <param name="saveName">저장 이름</param>
         private static void SaveLocal(string json, string saveName)
         {
-            PlayerPrefs.SetString($"{LocalFallbackKey}_{saveName}", json);
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetString($"{LocalFallbackKey}_{saveName}", json);
+            SWUtilsPlayerPrefs.Save();
         }
 
         /// <summary>
@@ -639,7 +639,7 @@ namespace SWUtils
         /// <returns>저장된 JSON 문자열</returns>
         private static string LoadLocal(string saveName)
         {
-            return PlayerPrefs.GetString($"{LocalFallbackKey}_{saveName}", string.Empty);
+            return SWUtilsPlayerPrefs.GetString($"{LocalFallbackKey}_{saveName}", string.Empty);
         }
 
         /// <summary>
@@ -648,8 +648,8 @@ namespace SWUtils
         /// <param name="saveName">저장 슬롯 이름</param>
         private static void DeleteLocal(string saveName)
         {
-            PlayerPrefs.DeleteKey($"{LocalFallbackKey}_{saveName}");
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.DeleteKey($"{LocalFallbackKey}_{saveName}");
+            SWUtilsPlayerPrefs.Save();
         }
         #endregion // 로컬 폴백
 
@@ -661,7 +661,7 @@ namespace SWUtils
         /// <param name="saveName">저장 슬롯 이름</param>
         public static void BackupPrefs(Action<bool> onComplete = null, string saveName = DefaultSaveName)
         {
-            string json = SWUtilsPlayerPrefs.ExportToJson();
+            string json = SWUtilsPlayerPrefs.ExportToJson(IsCloudBackupKey);
             Save(json, onComplete, saveName);
         }
 
@@ -672,7 +672,12 @@ namespace SWUtils
         /// <returns>성공 여부</returns>
         public static Task<bool> BackupPrefsAsync(string saveName = DefaultSaveName)
         {
-            return SaveAsync(SWUtilsPlayerPrefs.ExportToJson(), saveName);
+            return SaveAsync(SWUtilsPlayerPrefs.ExportToJson(IsCloudBackupKey), saveName);
+        }
+
+        private static bool IsCloudBackupKey(string key)
+        {
+            return !key.StartsWith(LocalFallbackKey, StringComparison.Ordinal);
         }
 
         /// <summary>

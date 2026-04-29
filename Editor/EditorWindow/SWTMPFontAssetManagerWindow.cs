@@ -36,12 +36,20 @@ namespace SWTools
 
         private Vector2 swapScroll;
 
+        /// <summary>
+        /// 등록된 TMP 폰트의 표시용 캐시 정보입니다.
+        /// </summary>
         private class RegisteredFontCache
         {
+            /// <summary>폰트 에셋 GUID입니다.</summary>
             public string guid;
+            /// <summary>폰트 에셋 경로입니다.</summary>
             public string path;
+            /// <summary>캐시된 TMP 폰트 에셋입니다.</summary>
             public TMP_FontAsset asset;
+            /// <summary>목록에 표시할 GUIContent입니다.</summary>
             public GUIContent content;
+            /// <summary>폰트 에셋이 현재 존재하는지 여부입니다.</summary>
             public bool exists;
         }
         #endregion
@@ -65,16 +73,28 @@ namespace SWTools
 
         private enum BrowserSortMode { Name, AtlasSize, GlyphCount, AtlasMemory }
 
+        /// <summary>
+        /// TMP 폰트 브라우저에 표시할 폰트 요약 정보입니다.
+        /// </summary>
         private class BrowserEntry
         {
+            /// <summary>TMP 폰트 에셋입니다.</summary>
             public TMP_FontAsset asset;
+            /// <summary>폰트 에셋 경로입니다.</summary>
             public string path;
+            /// <summary>폰트 에셋 이름입니다.</summary>
             public string name;
+            /// <summary>아틀라스 텍스처 너비입니다.</summary>
             public int atlasWidth;
+            /// <summary>아틀라스 텍스처 높이입니다.</summary>
             public int atlasHeight;
+            /// <summary>글리프 개수입니다.</summary>
             public int glyphCount;
+            /// <summary>문자 개수입니다.</summary>
             public int characterCount;
+            /// <summary>예상 아틀라스 메모리 사용량입니다.</summary>
             public long estimatedBytes;
+            /// <summary>Fallback 폰트 개수입니다.</summary>
             public int fallbackCount;
         }
         #endregion
@@ -115,6 +135,9 @@ namespace SWTools
 
         // ────────────────────────────────────────────
 
+        /// <summary>
+        /// TMP Font Asset Manager 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/TMP Font Asset Manager")]
         public static void ShowWindow()
         {

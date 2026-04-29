@@ -46,17 +46,31 @@ namespace SWTools
         private enum DiffFilter { All, Changed, Added, Removed }
         private enum DiffStatus { Unchanged, Changed, Added, Removed }
 
+        /// <summary>
+        /// 빌드 리포트에서 추출한 에셋 목록과 집계 정보를 보관하는 데이터입니다.
+        /// </summary>
         private class ReportData
         {
+            /// <summary>리포트에 포함된 에셋 항목 목록입니다.</summary>
             public List<AssetEntry> entries = new();
+            /// <summary>에셋 경로로 항목을 빠르게 찾기 위한 맵입니다.</summary>
             public Dictionary<string, AssetEntry> entryByPath = new();
+            /// <summary>카테고리별 전체 크기 맵입니다.</summary>
             public Dictionary<string, long> categoryTotals = new();
+            /// <summary>리포트 전체 에셋 크기입니다.</summary>
             public long totalSize;
+            /// <summary>리포트 전체 에셋 개수입니다.</summary>
             public int totalCount;
+            /// <summary>빌드 대상 표시 문자열입니다.</summary>
             public string targetLabel = "(없음)";
+            /// <summary>빌드 시간 표시 문자열입니다.</summary>
             public string timeLabel = "(없음)";
+            /// <summary>리포트 원본 경로 표시 문자열입니다.</summary>
             public string sourceLabel = "(로드되지 않음)";
 
+            /// <summary>
+            /// 리포트 데이터를 초기 상태로 되돌립니다.
+            /// </summary>
             public void Clear()
             {
                 entries.Clear();
@@ -70,26 +84,46 @@ namespace SWTools
             }
         }
 
+        /// <summary>
+        /// 빌드 리포트에 포함된 단일 에셋의 크기 정보입니다.
+        /// </summary>
         private class AssetEntry
         {
+            /// <summary>에셋 경로입니다.</summary>
             public string path;
+            /// <summary>에셋 파일명입니다.</summary>
             public string name;
+            /// <summary>빌드에서 차지하는 크기입니다.</summary>
             public long size;
+            /// <summary>에셋 카테고리입니다.</summary>
             public string category;
         }
 
+        /// <summary>
+        /// 두 빌드 리포트 사이의 에셋 크기 차이 정보입니다.
+        /// </summary>
         private class DiffEntry
         {
+            /// <summary>에셋 경로입니다.</summary>
             public string path;
+            /// <summary>에셋 파일명입니다.</summary>
             public string name;
+            /// <summary>에셋 카테고리입니다.</summary>
             public string category;
+            /// <summary>기준 리포트의 에셋 크기입니다.</summary>
             public long sizeA;
+            /// <summary>비교 리포트의 에셋 크기입니다.</summary>
             public long sizeB;
+            /// <summary>비교 리포트와 기준 리포트의 크기 차이입니다.</summary>
             public long delta;
+            /// <summary>비교 상태입니다.</summary>
             public DiffStatus status;
         }
         #endregion // 필드
 
+        /// <summary>
+        /// Build Report Viewer 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Build Report Viewer")]
         public static void ShowWindow()
         {

@@ -8,6 +8,9 @@ using UnityEngine.UIElements;
 
 namespace SWTools
 {
+    /// <summary>
+    /// <see cref="SWButtonBarAttribute"/>가 붙은 필드를 버튼 바로 렌더링하는 드로어입니다.
+    /// </summary>
     [CustomPropertyDrawer(typeof(SWButtonBarAttribute))]
     public class SWButtonBarAttributeDrawer : PropertyDrawer
     {
@@ -21,6 +24,11 @@ namespace SWTools
         #region 프로퍼티
         #endregion // 프로퍼티
 
+        /// <summary>
+        /// 버튼 바 UIElements 트리를 생성합니다.
+        /// </summary>
+        /// <param name="property">버튼 바 어트리뷰트가 붙은 SerializedProperty입니다.</param>
+        /// <returns>생성된 루트 VisualElement입니다.</returns>
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             SWButtonBarAttribute buttonBarAttribute = (SWButtonBarAttribute)attribute;

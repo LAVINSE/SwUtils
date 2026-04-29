@@ -11,7 +11,14 @@ namespace SWTools
     public class SWDropdownAttributeDrawer : PropertyDrawer
     {
         #region 필드
+        /// <summary>
+        /// 현재 드로어에 적용된 드롭다운 어트리뷰트입니다.
+        /// </summary>
         protected SWDropdownAttribute dropdownAttribute;
+
+        /// <summary>
+        /// 인스펙터에 표시할 드롭다운 항목 이름 배열입니다.
+        /// </summary>
         protected string[] dropdownDisplayNames;
 
         /// <summary>

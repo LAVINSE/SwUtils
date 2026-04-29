@@ -51,6 +51,7 @@ namespace SWUtils
         #endregion // 프로퍼티
 
         #region 초기화
+        /// <inheritdoc/>
         public override void Awake()
         {
             base.Awake();
@@ -125,6 +126,9 @@ namespace SWUtils
             SWUtilsLog.Log("[SWAudioManager] Stop music.");
         }
 
+        /// <summary>
+        /// 현재 재생 중인 BGM을 일시정지합니다.
+        /// </summary>
         public void PauseMusic()
         {
             EnsureMusicSource();
@@ -132,6 +136,9 @@ namespace SWUtils
             SWUtilsLog.Log("[SWAudioManager] Pause music.");
         }
 
+        /// <summary>
+        /// 일시정지된 BGM 재생을 재개합니다.
+        /// </summary>
         public void ResumeMusic()
         {
             EnsureMusicSource();
@@ -177,6 +184,9 @@ namespace SWUtils
             return source;
         }
 
+        /// <summary>
+        /// 현재 재생 중인 모든 SFX를 정지합니다.
+        /// </summary>
         public void StopAllSfx()
         {
             foreach (AudioSource source in sfxSources)
@@ -229,10 +239,10 @@ namespace SWUtils
         /// <param name="keyPrefix">저장 키 prefix.</param>
         public void SaveVolumes(string keyPrefix = "SWAudioManager")
         {
-            PlayerPrefs.SetFloat($"{keyPrefix}_Master", masterVolume);
-            PlayerPrefs.SetFloat($"{keyPrefix}_Music", musicVolume);
-            PlayerPrefs.SetFloat($"{keyPrefix}_Sfx", sfxVolume);
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetFloat($"{keyPrefix}_Master", masterVolume);
+            SWUtilsPlayerPrefs.SetFloat($"{keyPrefix}_Music", musicVolume);
+            SWUtilsPlayerPrefs.SetFloat($"{keyPrefix}_Sfx", sfxVolume);
+            SWUtilsPlayerPrefs.Save();
 
             SWUtilsLog.Log($"[SWAudioManager] Save volumes. Key: {keyPrefix}");
         }
@@ -243,9 +253,9 @@ namespace SWUtils
         /// <param name="keyPrefix">저장 키 prefix.</param>
         public void LoadVolumes(string keyPrefix = "SWAudioManager")
         {
-            masterVolume = PlayerPrefs.GetFloat($"{keyPrefix}_Master", masterVolume);
-            musicVolume = PlayerPrefs.GetFloat($"{keyPrefix}_Music", musicVolume);
-            sfxVolume = PlayerPrefs.GetFloat($"{keyPrefix}_Sfx", sfxVolume);
+            masterVolume = SWUtilsPlayerPrefs.GetFloat($"{keyPrefix}_Master", masterVolume);
+            musicVolume = SWUtilsPlayerPrefs.GetFloat($"{keyPrefix}_Music", musicVolume);
+            sfxVolume = SWUtilsPlayerPrefs.GetFloat($"{keyPrefix}_Sfx", sfxVolume);
             ApplyVolumes();
 
             SWUtilsLog.Log($"[SWAudioManager] Load volumes. Key: {keyPrefix}");

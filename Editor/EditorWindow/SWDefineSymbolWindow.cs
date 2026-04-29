@@ -36,6 +36,9 @@ namespace SWTools
         #endregion // 필드
 
         #region 초기화
+        /// <summary>
+        /// Define Symbol Window 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Define Symbol Window")]
         public static void ShowWindow()
         {

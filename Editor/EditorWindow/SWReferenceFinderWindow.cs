@@ -49,6 +49,9 @@ namespace SWTools
         private readonly Dictionary<string, GUIContent> guiContentCache = new();
         #endregion // 필드
 
+        /// <summary>
+        /// Reference Finder 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Reference Finder %#r")]
         public static void ShowWindow()
         {

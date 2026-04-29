@@ -97,7 +97,9 @@ namespace SWTools
         /// </summary>
         private class SWButtonMethodInfo
         {
+            /// <summary>버튼 클릭 시 호출할 메서드 정보입니다.</summary>
             public MethodInfo Method;
+            /// <summary>메서드에 적용된 버튼 어트리뷰트입니다.</summary>
             public SWButtonAttribute Attribute;
         }
         #endregion // 내부 클래스
@@ -472,6 +474,11 @@ namespace SWTools
             }
         }
 
+        /// <summary>
+        /// 지정한 그룹 데이터를 UIElements 인스펙터 영역에 그립니다.
+        /// </summary>
+        /// <param name="groupData">그릴 그룹 데이터입니다.</param>
+        /// <param name="root">그룹 UI를 추가할 루트 VisualElement입니다.</param>
         protected virtual void DrawGroup(SWGroupDataEditor groupData, VisualElement root)
         {
             // 폴드아웃 생성 및 설정

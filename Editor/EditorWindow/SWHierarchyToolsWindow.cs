@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace SWTools
 {
+    /// <summary>
+    /// 하이어라키 행 스타일, 아이콘, 표시 옵션을 설정하는 에디터 창입니다.
+    /// </summary>
     public class SWHierarchyToolsWindow : EditorWindow
     {
         private static readonly Color[] Palette =
@@ -57,6 +60,9 @@ namespace SWTools
         private List<string> customIconGuids = new();
         private bool removeCustomIconMode;
 
+        /// <summary>
+        /// Hierarchy Tools 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Hierarchy Tools")]
         public static void ShowWindow()
         {

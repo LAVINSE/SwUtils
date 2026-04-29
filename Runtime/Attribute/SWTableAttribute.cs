@@ -21,6 +21,10 @@ namespace SWTools
         #endregion // 필드
 
         #region 초기화
+        /// <summary>
+        /// 테이블 컬럼명을 지정해 컬럼 매핑 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="columnName">매핑할 테이블 컬럼명입니다.</param>
         public SWTableAttribute(string columnName)
         {
             ColumnName = columnName;

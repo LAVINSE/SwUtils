@@ -13,19 +13,33 @@ namespace SWTools
     public static class SWExcelTableParser
     {
         #region 클래스
+        /// <summary>
+        /// TSV 파싱 결과와 경고, 오류 메시지를 담는 데이터입니다.
+        /// </summary>
         public class ParseResult
         {
+            /// <summary>파싱된 헤더 목록입니다.</summary>
             public readonly List<string> Headers = new();
+            /// <summary>헤더 이름으로 접근 가능한 행 데이터 목록입니다.</summary>
             public readonly List<Dictionary<string, string>> Rows = new();
+            /// <summary>파싱 중 발생한 경고 메시지 목록입니다.</summary>
             public readonly List<string> Warnings = new();
+            /// <summary>파싱 중 발생한 오류 메시지 목록입니다.</summary>
             public readonly List<string> Errors = new();
         }
 
+        /// <summary>
+        /// ScriptableObject에서 TSV 시트와 연결되는 필드 정보입니다.
+        /// </summary>
         public class SheetFieldInfo
         {
+            /// <summary>시트 데이터를 적용할 필드입니다.</summary>
             public FieldInfo Field;
+            /// <summary>연결된 시트 이름입니다.</summary>
             public string SheetName;
+            /// <summary>리스트 또는 배열 요소 타입입니다.</summary>
             public Type ElementType;
+            /// <summary>대상 필드가 배열인지 여부입니다.</summary>
             public bool IsArray;
         }
         #endregion // 클래스

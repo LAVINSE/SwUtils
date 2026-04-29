@@ -567,8 +567,8 @@ namespace SWUtils
         /// <param name="key">PlayerPrefs 키</param>
         public static void SaveExitTime(string key = DefaultExitTimeKey)
         {
-            PlayerPrefs.SetString(key, DateTime.UtcNow.ToString("o"));
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetString(key, DateTime.UtcNow.ToString("o"));
+            SWUtilsPlayerPrefs.Save();
         }
 
         /// <summary>
@@ -578,7 +578,7 @@ namespace SWUtils
         /// <returns>경과 시간(초). 저장 기록 없으면 0</returns>
         public static double GetOfflineSeconds(string key = DefaultExitTimeKey)
         {
-            string stored = PlayerPrefs.GetString(key, string.Empty);
+            string stored = SWUtilsPlayerPrefs.GetString(key, string.Empty);
             if (string.IsNullOrEmpty(stored)) return 0;
             if (DateTime.TryParse(stored, null, DateTimeStyles.RoundtripKind, out DateTime last))
                 return (DateTime.UtcNow - last).TotalSeconds;
@@ -639,7 +639,7 @@ namespace SWUtils
         /// <param name="key">PlayerPrefs 키</param>
         /// <returns>리셋 완료이면 true</returns>
         public static bool HasResetToday(string key = DefaultResetKey)
-            => PlayerPrefs.GetString(key, "") == DateTime.UtcNow.ToString("yyyy-MM-dd");
+            => SWUtilsPlayerPrefs.GetString(key, "") == DateTime.UtcNow.ToString("yyyy-MM-dd");
 
         /// <summary>
         /// 커스텀 리셋 시각(UTC) 기준으로 현재 리셋 주기에서 이미 리셋되었는지 확인한다.
@@ -648,7 +648,7 @@ namespace SWUtils
         /// <param name="key">PlayerPrefs 키</param>
         /// <returns>리셋 완료이면 true</returns>
         public static bool HasResetToday(int resetHourUtc, string key = DefaultResetKey)
-            => PlayerPrefs.GetString(key, "") == GetResetDateKey(resetHourUtc);
+            => SWUtilsPlayerPrefs.GetString(key, "") == GetResetDateKey(resetHourUtc);
 
         /// <summary>
         /// 리셋 완료로 기록한다. 자정(00:00) 기준.
@@ -656,8 +656,8 @@ namespace SWUtils
         /// <param name="key">PlayerPrefs 키</param>
         public static void MarkResetDone(string key = DefaultResetKey)
         {
-            PlayerPrefs.SetString(key, DateTime.UtcNow.ToString("yyyy-MM-dd"));
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetString(key, DateTime.UtcNow.ToString("yyyy-MM-dd"));
+            SWUtilsPlayerPrefs.Save();
         }
 
         /// <summary>
@@ -667,8 +667,8 @@ namespace SWUtils
         /// <param name="key">PlayerPrefs 키</param>
         public static void MarkResetDone(int resetHourUtc, string key = DefaultResetKey)
         {
-            PlayerPrefs.SetString(key, GetResetDateKey(resetHourUtc));
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetString(key, GetResetDateKey(resetHourUtc));
+            SWUtilsPlayerPrefs.Save();
         }
 
         /// <summary>

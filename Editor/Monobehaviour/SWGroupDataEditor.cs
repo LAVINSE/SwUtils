@@ -10,6 +10,9 @@ namespace SWTools
     public class SWGroupDataEditor
     {
         #region 필드
+        /// <summary>
+        /// 그룹을 정의한 어트리뷰트입니다.
+        /// </summary>
         public SWGroupAttribute GroupAttribute;
 
         /// <summary>

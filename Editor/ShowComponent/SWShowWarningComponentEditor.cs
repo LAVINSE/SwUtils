@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace SWTools
 {
+    /// <summary>
+    /// Missing Script가 있는 GameObject를 하이어라키에서 경고 아이콘으로 표시하는 에디터 확장입니다.
+    /// </summary>
     [InitializeOnLoad]
     public class SWShowWarningComponentEditor
     {

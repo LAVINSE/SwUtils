@@ -33,6 +33,11 @@ namespace SWTools
         public bool Hidden { get; private set; } = false;
         #endregion // 프로퍼티
 
+        /// <summary>
+        /// 조건 enum 필드 이름과 표시할 enum 값을 지정해 조건부 표시 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="conditionEnum">조건으로 사용할 enum 필드 이름입니다.</param>
+        /// <param name="enumValues">필드를 표시할 enum 값 목록입니다.</param>
         public SWEnumConditionAttribute(string conditionEnum, params int[] enumValues)
         {
             this.ConditionEnum = conditionEnum;
@@ -44,6 +49,11 @@ namespace SWTools
             }
         }
 
+        /// <summary>
+        /// 지정한 enum 값이 표시 조건에 포함되어 있는지 확인합니다.
+        /// </summary>
+        /// <param name="enumValue">확인할 enum 값입니다.</param>
+        /// <returns>표시 조건에 포함되어 있으면 true입니다.</returns>
         public bool ContainsBitFlag(int enumValue)
         {
             return bitArray.Get(enumValue);

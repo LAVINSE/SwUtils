@@ -61,10 +61,15 @@ namespace SWTools
         private bool importShowPreview = false;
         private List<ImportEntry> importPreviewEntries = new();
 
+        /// <summary>
+        /// 가져오기 미리보기에 표시할 단일 로컬라이징 항목입니다.
+        /// </summary>
         [Serializable]
         private class ImportEntry
         {
+            /// <summary>로컬라이징 키입니다.</summary>
             public string key;
+            /// <summary>로케일 코드별 번역 문자열입니다.</summary>
             public Dictionary<string, string> translations = new();
         }
         #endregion // 필드 - Import 탭
@@ -89,16 +94,27 @@ namespace SWTools
 
         private enum ValidationLevel { Info, Warning, Error }
 
+        /// <summary>
+        /// 로컬라이징 검증 결과 한 항목입니다.
+        /// </summary>
         private class ValidationResult
         {
+            /// <summary>검증 메시지입니다.</summary>
             public string message;
+            /// <summary>검증 심각도입니다.</summary>
             public ValidationLevel level;
+            /// <summary>관련 로컬라이징 키입니다.</summary>
             public string key;
+            /// <summary>관련 로케일 코드입니다.</summary>
             public string locale;
+            /// <summary>관련 StringTableCollection 이름입니다.</summary>
             public string collectionName;
         }
         #endregion // 필드 - Validator 탭
 
+        /// <summary>
+        /// Localization Tools 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Localization Tools %#l")]
         public static void ShowWindow()
         {

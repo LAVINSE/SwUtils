@@ -4,9 +4,15 @@ using UnityEngine;
 
 namespace SWPool
 {
+    /// <summary>
+    /// 시작 시 지정한 프리팹들을 대상 풀에 미리 등록하고 생성하는 컴포넌트입니다.
+    /// </summary>
     public class SWPoolRegistry : SWMonoBehaviour
     {
         #region 데이터
+        /// <summary>
+        /// 미리 생성할 프리팹과 개수를 저장하는 풀 등록 정보입니다.
+        /// </summary>
         [System.Serializable]
         public class PoolEntry
         {

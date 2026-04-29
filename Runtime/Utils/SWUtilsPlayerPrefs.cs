@@ -377,11 +377,13 @@ namespace SWUtils
         /// 클라우드 저장용으로 사용한다.
         /// </summary>
         /// <returns>JSON 문자열 (복호화된 평문 상태)</returns>
-        public static string ExportToJson()
+        public static string ExportToJson(Predicate<string> keyFilter = null)
         {
             var data = new PrefsData();
             foreach (var key in KeyIndex)
             {
+                if (keyFilter != null && !keyFilter(key)) continue;
+
                 string value = GetString(key, null);
                 if (value != null)
                 {

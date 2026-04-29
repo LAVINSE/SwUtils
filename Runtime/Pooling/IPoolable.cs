@@ -1,5 +1,8 @@
 namespace SWPool
 {
+    /// <summary>
+    /// 풀에서 생성, 재사용, 반납되는 오브젝트가 구현하는 생명주기 인터페이스입니다.
+    /// </summary>
     public interface IPoolable
     {
         /// <summary>

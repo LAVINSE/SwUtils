@@ -28,6 +28,12 @@ namespace SWTools
             cachedPaths.Clear();
         }
 
+        /// <summary>
+        /// 조건 enum 값에 따라 필드를 표시하거나 비활성화 상태로 그립니다.
+        /// </summary>
+        /// <param name="position">그려질 영역입니다.</param>
+        /// <param name="property">대상 SerializedProperty입니다.</param>
+        /// <param name="label">필드 라벨입니다.</param>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             SWEnumConditionAttribute enumConditionAttribute = (SWEnumConditionAttribute)attribute;

@@ -27,16 +27,27 @@ namespace SWTools
         private const float MIN_ICON = 20f;
         private const float MAX_ICON = 64f;
 
+        /// <summary>
+        /// 팔레트에 표시할 에셋 캐시 항목입니다.
+        /// </summary>
         private class PaletteItem
         {
+            /// <summary>에셋 GUID입니다.</summary>
             public string guid;
+            /// <summary>에셋 경로입니다.</summary>
             public string path;
+            /// <summary>캐시된 에셋 참조입니다.</summary>
             public Object asset;
+            /// <summary>팔레트에 표시할 GUIContent입니다.</summary>
             public GUIContent content;
+            /// <summary>에셋이 현재 존재하는지 여부입니다.</summary>
             public bool exists;
         }
         #endregion // 필드
 
+        /// <summary>
+        /// Quick Asset Palette 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Quick Asset Palette")]
         public static void ShowWindow()
         {

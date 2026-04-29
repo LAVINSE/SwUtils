@@ -36,17 +36,28 @@ namespace SWTools
         private List<SWExcelTableParser.SheetFieldInfo> sheetFields = new();
         private SWExcelTableParser.ParseResult previewResult;
 
+        /// <summary>
+        /// 등록된 ScriptableObject의 표시용 캐시 정보입니다.
+        /// </summary>
         private class RegisteredObjectCache
         {
+            /// <summary>에셋 GUID입니다.</summary>
             public string guid;
+            /// <summary>에셋 경로입니다.</summary>
             public string path;
+            /// <summary>캐시된 ScriptableObject 에셋입니다.</summary>
             public ScriptableObject asset;
+            /// <summary>목록에 표시할 이름입니다.</summary>
             public string displayName;
+            /// <summary>에셋이 현재 존재하는지 여부입니다.</summary>
             public bool exists;
         }
         #endregion // 필드
 
         #region 초기화
+        /// <summary>
+        /// Excel Table Importer 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Excel Table Importer")]
         public static void ShowWindow()
         {

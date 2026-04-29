@@ -2,11 +2,19 @@ using System.Collections.Generic;
 using SWTools;
 using UnityEngine;
 
+/// <summary>
+/// SWTools 인스펙터 어트리뷰트 사용 예제를 보여주는 샘플 컴포넌트입니다.
+/// </summary>
 public class SWAttributeExample : SWMonoBehaviour
 {
+    /// <summary>
+    /// Enum 조건부 표시 예제에 사용하는 상태 값입니다.
+    /// </summary>
     public enum EEnumConditionType
     {
+        /// <summary>조건 대상 필드를 숨기는 상태입니다.</summary>
         Hide,
+        /// <summary>조건 대상 필드를 표시하는 상태입니다.</summary>
         Show,
     }
 

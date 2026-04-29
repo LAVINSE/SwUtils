@@ -21,6 +21,10 @@ namespace SWTools
         #region 프로퍼티
         #endregion // 프로퍼티
 
+        /// <summary>
+        /// 드롭다운에 표시할 값 목록을 지정해 드롭다운 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="dropdownValues">드롭다운 항목으로 사용할 값 목록입니다.</param>
         public SWDropdownAttribute(params object[] dropdownValues)
         {
             DropdownValues = dropdownValues;

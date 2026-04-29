@@ -39,6 +39,9 @@ namespace SWUtils.Editor
         #endregion // 필드
 
         #region 윈도우 열기
+        /// <summary>
+        /// Resolution Window 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Resolution Window")]
         public static void OpenWindow()
         {

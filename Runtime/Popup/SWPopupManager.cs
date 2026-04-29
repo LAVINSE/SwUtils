@@ -20,9 +20,13 @@ namespace SWUtils
         /// </summary>
         private class PopupRecord
         {
+            /// <summary>카탈로그 또는 등록 프리팹에서 사용한 팝업 키입니다.</summary>
             public string Key;
+            /// <summary>숨김 처리 후 인스턴스를 캐시에 유지할지 여부입니다.</summary>
             public bool UseCache;
+            /// <summary>팝업 인스턴스의 생명주기를 매니저가 소유하는지 여부입니다.</summary>
             public bool OwnedByManager;
+            /// <summary>팝업 숨김 완료를 기다리는 Task 완료 소스입니다.</summary>
             public TaskCompletionSource<bool> HideCompletionSource;
         }
 

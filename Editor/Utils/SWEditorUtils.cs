@@ -9,6 +9,9 @@ using Object = UnityEngine.Object;
 
 namespace SWTools
 {
+    /// <summary>
+    /// SWTools 에디터 UI에서 공통으로 사용하는 GUI, 아이콘, 스타일, EditorPrefs 헬퍼 모음입니다.
+    /// </summary>
     public static class SWEditorUtils
     {
         #region 색상
@@ -1075,6 +1078,10 @@ namespace SWTools
             // USS 파싱용 임시 VisualElement
             private VisualElement _probeRoot;
 
+            /// <summary>
+            /// 지정한 StyleSheet를 기반으로 스타일 캐시를 생성합니다.
+            /// </summary>
+            /// <param name="styleSheet">아이콘과 색상을 읽어올 StyleSheet입니다.</param>
             public SWStyleCache(StyleSheet styleSheet)
             {
                 _styleSheet = styleSheet;
@@ -1246,12 +1253,19 @@ namespace SWTools
         {
             private readonly Color _previousColor;
 
+            /// <summary>
+            /// GUI.color를 지정한 색상으로 임시 변경합니다.
+            /// </summary>
+            /// <param name="newColor">스코프 동안 적용할 GUI 색상입니다.</param>
             public GUIColorScope(Color newColor)
             {
                 _previousColor = GUI.color;
                 GUI.color = newColor;
             }
 
+            /// <summary>
+            /// 이전 GUI.color 값을 복원합니다.
+            /// </summary>
             public void Dispose()
             {
                 GUI.color = _previousColor;
@@ -1271,12 +1285,19 @@ namespace SWTools
         {
             private readonly Color _previousColor;
 
+            /// <summary>
+            /// GUI.backgroundColor를 지정한 색상으로 임시 변경합니다.
+            /// </summary>
+            /// <param name="newColor">스코프 동안 적용할 배경 색상입니다.</param>
             public GUIBgColorScope(Color newColor)
             {
                 _previousColor = GUI.backgroundColor;
                 GUI.backgroundColor = newColor;
             }
 
+            /// <summary>
+            /// 이전 GUI.backgroundColor 값을 복원합니다.
+            /// </summary>
             public void Dispose()
             {
                 GUI.backgroundColor = _previousColor;
@@ -1296,12 +1317,19 @@ namespace SWTools
         {
             private readonly bool _previousEnabled;
 
+            /// <summary>
+            /// GUI.enabled 값을 지정한 상태로 임시 변경합니다.
+            /// </summary>
+            /// <param name="enabled">스코프 동안 적용할 활성화 상태입니다.</param>
             public GUIEnabledScope(bool enabled)
             {
                 _previousEnabled = GUI.enabled;
                 GUI.enabled = enabled;
             }
 
+            /// <summary>
+            /// 이전 GUI.enabled 값을 복원합니다.
+            /// </summary>
             public void Dispose()
             {
                 GUI.enabled = _previousEnabled;

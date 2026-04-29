@@ -6,6 +6,9 @@ using UnityEngine.Pool;
 
 namespace SWPool
 {
+    /// <summary>
+    /// Unity ObjectPool 기반으로 프리팹별 오브젝트 풀을 관리하는 컴포넌트입니다.
+    /// </summary>
     public class SWPool : SWMonoBehaviour, IPool
     {
         #region 필드

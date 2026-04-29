@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace SWCoroutine
 {
+    /// <summary>
+    /// 공통 코루틴 실행과 대기 객체 캐싱을 제공하는 코루틴 러너입니다.
+    /// </summary>
     public class SWCoroutineRunner : SWMonoBehaviour, ICoroutineRunner
     {
         #region 필드

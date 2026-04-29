@@ -7,31 +7,51 @@ using UnityEngine;
 
 namespace SWTools
 {
+    /// <summary>
+    /// Unity 하이어라키 행의 배경, 아이콘, 보조 도구 표시를 관리하는 에디터 유틸리티입니다.
+    /// </summary>
     [InitializeOnLoad]
     public static class SWHierarchyTools
     {
+        /// <summary>
+        /// 하이어라키 행에 적용할 표시 스타일입니다.
+        /// </summary>
         public enum RowStyle
         {
+            /// <summary>일반 오브젝트 행 스타일입니다.</summary>
             Normal,
+            /// <summary>폴더처럼 강조하는 행 스타일입니다.</summary>
             Folder,
+            /// <summary>구분선 용도로 사용하는 행 스타일입니다.</summary>
             Divider
         }
 
+        /// <summary>
+        /// 하이어라키 오브젝트별 스타일 설정 데이터입니다.
+        /// </summary>
         [Serializable]
         public class Entry
         {
+            /// <summary>오브젝트를 식별하는 전역 ID입니다.</summary>
             public string globalId;
+            /// <summary>스타일을 저장할 때의 오브젝트 이름입니다.</summary>
             public string name;
+            /// <summary>시작 색상 HTML 문자열입니다.</summary>
             public string colorA;
+            /// <summary>끝 색상 HTML 문자열입니다.</summary>
             public string colorB;
+            /// <summary>그라데이션을 사용할지 여부입니다.</summary>
             public bool useGradient;
+            /// <summary>Unity 내장 아이콘 이름 또는 에셋 아이콘 경로입니다.</summary>
             public string iconName;
+            /// <summary>행 표시 스타일입니다.</summary>
             public RowStyle style;
         }
 
         [Serializable]
         private class EntryList
         {
+            /// <summary>저장된 하이어라키 스타일 항목 목록입니다.</summary>
             public List<Entry> entries = new();
         }
 
@@ -79,60 +99,70 @@ namespace SWTools
         private static readonly Dictionary<string, Texture2D> gradientTextureCache = new();
         private static GameObject hoveredObject;
 
+        /// <summary>하이어라키 도구 표시 기능이 활성화되어 있는지 여부입니다.</summary>
         public static bool Enabled
         {
             get { EnsureSettingsLoaded(); return enabled; }
             set { enabled = value; SetBool(EnabledKey, value); }
         }
 
+        /// <summary>스타일이 지정된 행의 배경을 그릴지 여부입니다.</summary>
         public static bool DrawBackground
         {
             get { EnsureSettingsLoaded(); return drawBackground; }
             set { drawBackground = value; SetBool(BackgroundKey, value); }
         }
 
+        /// <summary>새 스타일 적용 시 기본으로 그라데이션을 사용할지 여부입니다.</summary>
         public static bool UseGradientByDefault
         {
             get { EnsureSettingsLoaded(); return useGradientByDefault; }
             set { useGradientByDefault = value; SetBool(GradientKey, value); }
         }
 
+        /// <summary>하이어라키 오른쪽에 컴포넌트 미니맵을 표시할지 여부입니다.</summary>
         public static bool DrawComponentMinimap
         {
             get { EnsureSettingsLoaded(); return drawComponentMinimap; }
             set { drawComponentMinimap = value; SetBool(ComponentMinimapKey, value); }
         }
 
+        /// <summary>하이어라키 오른쪽에 컴포넌트 아이콘을 표시할지 여부입니다.</summary>
         public static bool DrawComponentIcons
         {
             get { EnsureSettingsLoaded(); return drawComponentIcons; }
             set { drawComponentIcons = value; SetBool(ComponentIconsKey, value); }
         }
 
+        /// <summary>Missing Script 경고 표시를 그릴지 여부입니다.</summary>
         public static bool DrawMissingScriptWarning
         {
             get { EnsureSettingsLoaded(); return drawMissingScriptWarning; }
             set { drawMissingScriptWarning = value; SetBool(MissingWarningKey, value); }
         }
 
+        /// <summary>하이어라키 행에 활성화 토글을 표시할지 여부입니다.</summary>
         public static bool DrawActiveToggle
         {
             get { EnsureSettingsLoaded(); return drawActiveToggle; }
             set { drawActiveToggle = value; SetBool(ActiveToggleKey, value); }
         }
 
+        /// <summary>하이어라키 행에 교차 배경을 표시할지 여부입니다.</summary>
         public static bool DrawZebraRows
         {
             get { EnsureSettingsLoaded(); return drawZebraRows; }
             set { drawZebraRows = value; SetBool(ZebraKey, value); }
         }
 
+        /// <summary>하이어라키 도구 단축키를 사용할지 여부입니다.</summary>
         public static bool EnableShortcuts
         {
             get { EnsureSettingsLoaded(); return enableShortcuts; }
             set { enableShortcuts = value; SetBool(ShortcutsKey, value); }
         }
 
+        /// <summary>행 왼쪽 색상 라인의 너비입니다.</summary>
         public static float LineWidth
         {
             get { EnsureSettingsLoaded(); return lineWidth; }
@@ -152,6 +182,14 @@ namespace SWTools
             EditorApplication.hierarchyChanged += ClearTransientCaches;
         }
 
+        /// <summary>
+        /// 선택한 오브젝트에 하이어라키 색상 스타일을 적용합니다.
+        /// </summary>
+        /// <param name="gameObjects">스타일을 적용할 오브젝트 목록입니다.</param>
+        /// <param name="colorA">시작 색상입니다.</param>
+        /// <param name="colorB">끝 색상입니다.</param>
+        /// <param name="useGradient">그라데이션 사용 여부입니다.</param>
+        /// <param name="includeChildren">자식 오브젝트까지 포함할지 여부입니다.</param>
         public static void Apply(IEnumerable<GameObject> gameObjects, Color colorA, Color colorB, bool useGradient, bool includeChildren)
         {
             ForEach(gameObjects, includeChildren, gameObject =>
@@ -165,6 +203,12 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 선택한 오브젝트에 하이어라키 아이콘을 적용합니다.
+        /// </summary>
+        /// <param name="gameObjects">아이콘을 적용할 오브젝트 목록입니다.</param>
+        /// <param name="iconName">Unity 내장 아이콘 이름 또는 에셋 아이콘 키입니다.</param>
+        /// <param name="includeChildren">자식 오브젝트까지 포함할지 여부입니다.</param>
         public static void SetIcon(IEnumerable<GameObject> gameObjects, string iconName, bool includeChildren)
         {
             ForEach(gameObjects, includeChildren, gameObject =>
@@ -177,6 +221,12 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 선택한 오브젝트에 에셋 Texture 아이콘을 적용합니다.
+        /// </summary>
+        /// <param name="gameObjects">아이콘을 적용할 오브젝트 목록입니다.</param>
+        /// <param name="icon">적용할 Texture2D 아이콘입니다.</param>
+        /// <param name="includeChildren">자식 오브젝트까지 포함할지 여부입니다.</param>
         public static void SetAssetIcon(IEnumerable<GameObject> gameObjects, Texture2D icon, bool includeChildren)
         {
             if (icon == null)
@@ -189,6 +239,12 @@ namespace SWTools
             SetIcon(gameObjects, $"asset:{path}", includeChildren);
         }
 
+        /// <summary>
+        /// 선택한 오브젝트에 행 스타일을 적용합니다.
+        /// </summary>
+        /// <param name="gameObjects">스타일을 적용할 오브젝트 목록입니다.</param>
+        /// <param name="style">적용할 행 스타일입니다.</param>
+        /// <param name="includeChildren">자식 오브젝트까지 포함할지 여부입니다.</param>
         public static void SetStyle(IEnumerable<GameObject> gameObjects, RowStyle style, bool includeChildren)
         {
             ForEach(gameObjects, includeChildren, gameObject =>
@@ -200,6 +256,11 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 선택한 오브젝트의 하이어라키 스타일과 아이콘을 제거합니다.
+        /// </summary>
+        /// <param name="gameObjects">스타일을 제거할 오브젝트 목록입니다.</param>
+        /// <param name="includeChildren">자식 오브젝트까지 포함할지 여부입니다.</param>
         public static void Clear(IEnumerable<GameObject> gameObjects, bool includeChildren)
         {
             EnsureLoaded();
@@ -211,6 +272,10 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 단일 오브젝트의 하이어라키 스타일과 아이콘을 제거합니다.
+        /// </summary>
+        /// <param name="gameObject">스타일을 제거할 오브젝트입니다.</param>
         public static void Clear(GameObject gameObject)
         {
             if (gameObject == null) return;
@@ -220,6 +285,9 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 저장된 모든 하이어라키 스타일과 아이콘을 제거합니다.
+        /// </summary>
         public static void ClearAll()
         {
             EnsureLoaded();
@@ -230,6 +298,9 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 더 이상 존재하지 않는 오브젝트의 저장 데이터를 정리합니다.
+        /// </summary>
         public static void CleanMissing()
         {
             EnsureLoaded();
@@ -246,6 +317,10 @@ namespace SWTools
             Save();
         }
 
+        /// <summary>
+        /// 저장된 하이어라키 스타일 항목을 오브젝트와 색상으로 변환해 반환합니다.
+        /// </summary>
+        /// <returns>오브젝트, 스타일 항목, 시작 색상, 끝 색상 목록입니다.</returns>
         public static List<(GameObject gameObject, Entry entry, Color colorA, Color colorB)> GetEntries()
         {
             EnsureLoaded();
@@ -257,6 +332,16 @@ namespace SWTools
             return result;
         }
 
+        /// <summary>
+        /// 새 GameObject를 만들고 지정한 하이어라키 스타일을 즉시 적용합니다.
+        /// </summary>
+        /// <param name="name">생성할 오브젝트 이름입니다.</param>
+        /// <param name="style">적용할 행 스타일입니다.</param>
+        /// <param name="colorA">시작 색상입니다.</param>
+        /// <param name="colorB">끝 색상입니다.</param>
+        /// <param name="useGradient">그라데이션 사용 여부입니다.</param>
+        /// <param name="iconName">적용할 아이콘 이름입니다.</param>
+        /// <returns>생성된 GameObject입니다.</returns>
         public static GameObject CreateStyledObject(string name, RowStyle style, Color colorA, Color colorB, bool useGradient, string iconName)
         {
             GameObject gameObject = new(name);
@@ -301,6 +386,11 @@ namespace SWTools
             DrawRightTools(gameObject, rowRect, entry);
         }
 
+        /// <summary>
+        /// 외부 하이어라키 GUI 흐름에서 오른쪽 보조 도구 영역을 그립니다.
+        /// </summary>
+        /// <param name="gameObject">대상 GameObject입니다.</param>
+        /// <param name="rowRect">하이어라키 행 영역입니다.</param>
         public static void DrawIntegratedRightTools(GameObject gameObject, Rect rowRect)
         {
             if (!Enabled || Event.current.type != EventType.Repaint || gameObject == null)

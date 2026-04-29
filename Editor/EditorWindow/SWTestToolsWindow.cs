@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using SWUtils;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -104,15 +105,25 @@ namespace SWTools
         // Quality Level 캐시
         private string[] qualityLevelNames;
 
+        /// <summary>
+        /// 씬 목록에 표시할 씬 에셋 캐시 정보입니다.
+        /// </summary>
         private struct SceneDisplayCache
         {
+            /// <summary>씬 에셋 경로입니다.</summary>
             public string path;
+            /// <summary>목록에 표시할 씬 이름입니다.</summary>
             public string displayName;
+            /// <summary>목록에 표시할 GUIContent입니다.</summary>
             public GUIContent content;
+            /// <summary>씬 에셋이 현재 존재하는지 여부입니다.</summary>
             public bool exists;
         }
         #endregion // 필드
 
+        /// <summary>
+        /// Test Tools 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Test Tools Window %#t")]
         public static void ShowWindow()
         {
@@ -1057,13 +1068,12 @@ namespace SWTools
         #region Utility 탭
         private void DrawUtilityTab()
         {
-            SWEditorUtils.DrawHeader("PlayerPrefs");
-            if (SWEditorUtils.DangerButton("PlayerPrefs.DeleteAll", "PlayerPrefs 삭제",
-                "모든 PlayerPrefs를 삭제하시겠습니까?", "삭제", "취소"))
+            SWEditorUtils.DrawHeader("SWUtilsPlayerPrefs");
+            if (SWEditorUtils.DangerButton("SWUtilsPlayerPrefs.DeleteAll", "SWUtilsPlayerPrefs 삭제",
+                "현재 슬롯의 모든 SWUtilsPlayerPrefs 데이터를 삭제하시겠습니까?", "삭제", "취소"))
             {
-                PlayerPrefs.DeleteAll();
-                PlayerPrefs.Save();
-                Debug.Log("[SWTestTools] PlayerPrefs 전체 삭제됨");
+                SWUtilsPlayerPrefs.DeleteAll();
+                Debug.Log("[SWTestTools] SWUtilsPlayerPrefs 전체 삭제됨");
             }
 
             EditorGUILayout.Space(10);

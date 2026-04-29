@@ -50,6 +50,12 @@ namespace SWTools
         #endregion // 프로퍼티
 
 
+        /// <summary>
+        /// 기본 그룹 색상으로 그룹 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="groupName">인스펙터에 표시할 그룹 이름입니다.</param>
+        /// <param name="groupAllFieldsUntilNextGroupAttribute">다음 그룹 어트리뷰트 전까지 필드를 모두 포함할지 여부입니다.</param>
+        /// <param name="closedByDefault">그룹을 기본적으로 접힌 상태로 시작할지 여부입니다.</param>
         public SWGroupAttribute(string groupName, bool groupAllFieldsUntilNextGroupAttribute = true, bool closedByDefault = false)
         {
             this.GroupName = groupName;
@@ -58,6 +64,13 @@ namespace SWTools
             this.ClosedByDefault = closedByDefault;
         }
 
+        /// <summary>
+        /// 그룹 색상을 직접 지정해 그룹 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="groupName">인스펙터에 표시할 그룹 이름입니다.</param>
+        /// <param name="color">그룹에 적용할 색상입니다.</param>
+        /// <param name="groupAllFieldsUntilNextGroupAttribute">다음 그룹 어트리뷰트 전까지 필드를 모두 포함할지 여부입니다.</param>
+        /// <param name="closedByDefault">그룹을 기본적으로 접힌 상태로 시작할지 여부입니다.</param>
         public SWGroupAttribute(string groupName, Color color, bool groupAllFieldsUntilNextGroupAttribute = true,  bool closedByDefault = false)
         {
             this.GroupName = groupName;

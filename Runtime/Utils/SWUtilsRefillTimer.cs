@@ -251,9 +251,9 @@ namespace SWUtils
         /// </summary>
         private void Save()
         {
-            PlayerPrefs.SetInt(KeyCount, count);
-            PlayerPrefs.SetString(KeyLastUse, lastUseUtc.ToString("o"));
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.SetInt(KeyCount, count);
+            SWUtilsPlayerPrefs.SetString(KeyLastUse, lastUseUtc.ToString("o"));
+            SWUtilsPlayerPrefs.Save();
         }
 
         /// <summary>
@@ -261,11 +261,11 @@ namespace SWUtils
         /// </summary>
         private void Load()
         {
-            if (!PlayerPrefs.HasKey(KeyCount)) return;
+            if (!SWUtilsPlayerPrefs.HasKey(KeyCount)) return;
 
-            count = Mathf.Clamp(PlayerPrefs.GetInt(KeyCount, maxCount), 0, maxCount);
+            count = Mathf.Clamp(SWUtilsPlayerPrefs.GetInt(KeyCount, maxCount), 0, maxCount);
 
-            string stored = PlayerPrefs.GetString(KeyLastUse, "");
+            string stored = SWUtilsPlayerPrefs.GetString(KeyLastUse, "");
             if (!string.IsNullOrEmpty(stored) &&
                 DateTime.TryParse(stored, null,
                     System.Globalization.DateTimeStyles.RoundtripKind, out DateTime parsed))
@@ -283,9 +283,9 @@ namespace SWUtils
         {
             count = maxCount;
             lastUseUtc = DateTime.UtcNow;
-            PlayerPrefs.DeleteKey(KeyCount);
-            PlayerPrefs.DeleteKey(KeyLastUse);
-            PlayerPrefs.Save();
+            SWUtilsPlayerPrefs.DeleteKey(KeyCount);
+            SWUtilsPlayerPrefs.DeleteKey(KeyLastUse);
+            SWUtilsPlayerPrefs.Save();
         }
         #endregion // 저장 / 로드
     }

@@ -38,6 +38,9 @@ namespace SWTools
         private const double REPAINT_INTERVAL = 0.05; // 20fps 정도로 갱신
         #endregion // 필드
 
+        /// <summary>
+        /// Input Debugger 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/Input Debugger Window")]
         public static void ShowWindow()
         {

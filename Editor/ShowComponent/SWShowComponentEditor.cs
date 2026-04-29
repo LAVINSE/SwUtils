@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace SWTools
 {
+    /// <summary>
+    /// 하이어라키에 GameObject가 가진 주요 컴포넌트 아이콘을 표시하는 에디터 확장입니다.
+    /// </summary>
     public static class SWShowComponentEditor
     {
         [InitializeOnLoadMethod]

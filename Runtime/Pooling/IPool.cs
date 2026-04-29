@@ -2,6 +2,9 @@ using UnityEngine;
 
 namespace SWPool
 {
+    /// <summary>
+    /// 프리팹 기반 오브젝트 풀의 공통 기능을 정의하는 인터페이스입니다.
+    /// </summary>
     public interface IPool
     {
         /// <summary>

@@ -16,6 +16,10 @@ namespace SWTools
         #endregion // 필드
 
         #region 초기화
+        /// <summary>
+        /// 시트명을 지정해 시트 매핑 어트리뷰트를 생성합니다.
+        /// </summary>
+        /// <param name="sheetName">매핑할 시트명입니다.</param>
         public SWTableSheetAttribute(string sheetName)
         {
             SheetName = sheetName;

@@ -11,16 +11,25 @@ namespace SWTools
     /// </summary>
     public class SWPlayerPrefsViewerWindow : EditorWindow
     {
+        /// <summary>
+        /// JSON 입출력에 사용하는 PlayerPrefs 항목 컨테이너입니다.
+        /// </summary>
         [Serializable]
         private class PrefsData
         {
+            /// <summary>저장된 PlayerPrefs 항목 목록입니다.</summary>
             public List<PrefsEntry> entries = new();
         }
 
+        /// <summary>
+        /// 단일 PlayerPrefs 키와 값입니다.
+        /// </summary>
         [Serializable]
         private class PrefsEntry
         {
+            /// <summary>PlayerPrefs 키입니다.</summary>
             public string key;
+            /// <summary>PlayerPrefs 값입니다.</summary>
             public string value;
         }
 
@@ -36,6 +45,9 @@ namespace SWTools
         private string jsonText = "";
         private string statusMessage = "";
 
+        /// <summary>
+        /// PlayerPrefs Viewer 창을 엽니다.
+        /// </summary>
         [MenuItem("SWTools/PlayerPrefs Viewer")]
         public static void ShowWindow()
         {

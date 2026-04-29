@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace SWCoroutine
 {
+    /// <summary>
+    /// 코루틴 실행, 중단, 지연 호출, 반복 실행을 추상화한 러너 인터페이스입니다.
+    /// </summary>
     public interface ICoroutineRunner
     {
         /// <summary>
