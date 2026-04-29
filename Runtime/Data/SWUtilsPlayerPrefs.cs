@@ -47,7 +47,7 @@ namespace SWUtils
         private static HashSet<string> keyIndexCache;
 
         /// <summary>현재 활성 슬롯 이름. 모든 키 앞에 자동으로 붙는다.</summary>
-        private static string currentSlot = "default";
+        private static string currentSlot = SWSaveSlot.Default;
         #endregion // 필드
 
         #region 프로퍼티
@@ -83,8 +83,8 @@ namespace SWUtils
         /// <param name="slotName">슬롯 이름</param>
         public static void SetSlot(string slotName)
         {
-            if (string.IsNullOrEmpty(slotName)) slotName = "default";
-            currentSlot = slotName;
+            if (string.IsNullOrWhiteSpace(slotName)) slotName = SWSaveSlot.Default;
+            currentSlot = slotName.Trim();
             keyIndexCache = null; // 인덱스 캐시 리셋
         }
         #endregion // 슬롯 관리

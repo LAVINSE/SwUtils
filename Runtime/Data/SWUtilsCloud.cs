@@ -30,7 +30,7 @@ namespace SWUtils
     {
         #region 필드
         /// <summary>기본 저장 슬롯 이름.</summary>
-        private const string DefaultSaveName = "swutils_save";
+        public const string DefaultSaveName = SWSaveSlot.Default;
         /// <summary>로컬 폴백 PlayerPrefs 키 prefix.</summary>
         private const string LocalFallbackKey = "SwUtilsCloud_Local";
         /// <summary>초기화 완료 여부.</summary>
