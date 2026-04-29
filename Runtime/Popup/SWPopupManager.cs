@@ -30,42 +30,6 @@ namespace SWUtils
             public TaskCompletionSource<bool> HideCompletionSource;
         }
 
-        /// <summary>
-        /// 팝업이 외부에서 비활성화되거나 파괴될 때 관리자에게 숨김 완료를 통지하는 내부 컴포넌트입니다.
-        /// </summary>
-        [DisallowMultipleComponent]
-        private sealed class PopupLifecycleWatcher : MonoBehaviour
-        {
-            private SWPopupManager owner;
-            private SWPopupBase popup;
-
-            /// <summary>
-            /// 감시할 팝업과 숨김 완료를 처리할 관리자를 설정합니다.
-            /// </summary>
-            /// <param name="popupManager">숨김 완료를 통지받을 팝업 관리자입니다.</param>
-            /// <param name="popupBase">감시할 팝업 인스턴스입니다.</param>
-            public void Initialize(SWPopupManager popupManager, SWPopupBase popupBase)
-            {
-                owner = popupManager;
-                popup = popupBase;
-            }
-
-            /// <summary>
-            /// 팝업 GameObject가 비활성화될 때 관리자 상태를 정리합니다.
-            /// </summary>
-            private void OnDisable()
-            {
-                owner?.CompletePopupHidden(popup, false);
-            }
-
-            /// <summary>
-            /// 팝업 GameObject가 파괴될 때 관리자 상태를 정리합니다.
-            /// </summary>
-            private void OnDestroy()
-            {
-                owner?.CompletePopupHidden(popup, true);
-            }
-        }
         #endregion // 데이터
 
         #region 필드
@@ -282,8 +246,7 @@ namespace SWUtils
             if (popup == null) return false;
             if (!activeRecords.ContainsKey(popup)) return false;
 
-            popup.Hide();
-            CompletePopupHidden(popup, false);
+            popup.Hide(() => CompletePopupHidden(popup, false));
             return true;
         }
 
@@ -405,6 +368,7 @@ namespace SWUtils
             popupCanvas = canvas;
             defaultParent = parent != null ? parent : canvas.transform;
         }
+
         #endregion // 전역 루트
 
         #region 조회 및 캐시
@@ -546,9 +510,9 @@ namespace SWUtils
         /// <param name="popup">감시자를 연결할 팝업 인스턴스입니다.</param>
         private void EnsureLifecycleWatcher(SWPopupBase popup)
         {
-            PopupLifecycleWatcher watcher = popup.GetComponent<PopupLifecycleWatcher>();
+            SWPopupLifecycle watcher = popup.GetComponent<SWPopupLifecycle>();
             if (watcher == null)
-                watcher = popup.gameObject.AddComponent<PopupLifecycleWatcher>();
+                watcher = popup.gameObject.AddComponent<SWPopupLifecycle>();
 
             watcher.Initialize(this, popup);
         }
