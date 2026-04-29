@@ -54,7 +54,7 @@ namespace SWTools
             }
             else
             {
-                Debug.LogError("지정한 Boolean 필드명을 찾을 수 없습니다 - " + conditionAttribute.ConditionBoolean);
+                SWUtils.SWUtilsLog.LogError("지정한 Boolean 필드명을 찾을 수 없습니다 - " + conditionAttribute.ConditionBoolean);
             }
             
             // Negative 옵션이 설정된 경우 결과를 반전

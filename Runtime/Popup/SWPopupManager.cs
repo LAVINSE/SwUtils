@@ -148,10 +148,18 @@ namespace SWUtils
         /// </summary>
         public T Show<T>(T prefab, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
-            if (prefab == null) return null;
+            if (prefab == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 팝업 표시 실패: 프리팹이 null입니다.");
+                return null;
+            }
 
             Transform targetParent = ResolveParent(parent);
-            if (targetParent == null) return null;
+            if (targetParent == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 팝업 표시 실패: 배치할 부모 Transform을 찾을 수 없습니다.");
+                return null;
+            }
 
             T popup = Instantiate(prefab, targetParent);
             return ShowPopup(popup, targetParent, null, false, true, setup);
@@ -170,10 +178,18 @@ namespace SWUtils
         /// </summary>
         public T ShowExisting<T>(T popup, Action<T> setup, Transform parent = null) where T : SWPopupBase
         {
-            if (popup == null) return null;
+            if (popup == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 기존 팝업 표시 실패: 팝업 인스턴스가 null입니다.");
+                return null;
+            }
 
             Transform targetParent = ResolveParent(parent);
-            if (targetParent == null) return null;
+            if (targetParent == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 기존 팝업 표시 실패: 배치할 부모 Transform을 찾을 수 없습니다.");
+                return null;
+            }
 
             return ShowPopup(popup, targetParent, null, false, false, setup);
         }
@@ -205,7 +221,7 @@ namespace SWUtils
             SWPopupBase popup = GetOrCreatePopup(key, entry, targetParent);
             if (popup is not T typedPopup)
             {
-                SWUtilsLog.LogWarning($"[SWPopupManager] Popup type mismatch. Key: {key}, Expected: {typeof(T).Name}, Actual: {popup.GetType().Name}");
+                SWUtilsLog.LogWarning($"[SWPopupManager] 팝업 타입이 일치하지 않습니다. Key: {key}, 기대 타입: {typeof(T).Name}, 실제 타입: {popup.GetType().Name}");
                 return null;
             }
 
@@ -310,7 +326,11 @@ namespace SWUtils
         /// </summary>
         public void Register(string key, SWPopupBase prefab)
         {
-            if (string.IsNullOrEmpty(key) || prefab == null) return;
+            if (string.IsNullOrEmpty(key) || prefab == null)
+            {
+                SWUtilsLog.LogWarning($"[SWPopupManager] 팝업 등록 실패: 키 또는 프리팹이 유효하지 않습니다. Key: {key}");
+                return;
+            }
 
             ClearCache(key);
             unregisteredKeys.Remove(key);
@@ -359,7 +379,11 @@ namespace SWUtils
         /// <param name="parent">팝업 인스턴스를 배치할 Transform입니다.</param>
         public void SetDefaultParent(Transform parent)
         {
-            if (parent == null) return;
+            if (parent == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 기본 부모 설정 실패: parent가 null입니다.");
+                return;
+            }
 
             defaultParent = parent;
             popupCanvas = parent.GetComponentInParent<Canvas>();
@@ -372,7 +396,11 @@ namespace SWUtils
         /// <param name="parent">팝업 인스턴스를 배치할 Transform입니다. null이면 Canvas Transform을 사용합니다.</param>
         public void SetPopupCanvas(Canvas canvas, Transform parent = null)
         {
-            if (canvas == null) return;
+            if (canvas == null)
+            {
+                SWUtilsLog.LogWarning("[SWPopupManager] 팝업 Canvas 설정 실패: canvas가 null입니다.");
+                return;
+            }
 
             popupCanvas = canvas;
             defaultParent = parent != null ? parent : canvas.transform;
@@ -548,7 +576,7 @@ namespace SWUtils
 
             if (popupCanvas == null)
             {
-                SWUtilsLog.LogWarning("[SWPopupManager] Popup Canvas is null. Assign a global popup Canvas or default parent.");
+                SWUtilsLog.LogWarning("[SWPopupManager] 팝업 Canvas가 null입니다. 전역 팝업 Canvas 또는 기본 부모를 지정하세요.");
                 return null;
             }
 
@@ -582,7 +610,11 @@ namespace SWUtils
         {
             entry = null;
             if (string.IsNullOrEmpty(key)) return false;
-            if (unregisteredKeys.Contains(key)) return false;
+            if (unregisteredKeys.Contains(key))
+            {
+                SWUtilsLog.LogWarning($"[SWPopupManager] 등록 해제된 팝업 키입니다: {key}");
+                return false;
+            }
 
             if (registeredEntries.TryGetValue(key, out entry) && entry != null && entry.prefab != null)
                 return true;
@@ -601,6 +633,7 @@ namespace SWUtils
             if (catalog != null && catalog.TryGetEntry(key, out entry))
                 return true;
 
+            SWUtilsLog.LogWarning($"[SWPopupManager] 팝업 키를 찾을 수 없습니다: {key}");
             return false;
         }
 

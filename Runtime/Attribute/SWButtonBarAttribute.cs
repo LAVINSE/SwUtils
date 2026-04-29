@@ -40,7 +40,7 @@ namespace SWTools
         {
             if (labels.Length != methodNames.Length || labels.Length != onlyWhenPlayMode.Length)
             {
-                Debug.LogError("[SWButtonBar] 배열 길이가 일치하지 않습니다. 모든 배열의 길이가 동일해야 합니다.");
+                SWUtils.SWUtilsLog.LogError("[SWButtonBar] 배열 길이가 일치하지 않습니다. 모든 배열의 길이가 동일해야 합니다.");
             }
 
             this.Labels = labels;

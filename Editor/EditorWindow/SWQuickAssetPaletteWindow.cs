@@ -254,7 +254,7 @@ namespace SWTools
 
             if (assetGuids.Contains(guid))
             {
-                Debug.Log($"[SWTools] 이미 팔레트에 등록된 에셋: {AssetDatabase.GetAssetPath(asset)}");
+                SWUtils.SWUtilsLog.Log($"[SWTools] 이미 팔레트에 등록된 에셋: {AssetDatabase.GetAssetPath(asset)}");
                 return;
             }
 
@@ -275,7 +275,7 @@ namespace SWTools
             int removed = before - assetGuids.Count;
             SavePalette();
             needsCacheRebuild = true;
-            Debug.Log($"[SWTools] 없는 항목 {removed}개 정리됨.");
+            SWUtils.SWUtilsLog.Log($"[SWTools] 없는 항목 {removed}개 정리됨.");
         }
 
         /// <summary>

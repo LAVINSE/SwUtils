@@ -67,7 +67,7 @@ namespace SWTools
                 }
                 else
                 {
-                    Debug.LogWarning($"[SWButtonBar] '{eventOwnerType.Name}' 클래스에서 '{buttonBarAttribute.MethodNames[i]}' 메서드를 찾을 수 없습니다.");
+                    SWUtils.SWUtilsLog.LogWarning($"[SWButtonBar] '{eventOwnerType.Name}' 클래스에서 '{buttonBarAttribute.MethodNames[i]}' 메서드를 찾을 수 없습니다.");
                 }
 
                 if (buttonBarAttribute.OnlyWhenPlayMode[i] && !Application.isPlaying)

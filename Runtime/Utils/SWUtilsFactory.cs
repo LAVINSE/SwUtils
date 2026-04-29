@@ -48,6 +48,12 @@ namespace SWUtils
             GameObject prefabObject, GameObject parentObject, Vector3 position,
             Vector3 scale, Vector3 rotation, bool isStayWorldPosition = false)
         {
+            if (prefabObject == null)
+            {
+                SWUtilsLog.LogError($"[SWUtilsFactory] 프리팹 복제 실패: 원본 프리팹이 null입니다. ObjectName: {objectName}");
+                return null;
+            }
+
             var gameObject = GameObject.Instantiate(prefabObject, Vector3.zero, Quaternion.identity);
             gameObject.name = objectName;
             gameObject.transform.SetParent(parentObject?.transform, isStayWorldPosition);
@@ -99,6 +105,8 @@ namespace SWUtils
         {
             var gameObject = SWUtilsFactory.CreateCloneGameObj(objectName,
                 prefabObject, parentObject, position, scale, rotation, isStayWorldPosition);
+
+            if (gameObject == null) return null;
 
             return gameObject.GetComponent<T>() ?? gameObject.AddComponent<T>();
         }

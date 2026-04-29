@@ -410,7 +410,7 @@ namespace SWTools
             }
 
             Undo.CollapseUndoOperations(undoGroup);
-            Debug.Log($"[SWTools] '{font.name}' 폰트를 {count}개 TMP 컴포넌트에 적용했습니다.");
+            SWUtils.SWUtilsLog.Log($"[SWTools] '{font.name}' 폰트를 {count}개 TMP 컴포넌트에 적용했습니다.");
         }
 
         private void ApplyFontToAllInScene(TMP_FontAsset font)
@@ -435,7 +435,7 @@ namespace SWTools
             }
 
             Undo.CollapseUndoOperations(undoGroup);
-            Debug.Log($"[SWTools] 씬 내 {allTmps.Length}개 TMP 컴포넌트에 '{font.name}' 적용 완료.");
+            SWUtils.SWUtilsLog.Log($"[SWTools] 씬 내 {allTmps.Length}개 TMP 컴포넌트에 '{font.name}' 적용 완료.");
         }
 
         private void RegisterFont(TMP_FontAsset font)
@@ -446,7 +446,7 @@ namespace SWTools
 
             if (registeredFontGuids.Contains(guid))
             {
-                Debug.Log($"[SWTools] 이미 등록된 폰트: {font.name}");
+                SWUtils.SWUtilsLog.Log($"[SWTools] 이미 등록된 폰트: {font.name}");
                 return;
             }
 
@@ -474,7 +474,7 @@ namespace SWTools
             int removed = before - registeredFontGuids.Count;
             SaveRegisteredFonts();
             needsFontCacheRebuild = true;
-            Debug.Log($"[SWTools] 없는 폰트 {removed}개 정리됨.");
+            SWUtils.SWUtilsLog.Log($"[SWTools] 없는 폰트 {removed}개 정리됨.");
         }
 
         private void SwapFont(int from, int to)
@@ -727,7 +727,7 @@ namespace SWTools
             }
 
             Undo.CollapseUndoOperations(undoGroup);
-            Debug.Log($"[SWTools] '{font.name}' + Preset '{preset.name}'을(를) {count}개 TMP에 적용했습니다.");
+            SWUtils.SWUtilsLog.Log($"[SWTools] '{font.name}' + Preset '{preset.name}'을(를) {count}개 TMP에 적용했습니다.");
         }
 
         #endregion // Presets 탭

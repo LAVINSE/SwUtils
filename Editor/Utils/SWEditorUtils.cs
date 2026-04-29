@@ -544,7 +544,7 @@ namespace SWTools
                 }
                 else
                 {
-                    Debug.LogWarning($"[SWEditorUtils] StyleSheet '{UTILS_STYLESHEET_NAME}'을(를) 찾을 수 없습니다.");
+                    SWUtils.SWUtilsLog.LogWarning($"[SWEditorUtils] StyleSheet '{UTILS_STYLESHEET_NAME}'을(를) 찾을 수 없습니다.");
                 }
             }
             return _cachedStyleSheet;
@@ -580,7 +580,7 @@ namespace SWTools
                 return AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
             }
 
-            Debug.LogWarning($"[SWEditorUtils] StyleSheet '{stylesheetName}'을(를) 찾을 수 없습니다.");
+            SWUtils.SWUtilsLog.LogWarning($"[SWEditorUtils] StyleSheet '{stylesheetName}'을(를) 찾을 수 없습니다.");
             return null;
         }
 

@@ -72,7 +72,7 @@ namespace SWTools
 
             if (dropdownAttribute.DropdownValues == null || dropdownAttribute.DropdownValues.Length == 0)
             {
-                Debug.LogWarning($"[SWDropdown] '{property.name}' 필드의 드롭다운 값이 비어있습니다.");
+                SWUtils.SWUtilsLog.LogWarning($"[SWDropdown] '{property.name}' 필드의 드롭다운 값이 비어있습니다.");
                 return;
             }
 
@@ -81,7 +81,7 @@ namespace SWTools
             // 프로퍼티 타입과 드롭다운 값 타입 일치 여부 검사
             if (!IsTypeCompatible(property))
             {
-                Debug.LogError($"[SWDropdown] '{property.name}' 필드 타입과 드롭다운 값 타입이 일치하지 않습니다.");
+                SWUtils.SWUtilsLog.LogError($"[SWDropdown] '{property.name}' 필드 타입과 드롭다운 값 타입이 일치하지 않습니다.");
                 return;
             }
 

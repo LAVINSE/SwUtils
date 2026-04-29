@@ -76,7 +76,7 @@ namespace SWTools
             }
             else
             {
-                Debug.LogError($"[SWEnumCondition] 조건 enum을 찾을 수 없습니다: '{enumConditionAttribute.ConditionEnum}'");
+                SWUtils.SWUtilsLog.LogError($"[SWEnumCondition] 조건 enum을 찾을 수 없습니다: '{enumConditionAttribute.ConditionEnum}'");
             }
 
             return enabled;

@@ -317,7 +317,7 @@ namespace SWTools
                 currentResults.AddRange(refs.Where(p => p != targetPath).Distinct().OrderBy(p => p));
             }
 
-            Debug.Log($"[SWReferenceFinder] '{targetPath}'를 참조하는 에셋 {currentResults.Count}개를 찾았습니다.");
+            SWUtils.SWUtilsLog.Log($"[SWReferenceFinder] '{targetPath}'를 참조하는 에셋 {currentResults.Count}개를 찾았습니다.");
         }
 
         private void BuildReverseIndex()
@@ -384,7 +384,7 @@ namespace SWTools
                 }
 
                 lastIndexBuildTime = EditorApplication.timeSinceStartup - startTime;
-                Debug.Log($"[SWReferenceFinder] 인덱스 빌드 완료: {indexedAssetCount}개 파일, {reverseIndex.Count}개 고유 GUID, {SWEditorUtils.FormatDuration(lastIndexBuildTime)}");
+                SWUtils.SWUtilsLog.Log($"[SWReferenceFinder] 인덱스 빌드 완료: {indexedAssetCount}개 파일, {reverseIndex.Count}개 고유 GUID, {SWEditorUtils.FormatDuration(lastIndexBuildTime)}");
             }
             finally
             {

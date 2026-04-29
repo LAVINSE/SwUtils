@@ -483,12 +483,12 @@ namespace SWTools
                 AssetDatabase.Refresh();
 
                 EditorUtility.DisplayDialog("완료", $"파일이 성공적으로 내보내졌습니다:\n{fullPath}", "확인");
-                Debug.Log($"[SWLocalization] Export 완료: {fullPath}");
+                SWUtils.SWUtilsLog.Log($"[SWLocalization] Export 완료: {fullPath}");
             }
             catch (Exception e)
             {
                 EditorUtility.DisplayDialog("오류", $"내보내기 중 오류가 발생했습니다:\n{e.Message}", "확인");
-                Debug.LogError($"[SWLocalization] Export 실패: {e}");
+                SWUtils.SWUtilsLog.LogError($"[SWLocalization] Export 실패: {e}");
             }
         }
 
@@ -670,7 +670,7 @@ namespace SWTools
                     EditorUtility.DisplayDialog("오류", "유효한 데이터를 찾을 수 없습니다.", "확인");
                     return;
                 }
-                Debug.Log($"[SWLocalization] 미리보기: {importPreviewEntries.Count}개 항목 파싱됨");
+                SWUtils.SWUtilsLog.Log($"[SWLocalization] 미리보기: {importPreviewEntries.Count}개 항목 파싱됨");
             }
             catch (Exception e)
             {
@@ -789,7 +789,7 @@ namespace SWTools
                             }
                             catch (Exception e)
                             {
-                                Debug.LogWarning($"[SWLocalization] 로케일 '{locale.LocaleName}' 테이블 생성 실패: {e.Message}");
+                                SWUtils.SWUtilsLog.LogWarning($"[SWLocalization] 로케일 '{locale.LocaleName}' 테이블 생성 실패: {e.Message}");
                                 continue;
                             }
                         }
@@ -842,13 +842,13 @@ namespace SWTools
                     $"• {entries.Count}개 키 처리됨\n" +
                     $"• {selectedLocales.Count}개 언어 지원" + replaceText, "확인");
 
-                Debug.Log($"[SWLocalization] '{collectionName}' {actionText} 완료: {entries.Count}개 항목");
+                SWUtils.SWUtilsLog.Log($"[SWLocalization] '{collectionName}' {actionText} 완료: {entries.Count}개 항목");
             }
             catch (Exception e)
             {
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("오류", $"Localization Table 생성 중 오류:\n{e.Message}", "확인");
-                Debug.LogError($"[SWLocalization] Import 실패: {e}");
+                SWUtils.SWUtilsLog.LogError($"[SWLocalization] Import 실패: {e}");
             }
         }
 
@@ -868,7 +868,7 @@ namespace SWTools
                 if (table != null) table.Clear();
             }
 
-            Debug.Log($"[SWLocalization] '{collection.name}'에서 {keysToRemove.Count}개 키가 삭제되었습니다.");
+            SWUtils.SWUtilsLog.Log($"[SWLocalization] '{collection.name}'에서 {keysToRemove.Count}개 키가 삭제되었습니다.");
         }
 
         private void RemoveKeysNotInTSV(StringTableCollection collection, HashSet<string> tsvKeys)
@@ -895,7 +895,7 @@ namespace SWTools
                 }
             }
 
-            Debug.Log($"[SWLocalization] '{collection.name}'에서 TSV에 없는 {keysToRemove.Count}개 키가 삭제되었습니다.");
+            SWUtils.SWUtilsLog.Log($"[SWLocalization] '{collection.name}'에서 TSV에 없는 {keysToRemove.Count}개 키가 삭제되었습니다.");
         }
 
         private StringTableCollection GetOrCreateStringTableCollection(string name)
@@ -918,7 +918,7 @@ namespace SWTools
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[SWLocalization] 로케일 '{locale.LocaleName}' 테이블 추가 실패: {e.Message}");
+                    SWUtils.SWUtilsLog.LogWarning($"[SWLocalization] 로케일 '{locale.LocaleName}' 테이블 추가 실패: {e.Message}");
                 }
             }
 
@@ -1225,7 +1225,7 @@ namespace SWTools
                 EditorUtility.SetDirty(selectedCollection.SharedData);
                 AssetDatabase.SaveAssets();
 
-                Debug.Log($"[SWLocalization] Smart String {(enableSmart ? "ON" : "OFF")}: {processed}개 항목 처리됨");
+                SWUtils.SWUtilsLog.Log($"[SWLocalization] Smart String {(enableSmart ? "ON" : "OFF")}: {processed}개 항목 처리됨");
             }
             finally
             {
@@ -1301,7 +1301,7 @@ namespace SWTools
 
             validationResults.Clear();
             ValidateStringTableCollection(selectedCollection);
-            Debug.Log($"[SWLocalization] '{selectedCollection.name}' 검증 완료: {validationResults.Count}개 결과");
+            SWUtils.SWUtilsLog.Log($"[SWLocalization] '{selectedCollection.name}' 검증 완료: {validationResults.Count}개 결과");
         }
 
         private void ValidateAllCollections()
@@ -1314,7 +1314,7 @@ namespace SWTools
             {
                 ValidateStringTableCollection(c);
             }
-            Debug.Log($"[SWLocalization] 전체 검증 완료: {validationResults.Count}개 결과");
+            SWUtils.SWUtilsLog.Log($"[SWLocalization] 전체 검증 완료: {validationResults.Count}개 결과");
         }
 
         private void ValidateStringTableCollection(StringTableCollection collection)

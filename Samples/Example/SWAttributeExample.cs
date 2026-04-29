@@ -51,22 +51,22 @@ public class SWAttributeExample : SWMonoBehaviour
     [SWButton("함수 버튼 예제")]
     private void ButtonExample()
     {
-        Debug.Log("버튼 예제");
+        SWUtils.SWUtilsLog.Log("버튼 예제");
     }
 
     private void ButtonBarExample1()
     {
-        Debug.Log("버튼 바 예제 1");
+        SWUtils.SWUtilsLog.Log("버튼 바 예제 1");
     }
 
     private void ButtonBarExample2()
     {
-        Debug.Log("버튼 바 예제 2");
+        SWUtils.SWUtilsLog.Log("버튼 바 예제 2");
     }
 
     private void ButtonBarExample3()
     {
-        Debug.Log("버튼 바 예제 3");
+        SWUtils.SWUtilsLog.Log("버튼 바 예제 3");
     }
     #endregion // 함수
 }

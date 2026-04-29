@@ -151,7 +151,7 @@ namespace SWTools
                 }
                 else
                 {
-                    Debug.LogWarning($"StyleSheet '{STYLESHEET_NAME}'을(를) 찾을 수 없습니다.");
+                    SWUtils.SWUtilsLog.LogWarning($"StyleSheet '{STYLESHEET_NAME}'을(를) 찾을 수 없습니다.");
                 }
             }
 

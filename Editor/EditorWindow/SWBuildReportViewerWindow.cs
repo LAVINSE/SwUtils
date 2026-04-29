@@ -146,7 +146,7 @@ namespace SWTools
         {
             if (!File.Exists(sourcePath))
             {
-                Debug.LogWarning($"[SWTools] 파일이 존재하지 않습니다: {sourcePath}");
+                SWUtils.SWUtilsLog.LogWarning($"[SWTools] 파일이 존재하지 않습니다: {sourcePath}");
                 return;
             }
 
@@ -162,7 +162,7 @@ namespace SWTools
 
                 if (loaded == null)
                 {
-                    Debug.LogWarning("[SWTools] BuildReport 로드 실패: " + sourcePath);
+                    SWUtils.SWUtilsLog.LogWarning("[SWTools] BuildReport 로드 실패: " + sourcePath);
                     return;
                 }
 

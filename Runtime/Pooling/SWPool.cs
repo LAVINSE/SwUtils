@@ -39,7 +39,17 @@ namespace SWPool
         /// <inheritdoc/>
         public void Prewarm(GameObject prefab, int count)
         {
-            if (prefab == null || count <= 0) return;
+            if (prefab == null)
+            {
+                SWUtils.SWUtilsLog.LogWarning("[SWPool] 프리웜 실패: 프리팹이 null입니다.");
+                return;
+            }
+
+            if (count <= 0)
+            {
+                SWUtils.SWUtilsLog.LogWarning($"[SWPool] 프리웜 실패: 생성 수가 0 이하입니다. Count: {count}");
+                return;
+            }
 
             var pool = GetOrCreatePool(prefab);
             var tempInstances = new GameObject[count];
@@ -55,7 +65,11 @@ namespace SWPool
         public GameObject Spawn(GameObject prefab, Vector3 position = default,
             Quaternion rotation = default, Transform parent = null)
         {
-            if (prefab == null) return null;
+            if (prefab == null)
+            {
+                SWUtils.SWUtilsLog.LogWarning("[SWPool] Spawn 실패: 프리팹이 null입니다.");
+                return null;
+            }
 
             var pool = GetOrCreatePool(prefab);
             var instance = pool.Get();
@@ -80,7 +94,11 @@ namespace SWPool
         /// <inheritdoc/>
         public void Release(GameObject instance)
         {
-            if (instance == null) return;
+            if (instance == null)
+            {
+                SWUtils.SWUtilsLog.LogWarning("[SWPool] Release 실패: 반환할 인스턴스가 null입니다.");
+                return;
+            }
 
             // 예약된 지연 반납이 있으면 취소
             if (delayedReleaseDict.TryGetValue(instance, out var reservedCoroutine))
@@ -91,6 +109,7 @@ namespace SWPool
 
             if (!instanceToPrefabDict.TryGetValue(instance, out var prefab))
             {
+                SWUtils.SWUtilsLog.LogWarning($"[SWPool] 등록되지 않은 인스턴스라 파괴합니다: {instance.name}");
                 Destroy(instance);
                 return;
             }
@@ -98,7 +117,10 @@ namespace SWPool
             if (poolDict.TryGetValue(prefab, out var pool))
                 pool.Release(instance);
             else
+            {
+                SWUtils.SWUtilsLog.LogWarning($"[SWPool] 연결된 풀이 없어 인스턴스를 파괴합니다: {instance.name}");
                 Destroy(instance);
+            }
         }
 
         /// <inheritdoc/>
@@ -132,7 +154,13 @@ namespace SWPool
         /// <inheritdoc/>
         public void Clear(GameObject prefab)
         {
-            if (prefab == null || !poolDict.TryGetValue(prefab, out var pool)) return;
+            if (prefab == null)
+            {
+                SWUtils.SWUtilsLog.LogWarning("[SWPool] Clear 실패: 프리팹이 null입니다.");
+                return;
+            }
+
+            if (!poolDict.TryGetValue(prefab, out var pool)) return;
 
             // 해당 프리팹의 예약된 지연 반납 취소
             var instancesToCancel = new List<GameObject>();
@@ -230,6 +258,7 @@ namespace SWPool
             );
 
             poolDict[prefab] = pool;
+            SWUtils.SWUtilsLog.Log($"[SWPool] 풀 생성 완료: {prefab.name}");
             return pool;
         }
 

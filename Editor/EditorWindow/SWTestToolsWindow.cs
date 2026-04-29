@@ -477,7 +477,7 @@ namespace SWTools
             {
                 System.GC.Collect();
                 cachedTotalMemoryMB = System.GC.GetTotalMemory(false) / (1024 * 1024);
-                Debug.Log("[SWTestTools] GC.Collect 실행됨");
+                SWUtils.SWUtilsLog.Log("[SWTestTools] GC.Collect 실행됨");
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -880,7 +880,7 @@ namespace SWTools
 
             if (bookmarkedObjects.Contains(entry))
             {
-                Debug.Log($"[SWTestTools] 이미 북마크된 GameObject입니다: {hierarchyPath}");
+                SWUtils.SWUtilsLog.Log($"[SWTestTools] 이미 북마크된 GameObject입니다: {hierarchyPath}");
                 return;
             }
 
@@ -925,7 +925,7 @@ namespace SWTools
                 }
                 else
                 {
-                    Debug.LogWarning($"[SWTestTools] 씬 파일이 없습니다: {scenePath}");
+                    SWUtils.SWUtilsLog.LogWarning($"[SWTestTools] 씬 파일이 없습니다: {scenePath}");
                     return;
                 }
             }
@@ -938,7 +938,7 @@ namespace SWTools
             }
             else
             {
-                Debug.LogWarning($"[SWTestTools] GameObject를 찾을 수 없습니다: {hierarchyPath}");
+                SWUtils.SWUtilsLog.LogWarning($"[SWTestTools] GameObject를 찾을 수 없습니다: {hierarchyPath}");
             }
         }
 
@@ -998,7 +998,7 @@ namespace SWTools
             if (string.IsNullOrEmpty(path)) return;
             if (registeredScenePaths.Contains(path))
             {
-                Debug.Log($"[SWTestTools] 이미 등록된 씬입니다: {path}");
+                SWUtils.SWUtilsLog.Log($"[SWTestTools] 이미 등록된 씬입니다: {path}");
                 return;
             }
 
@@ -1073,7 +1073,7 @@ namespace SWTools
                 "현재 슬롯의 모든 SWUtilsPlayerPrefs 데이터를 삭제하시겠습니까?", "삭제", "취소"))
             {
                 SWUtilsPlayerPrefs.DeleteAll();
-                Debug.Log("[SWTestTools] SWUtilsPlayerPrefs 전체 삭제됨");
+                SWUtils.SWUtilsLog.Log("[SWTestTools] SWUtilsPlayerPrefs 전체 삭제됨");
             }
 
             EditorGUILayout.Space(10);

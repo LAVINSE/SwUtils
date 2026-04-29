@@ -315,11 +315,11 @@ namespace SWUtils
         private void LogSafeAreaInfo()
         {
             var effectiveSafeArea = GetEffectiveSafeArea();
-            Debug.Log($"[SafeAreaHandler] Screen: {Screen.width}x{Screen.height}\n" +
-                      $"  Actual SafeArea: {Screen.safeArea}\n" +
-                      $"  Effective SafeArea: {effectiveSafeArea}\n" +
-                      $"  Orientation: {Screen.orientation}\n" +
-                      $"  DPI: {Screen.dpi}");
+            SWUtilsLog.Log($"[SWSafeArea] 화면: {Screen.width}x{Screen.height}\n" +
+                           $"  실제 SafeArea: {Screen.safeArea}\n" +
+                           $"  적용 SafeArea: {effectiveSafeArea}\n" +
+                           $"  화면 방향: {Screen.orientation}\n" +
+                           $"  DPI: {Screen.dpi}");
         }
         #endregion // 에디터 버튼
     }
