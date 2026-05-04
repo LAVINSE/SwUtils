@@ -106,11 +106,11 @@ namespace SWTools
             EditorGUILayout.BeginVertical(GUILayout.Width(LeftPanelWidth));
 
             List<(GameObject gameObject, SWHierarchyTools.Entry entry, Color colorA, Color colorB)> entries = SWHierarchyTools.GetEntries();
-            SWEditorUtils.DrawHeader($"Registry ({entries.Count})");
+            SWEditorUtils.DrawHeader($"등록 목록 ({entries.Count})");
 
             if (entries.Count == 0)
             {
-                SWEditorUtils.DrawEmptyNotice("No registered hierarchy items.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("등록된 하이어라키 항목이 없습니다.", MessageType.None);
             }
             else
             {
@@ -120,12 +120,12 @@ namespace SWTools
             GUILayout.FlexibleSpace();
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clean Missing", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
+            if (GUILayout.Button("누락 정리", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
                 SWHierarchyTools.CleanMissing();
 
-            if (GUILayout.Button("Clear All", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
+            if (GUILayout.Button("전체 제거", GUILayout.Height(SWEditorUtils.SmallButtonHeight)))
             {
-                if (EditorUtility.DisplayDialog("Clear Hierarchy Tools", "Clear all hierarchy decorations?", "Clear", "Cancel"))
+                if (EditorUtility.DisplayDialog("Hierarchy Tools 초기화", "모든 하이어라키 꾸밈을 제거할까요?", "제거", "취소"))
                     SWHierarchyTools.ClearAll();
             }
             EditorGUILayout.EndHorizontal();
@@ -197,20 +197,20 @@ namespace SWTools
 
         private void DrawDisplayTab()
         {
-            SWEditorUtils.DrawHeader("Display");
+            SWEditorUtils.DrawHeader("표시");
 
             EditorGUI.BeginChangeCheck();
-            bool enabled = DrawToggleRow("Enabled", "Enable hierarchy tools", SWHierarchyTools.Enabled);
-            bool background = DrawToggleRow("Background Tint", "Draw row background tint", SWHierarchyTools.DrawBackground);
-            bool gradientDefault = DrawToggleRow("Gradient Default", "Use gradient for new decorations", SWHierarchyTools.UseGradientByDefault);
-            bool componentIcons = DrawToggleRow("Component Icons", "Draw component icons on right", SWHierarchyTools.DrawComponentIcons);
-            bool minimap = DrawToggleRow("Component Dots", "Draw small component dots", SWHierarchyTools.DrawComponentMinimap);
-            bool warning = DrawToggleRow("Missing Warning", "Draw missing script warning", SWHierarchyTools.DrawMissingScriptWarning);
-            bool activeToggle = DrawToggleRow("Active Toggle", "Draw active toggle on right", SWHierarchyTools.DrawActiveToggle);
-            bool zebra = DrawToggleRow("Zebra Rows", "Draw alternating row tint", SWHierarchyTools.DrawZebraRows);
-            bool shortcuts = DrawToggleRow("Hovered Shortcuts", "Enable hovered object shortcuts", SWHierarchyTools.EnableShortcuts);
-            float lineWidth = EditorGUILayout.Slider("Line Width", SWHierarchyTools.LineWidth, 1f, 12f);
-            float componentIconSpacing = EditorGUILayout.Slider("Component Icon Spacing", SWHierarchyTools.ComponentIconSpacing, 0f, 12f);
+            bool enabled = DrawToggleRow("활성화", "Hierarchy Tools 기능을 켭니다.", SWHierarchyTools.Enabled);
+            bool background = DrawToggleRow("배경 색상", "행 배경에 색상을 표시합니다.", SWHierarchyTools.DrawBackground);
+            bool gradientDefault = DrawToggleRow("기본 그라데이션", "새 꾸밈에 그라데이션을 기본 적용합니다.", SWHierarchyTools.UseGradientByDefault);
+            bool componentIcons = DrawToggleRow("컴포넌트 아이콘", "오른쪽에 컴포넌트 아이콘을 표시합니다.", SWHierarchyTools.DrawComponentIcons);
+            bool minimap = DrawToggleRow("컴포넌트 점", "작은 컴포넌트 점을 표시합니다.", SWHierarchyTools.DrawComponentMinimap);
+            bool warning = DrawToggleRow("누락 경고", "Missing Script 경고를 표시합니다.", SWHierarchyTools.DrawMissingScriptWarning);
+            bool activeToggle = DrawToggleRow("활성 토글", "오른쪽에 활성 상태 토글을 표시합니다.", SWHierarchyTools.DrawActiveToggle);
+            bool zebra = DrawToggleRow("교차 행", "행마다 번갈아 배경을 표시합니다.", SWHierarchyTools.DrawZebraRows);
+            bool shortcuts = DrawToggleRow("호버 단축키", "마우스를 올린 오브젝트의 단축키를 사용합니다.", SWHierarchyTools.EnableShortcuts);
+            float lineWidth = EditorGUILayout.Slider("라인 두께", SWHierarchyTools.LineWidth, 1f, 12f);
+            float componentIconSpacing = EditorGUILayout.Slider("컴포넌트 아이콘 간격", SWHierarchyTools.ComponentIconSpacing, 0f, 12f);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -228,19 +228,19 @@ namespace SWTools
             }
 
             EditorGUILayout.Space(6);
-            EditorGUILayout.HelpBox("Object Icon replaces Unity's default GameObject icon. The right side is reserved for component icons, warnings, and toggles.", MessageType.None);
+            EditorGUILayout.HelpBox("오브젝트 아이콘은 Unity 기본 GameObject 아이콘을 대체합니다. 오른쪽 영역은 컴포넌트 아이콘, 경고, 토글 표시에 사용됩니다.", MessageType.None);
         }
 
         private void DrawApplyTab()
         {
-            SWEditorUtils.DrawHeader("Apply");
+            SWEditorUtils.DrawHeader("적용");
 
             List<GameObject> selected = GetSelectedGameObjects();
-            EditorGUILayout.LabelField($"Selected GameObjects: {selected.Count}");
-            includeChildren = DrawToggleRow("Include Children", "Apply to child objects", includeChildren);
+            EditorGUILayout.LabelField($"선택된 GameObject: {selected.Count}");
+            includeChildren = DrawToggleRow("자식 포함", "자식 오브젝트까지 함께 적용합니다.", includeChildren);
 
             EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("Quick Colors", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("빠른 색상", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             foreach (Color color in Palette)
             {
@@ -256,39 +256,39 @@ namespace SWTools
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(4);
-            useGradient = EditorGUILayout.Toggle("Use Gradient", useGradient);
-            colorA = EditorGUILayout.ColorField("Color A", colorA);
+            useGradient = EditorGUILayout.Toggle("그라데이션 사용", useGradient);
+            colorA = EditorGUILayout.ColorField("색상 A", colorA);
             using (new SWEditorUtils.GUIEnabledScope(useGradient))
-                colorB = EditorGUILayout.ColorField("Color B", colorB);
+                colorB = EditorGUILayout.ColorField("색상 B", colorB);
 
-            if (GUILayout.Button("Apply Color", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+            if (GUILayout.Button("색상 적용", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                 SWHierarchyTools.Apply(selected, colorA, colorB, useGradient, includeChildren);
 
             EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Unity Object Icons", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Unity 오브젝트 아이콘", EditorStyles.boldLabel);
             DrawBuiltinIconPalette(selected);
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("Custom Texture Icons", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("커스텀 텍스처 아이콘", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             customTextureIcon = (Texture2D)EditorGUILayout.ObjectField(customTextureIcon, typeof(Texture2D), false);
             using (new SWEditorUtils.GUIEnabledScope(customTextureIcon != null))
             {
-                if (GUILayout.Button("Add", GUILayout.Width(55), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                if (GUILayout.Button("추가", GUILayout.Width(55), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                     RegisterCustomIcon(customTextureIcon);
 
-                if (GUILayout.Button("Apply", GUILayout.Width(60), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+                if (GUILayout.Button("적용", GUILayout.Width(60), GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                     SWHierarchyTools.SetAssetIcon(selected, customTextureIcon, includeChildren);
             }
             EditorGUILayout.EndHorizontal();
             DrawCustomIconPalette(selected);
 
             EditorGUILayout.Space(8);
-            SWEditorUtils.DrawHeader("Create");
+            SWEditorUtils.DrawHeader("생성");
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Folder", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+            if (GUILayout.Button("폴더", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                 SWHierarchyTools.CreateStyledObject("Folder", SWHierarchyTools.RowStyle.Folder, colorA, colorB, useGradient, "d_Folder Icon");
-            if (GUILayout.Button("Example Divider", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
+            if (GUILayout.Button("구분선 예시", GUILayout.Height(SWEditorUtils.DefaultButtonHeight)))
                 SWHierarchyTools.CreateStyledObject("--------------- Example ---------------", SWHierarchyTools.RowStyle.Normal, colorA, colorB, useGradient, "");
             EditorGUILayout.EndHorizontal();
         }
@@ -318,11 +318,11 @@ namespace SWTools
         {
             if (customIconGuids.Count == 0)
             {
-                SWEditorUtils.DrawEmptyNotice("No custom icons registered.", MessageType.None);
+                SWEditorUtils.DrawEmptyNotice("등록된 커스텀 아이콘이 없습니다.", MessageType.None);
                 return;
             }
 
-            removeCustomIconMode = DrawToggleRow("Remove Mode", "Click a custom icon to remove it", removeCustomIconMode);
+            removeCustomIconMode = DrawToggleRow("제거 모드", "커스텀 아이콘을 클릭하면 목록에서 제거합니다.", removeCustomIconMode);
             customIconScroll = EditorGUILayout.BeginScrollView(customIconScroll, GUILayout.MaxHeight(82f));
             int column = 0;
             EditorGUILayout.BeginHorizontal();
