@@ -61,6 +61,7 @@ namespace SWTools
         private const string GradientKey = "SWTools.HierarchyTools.Gradient";
         private const string ComponentMinimapKey = "SWTools.HierarchyTools.ComponentMinimap.v2";
         private const string ComponentIconsKey = "SWTools.HierarchyTools.ComponentIcons";
+        private const string ComponentIconSpacingKey = "SWTools.HierarchyTools.ComponentIconSpacing";
         private const string MissingWarningKey = "SWTools.HierarchyTools.MissingWarning";
         private const string ActiveToggleKey = "SWTools.HierarchyTools.ActiveToggle";
         private const string ZebraKey = "SWTools.HierarchyTools.Zebra";
@@ -91,6 +92,7 @@ namespace SWTools
         private static bool useGradientByDefault;
         private static bool drawComponentMinimap;
         private static bool drawComponentIcons;
+        private static float componentIconSpacing;
         private static bool drawMissingScriptWarning;
         private static bool drawActiveToggle;
         private static bool drawZebraRows;
@@ -134,7 +136,19 @@ namespace SWTools
             set { drawComponentIcons = value; SetBool(ComponentIconsKey, value); }
         }
 
-        /// <summary>Missing Script 경고 표시를 그릴지 여부입니다.</summary>
+        /// <summary>Hierarchy row component icon spacing in pixels.</summary>
+        public static float ComponentIconSpacing
+        {
+            get { EnsureSettingsLoaded(); return componentIconSpacing; }
+            set
+            {
+                componentIconSpacing = Mathf.Clamp(value, 0f, 12f);
+                SWEditorUtils.SavePref(ComponentIconSpacingKey, componentIconSpacing);
+                Repaint();
+            }
+        }
+
+        /// <summary>Missing script warning display toggle.</summary>
         public static bool DrawMissingScriptWarning
         {
             get { EnsureSettingsLoaded(); return drawMissingScriptWarning; }
@@ -493,7 +507,7 @@ namespace SWTools
                 if (icon == null)
                     continue;
 
-                x -= 16f;
+                x -= SWEditorUtils.DefaultIconSize + componentIconSpacing;
                 Rect iconRect = new(x, rowRect.y, SWEditorUtils.DefaultIconSize, SWEditorUtils.DefaultIconSize);
                 SWEditorUtils.DrawIcon(iconRect, icon, SWEditorUtils.IsComponentEnabled(component));
                 drawn++;
@@ -669,6 +683,7 @@ namespace SWTools
             useGradientByDefault = SWEditorUtils.LoadPref(GradientKey, true);
             drawComponentMinimap = SWEditorUtils.LoadPref(ComponentMinimapKey, false);
             drawComponentIcons = SWEditorUtils.LoadPref(ComponentIconsKey, true);
+            componentIconSpacing = Mathf.Clamp(SWEditorUtils.LoadPref(ComponentIconSpacingKey, 0f), 0f, 12f);
             drawMissingScriptWarning = SWEditorUtils.LoadPref(MissingWarningKey, true);
             drawActiveToggle = SWEditorUtils.LoadPref(ActiveToggleKey, false);
             drawZebraRows = SWEditorUtils.LoadPref(ZebraKey, false);

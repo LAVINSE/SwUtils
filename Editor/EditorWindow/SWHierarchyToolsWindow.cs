@@ -210,6 +210,7 @@ namespace SWTools
             bool zebra = DrawToggleRow("Zebra Rows", "Draw alternating row tint", SWHierarchyTools.DrawZebraRows);
             bool shortcuts = DrawToggleRow("Hovered Shortcuts", "Enable hovered object shortcuts", SWHierarchyTools.EnableShortcuts);
             float lineWidth = EditorGUILayout.Slider("Line Width", SWHierarchyTools.LineWidth, 1f, 12f);
+            float componentIconSpacing = EditorGUILayout.Slider("Component Icon Spacing", SWHierarchyTools.ComponentIconSpacing, 0f, 12f);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -223,6 +224,7 @@ namespace SWTools
                 SWHierarchyTools.DrawZebraRows = zebra;
                 SWHierarchyTools.EnableShortcuts = shortcuts;
                 SWHierarchyTools.LineWidth = lineWidth;
+                SWHierarchyTools.ComponentIconSpacing = componentIconSpacing;
             }
 
             EditorGUILayout.Space(6);
