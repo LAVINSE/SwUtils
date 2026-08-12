@@ -8,6 +8,9 @@
 
 SWUtils is a compact Unity utility package for runtime systems, inspector workflows, debugging tools, and editor productivity windows.
 
+> [!WARNING]
+> The features provided by SWUtils are currently experimental. Unexpected behavior or bugs may occur, so verify them thoroughly before using them in a production project.
+
 ## Overview
 
 | Area | What it provides |
@@ -45,17 +48,14 @@ https://github.com/LAVINSE/SWUtils.git#v1.1.0
 
 ## Dependencies
 
-The following Unity packages are installed automatically through `package.json`:
+Localization is the only required Unity package for SWUtils. It is installed automatically through `package.json` when SWUtils is installed from a Git URL.
 
 - Localization
-- TextMeshPro
-- Unity UI
 
 Unity Input System is not installed automatically. The debug console can use it when it already exists in the project, but SWUtils keeps it optional to avoid a mandatory package dependency.
 
-The following external libraries may not be available directly through Unity Package Manager. Install them before using the related features:
+Install the following external libraries only when using their related features:
 
-- DOTween: Used for popup show and hide animations.
 - Google Play Games: Used for Android cloud saves.
 - Steamworks.NET: Used for standalone cloud saves.
 
@@ -70,7 +70,7 @@ Add the following define symbols when using external libraries for cloud saves:
 
 After installation:
 
-1. Import the package sample from the `Samples` tab in Unity Package Manager when you want working attribute and pooling examples.
+1. Find the examples in `Packages > SWUtils > Samples` in the Project window.
 2. Add `using SW.Base;` for `SWMonoBehaviour` and `SWScriptableObject`, and add `using SW.Attributes;` for Inspector attributes.
 3. Import the namespace that owns the feature you use, such as `SW.Data`, `SW.Popup`, `SW.ScreenResolution`, or `SW.Util`.
 4. Add `using SW.Coroutines;` when using `ICoroutineRunner` or `SWCoroutineRunner`.
@@ -502,7 +502,7 @@ Manages popup creation, display, hiding, caching, and animation.
 - `SWPopupManager`: Handles popup display, hiding, key-based registration, and caching.
 - `SWPopupCatalog`: A ScriptableObject that maps keys to popup prefabs.
 - `SWPopupShowEffect`, `SWPopupHideEffect`: Abstract classes for show and hide effects.
-- `SWPopupScaleShowEffect`, `SWPopupScaleHideEffect`: Default DOTween-based scale effects.
+- `SWPopupScaleShowEffect`, `SWPopupScaleHideEffect`: Default coroutine-based scale effects.
 - `SWPopupLifecycle`: Connects popup lifecycle events.
 
 Example:
@@ -1013,7 +1013,7 @@ Provides sample prefabs and example scripts.
 - `Samples/Prefab/SWPool.prefab`: Pool manager prefab.
 - `Samples/Prefab/SWPoolRegistry.prefab`: Pool registry prefab.
 
-After installing the package through Unity Package Manager, import the sample into your project to inspect the example prefabs.
+After installation, inspect the examples directly in `Packages > SWUtils > Samples` in the Project window.
 
 ## Assembly Definitions
 

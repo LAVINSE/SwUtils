@@ -8,6 +8,9 @@
 
 SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시스템, 인스펙터 워크플로, 디버깅 도구, 에디터 생산성 창을 모은 유틸리티 패키지입니다.
 
+> [!WARNING]
+> SWUtils에서 제공하는 기능은 현재 테스트 단계입니다. 사용 중 예기치 않은 동작이나 버그가 발생할 수 있으므로 실제 프로젝트에 적용하기 전에 충분히 검증하세요.
+
 ## 개요
 
 | 영역 | 제공 기능 |
@@ -45,13 +48,14 @@ https://github.com/LAVINSE/SWUtils.git#v1.1.0
 
 ## 의존성
 
+SWUtils 사용에 필요한 필수 Unity 패키지는 Localization뿐입니다. Git 주소로 SWUtils를 설치하면 `package.json`을 통해 자동으로 설치됩니다.
+
 - Localization
-- TextMeshPro
-- Unity UI
 
-외부 라이브러리는 사용하는 기능에 따라 별도로 설치해야 합니다.
+Unity Input System은 자동 설치하지 않습니다. 디버그 콘솔은 프로젝트에 Input System이 이미 있으면 사용할 수 있지만, 필수 패키지 의존성이 생기지 않도록 선택 기능으로 유지합니다.
 
-- DOTween: 팝업 표시 및 숨김 연출
+다음 외부 라이브러리는 관련 기능을 사용할 때만 선택적으로 설치합니다.
+
 - Google Play Games: Android 클라우드 저장
 - Steamworks.NET: 데스크톱 클라우드 저장
 
@@ -62,7 +66,7 @@ https://github.com/LAVINSE/SWUtils.git#v1.1.0
 
 ## 빠른 시작
 
-1. 예제가 필요하면 Unity Package Manager의 `Samples` 탭에서 샘플을 가져옵니다.
+1. 예제가 필요하면 프로젝트 창의 `Packages > SWUtils > Samples` 폴더에서 확인합니다.
 2. `SWMonoBehaviour`와 `SWScriptableObject`를 사용할 때 `using SW.Base;`를 추가합니다.
 3. 인스펙터 어트리뷰트를 사용할 때 `using SW.Attributes;`를 추가합니다.
 4. 데이터, 팝업, 해상도, 유틸리티 기능은 각각 `SW.Data`, `SW.Popup`, `SW.ScreenResolution`, `SW.Util`을 사용합니다.
@@ -446,7 +450,7 @@ Runtime 어트리뷰트에 대응하는 프로퍼티 서랍과 `SWMonoBehaviour`
 - `SWExampleStackStateMachine`: Gameplay, Pause와 Return State를 사용하는 Stack State Machine 예제 에셋
 - `SWPool`, `SWPoolRegistry`, `SWPopupManager`, `SWStats` 프리팹
 
-Unity Package Manager의 `Samples` 탭에서 샘플을 가져올 수 있습니다.
+예제는 프로젝트 창의 `Packages > SWUtils > Samples` 폴더에서 바로 확인할 수 있습니다.
 
 ## 조립체 정의
 
