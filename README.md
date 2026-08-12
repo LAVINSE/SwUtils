@@ -45,15 +45,11 @@ https://github.com/LAVINSE/SWUtils.git#v1.1.0
 
 ## 의존성
 
-다음 Unity 패키지는 `package.json`을 통해 자동으로 설치됩니다.
-
 - Localization
 - TextMeshPro
 - Unity UI
 
-Unity Input System은 자동 설치하지 않습니다. 디버그 콘솔은 프로젝트에 Input System이 이미 있으면 사용할 수 있지만, 필수 패키지 의존성이 생기지 않도록 선택 기능으로 유지합니다.
-
-다음 외부 라이브러리는 사용하는 기능에 따라 별도로 설치해야 합니다.
+외부 라이브러리는 사용하는 기능에 따라 별도로 설치해야 합니다.
 
 - DOTween: 팝업 표시 및 숨김 연출
 - Google Play Games: Android 클라우드 저장
