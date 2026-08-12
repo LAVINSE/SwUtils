@@ -17,7 +17,7 @@ MonoBehaviour:
   - identifier: 94709ac4c4614e59a762e31ab43cd850
     displayName: Gameplay
     description: "\uAC8C\uC784\uC774 \uC9C4\uD589 \uC911\uC778 \uC2DC\uC791 \uC0C1\uD0DC\uC785\uB2C8\uB2E4."
-    stateTypeName: SW.Example.SWGraphAssetsExample+GameplayState, SWUtils.Samples
+    stateTypeName: SW.Example.GameplayState, SWUtils.Samples
     position:
       serializedVersion: 2
       x: -65
@@ -31,7 +31,7 @@ MonoBehaviour:
     displayName: Pause
     description: "Gameplay \uC704\uC5D0 Push\uB418\uB294 \uC77C\uC2DC\uC815\uC9C0
       \uC0C1\uD0DC\uC785\uB2C8\uB2E4."
-    stateTypeName: SW.Example.SWGraphAssetsExample+PauseState, SWUtils.Samples
+    stateTypeName: SW.Example.PauseState, SWUtils.Samples
     position:
       serializedVersion: 2
       x: 306
@@ -61,7 +61,7 @@ MonoBehaviour:
     operation: 1
     usesCommand: 0
     command: 0
-    conditionTypeName: SW.Example.SWGraphAssetsExample+IsPausedCondition, SWUtils.Samples
+    conditionTypeName: SW.Example.IsPausedCondition, SWUtils.Samples
     canReenter: 0
     priority: 0
     summaryOffset: {x: 1, y: -17}
@@ -71,7 +71,7 @@ MonoBehaviour:
     operation: 3
     usesCommand: 0
     command: 0
-    conditionTypeName: SW.Example.SWGraphAssetsExample+IsNotPausedCondition, SWUtils.Samples
+    conditionTypeName: SW.Example.IsNotPausedCondition, SWUtils.Samples
     canReenter: 0
     priority: 0
     summaryOffset: {x: -20, y: -16}

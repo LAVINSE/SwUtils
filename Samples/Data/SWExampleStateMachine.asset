@@ -18,7 +18,7 @@ MonoBehaviour:
     displayName: Idle
     description: "\uC774\uB3D9 \uC785\uB825\uC744 \uAE30\uB2E4\uB9AC\uB294 \uC2DC\uC791
       \uC0C1\uD0DC\uC785\uB2C8\uB2E4."
-    stateTypeName: SW.Example.SWGraphAssetsExample+IdleState, SWUtils.Samples
+    stateTypeName: SW.Example.IdleState, SWUtils.Samples
     position:
       serializedVersion: 2
       x: 40
@@ -31,7 +31,7 @@ MonoBehaviour:
   - identifier: 867a6ed7eb5243df84e1e64ec975e80b
     displayName: Moving
     description: "\uC774\uB3D9 \uC870\uAC74\uC774 \uD65C\uC131\uD654\uB41C \uC0C1\uD0DC\uC785\uB2C8\uB2E4."
-    stateTypeName: SW.Example.SWGraphAssetsExample+MovingState, SWUtils.Samples
+    stateTypeName: SW.Example.MovingState, SWUtils.Samples
     position:
       serializedVersion: 2
       x: 444
@@ -48,7 +48,7 @@ MonoBehaviour:
     operation: 0
     usesCommand: 0
     command: 0
-    conditionTypeName: SW.Example.SWGraphAssetsExample+IsMovingCondition, SWUtils.Samples
+    conditionTypeName: SW.Example.IsMovingCondition, SWUtils.Samples
     canReenter: 0
     priority: 0
     summaryOffset: {x: 0, y: 0}
@@ -58,7 +58,7 @@ MonoBehaviour:
     operation: 0
     usesCommand: 0
     command: 0
-    conditionTypeName: SW.Example.SWGraphAssetsExample+IsNotMovingCondition, SWUtils.Samples
+    conditionTypeName: SW.Example.IsNotMovingCondition, SWUtils.Samples
     canReenter: 0
     priority: 0
     summaryOffset: {x: 0, y: 0}

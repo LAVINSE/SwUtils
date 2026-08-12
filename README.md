@@ -24,12 +24,64 @@ SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시�
 
 빠른 링크:
 
+- [주요 기능 미리보기](#주요-기능-미리보기)
 - [Git 주소로 설치](#git-주소로-설치)
 - [빠른 시작](#빠른-시작)
 - [네임스페이스 구조](#네임스페이스-구조)
 - [런타임 기능](#런타임-기능)
 - [에디터 기능](#에디터-기능)
 - [조립체 정의](#조립체-정의)
+
+## 주요 기능 미리보기
+
+### 인스펙터 어트리뷰트
+
+그룹, 읽기 전용 필드, 조건부 표시, 드롭다운과 메서드 실행 버튼을 기본 인스펙터에서 사용할 수 있습니다.
+
+<p align="center">
+  <img src="Documentation~/Media/SWAttribute.gif" alt="SWUtils 인스펙터 어트리뷰트 사용 화면" width="460">
+</p>
+
+### State Machine 그래프
+
+상태와 전이를 시각적으로 구성하고 실행 중인 상태와 최근 전이를 그래프에서 확인할 수 있습니다.
+
+![SWUtils State Machine 그래프 사용 화면](Documentation~/Media/SWStateMachine.gif)
+
+### Behaviour Tree
+
+Blackboard와 노드 인스펙터를 이용해 트리를 구성하고 실행 중인 노드 상태를 확인할 수 있습니다.
+
+![SWUtils Behaviour Tree 사용 화면](Documentation~/Media/SWBehaviourTree.gif)
+
+### 에디터 작업 도구
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Quick Asset Palette</strong><br>
+      자주 사용하는 에셋과 폴더를 등록하고 열기, 선택, 생성 작업을 빠르게 실행합니다.<br><br>
+      <img src="Documentation~/Media/SWAssetPalette.png" alt="SWUtils Quick Asset Palette 화면">
+    </td>
+    <td width="50%" valign="top">
+      <strong>Reference Finder</strong><br>
+      에셋의 역참조, 의존성과 미사용 후보를 검색합니다.<br><br>
+      <img src="Documentation~/Media/ReferenceFinder.png" alt="SWUtils Reference Finder 화면">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Excel Table Importer</strong><br>
+      탭으로 구분된 표 데이터를 미리 확인한 뒤 ScriptableObject에 적용합니다.<br><br>
+      <img src="Documentation~/Media/ExcelTable.png" alt="SWUtils Excel Table Importer 화면">
+    </td>
+    <td width="50%" valign="top">
+      <strong>Amount Format</strong><br>
+      큰 숫자의 단위, 소수점과 반올림 방식을 프리셋으로 관리하고 결과를 미리 확인합니다.<br><br>
+      <img src="Documentation~/Media/AmountFormat.png" alt="SWUtils Amount Format 화면">
+    </td>
+  </tr>
+</table>
 
 ## Git 주소로 설치
 

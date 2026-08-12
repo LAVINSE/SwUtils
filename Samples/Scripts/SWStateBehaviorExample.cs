@@ -1,11 +1,12 @@
 #region 다중 계층 상태
 using System;
 using SW.BehaviourTree;
-using SW.Example;
 using SW.StateMachine;
 using SW.Util;
 using UnityEngine;
 
+namespace SW.Example
+{
 /// <summary>대기 중인 다중 계층 예제 상태입니다.</summary>
 [SWStateMachineNodeCategory("Example/Layered States")]
 public sealed class IdleState : ExampleLayeredState { }
@@ -123,3 +124,4 @@ public sealed class GameObjectBlackboardEntry :
 {
 }
 #endregion // Behaviour Tree 사용자 타입
+}

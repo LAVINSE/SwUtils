@@ -24,12 +24,64 @@ SWUtils is a compact Unity utility package for runtime systems, inspector workfl
 
 Quick links:
 
+- [Feature Preview](#feature-preview)
 - [Install from a Git URL](#install-from-a-git-url)
 - [Quick Start](#quick-start)
 - [Namespace Layout](#namespace-layout)
 - [Runtime Features](#runtime-features)
 - [Editor Features](#editor-features)
 - [Assembly Definitions](#assembly-definitions)
+
+## Feature Preview
+
+### Inspector Attributes
+
+Use groups, read-only fields, conditional fields, dropdowns, and method buttons directly in the standard Inspector.
+
+<p align="center">
+  <img src="Documentation~/Media/SWAttribute.gif" alt="SWUtils Inspector attributes" width="460">
+</p>
+
+### State Machine Graph
+
+Build states and transitions visually, then inspect the active state and latest transition while running.
+
+![SWUtils State Machine Graph](Documentation~/Media/SWStateMachine.gif)
+
+### Behaviour Tree
+
+Build trees with a Blackboard and node Inspector, then inspect node states while the tree is running.
+
+![SWUtils Behaviour Tree](Documentation~/Media/SWBehaviourTree.gif)
+
+### Editor Workflow Tools
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Quick Asset Palette</strong><br>
+      Register frequently used assets and folders for fast opening, selection, and prefab creation.<br><br>
+      <img src="Documentation~/Media/SWAssetPalette.png" alt="SWUtils Quick Asset Palette">
+    </td>
+    <td width="50%" valign="top">
+      <strong>Reference Finder</strong><br>
+      Search reverse references, dependencies, and potentially unused assets.<br><br>
+      <img src="Documentation~/Media/ReferenceFinder.png" alt="SWUtils Reference Finder">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Excel Table Importer</strong><br>
+      Preview tab-separated table data and apply it to a ScriptableObject.<br><br>
+      <img src="Documentation~/Media/ExcelTable.png" alt="SWUtils Excel Table Importer">
+    </td>
+    <td width="50%" valign="top">
+      <strong>Amount Format</strong><br>
+      Manage large-number units, decimal places, and rounding behavior with reusable presets.<br><br>
+      <img src="Documentation~/Media/AmountFormat.png" alt="SWUtils Amount Format">
+    </td>
+  </tr>
+</table>
 
 ## Install from a Git URL
 
