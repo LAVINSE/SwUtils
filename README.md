@@ -338,7 +338,14 @@ stackStateMachine.Pop();
 
 #### 상태 머신 그래프 편집기
 
-Unity 6 전용 상태 머신 그래프 편집기는 `ScriptableObject` 에셋에 상태 노드와 연결 정보를 저장합니다. Shader Graph처럼 그래프가 창 전체를 사용하고 접을 수 있는 `Graph List`, `Blackboard`, `Graph Inspector`와 하단 검증 Console을 제공합니다.
+- `SWStateMachineGraphAsset`: 상태 노드와 전이 정보를 저장하는 `ScriptableObject` 그래프 에셋입니다.
+- `Layered`: 여러 계층을 독립적으로 실행하며 같은 계층의 상태와 `Any State`를 연결하는 그래프 형식입니다.
+- `Stack`: 상태를 쌓고 제거하는 그래프 형식입니다. 입력 전용 `Return State`로 현재 상태를 제거하고 이전 상태에 복귀합니다.
+- `SWStateMachineGraphFactory`: 그래프 에셋으로 다중 계층 상태 머신 또는 스택 상태 머신 제어기를 생성합니다.
+- `SWStateMachineGraphCondition<TContext>`: 프로젝트 문맥에 맞는 전이 조건을 구현하는 기본 타입입니다.
+- `SWStackStateMachineGraphController<TContext>`: 스택 그래프의 갱신, 명령, 메시지, 중지와 상태 전이를 제어합니다.
+
+##### 편집 방법
 
 1. `Assets > Create > SWTools > State Machine Graph`에서 그래프 에셋을 생성합니다.
 2. 그래프 에셋을 두 번 클릭하거나 인스펙터의 `상태 머신 그래프 편집` 버튼을 누릅니다.
@@ -351,15 +358,20 @@ Unity 6 전용 상태 머신 그래프 편집기는 `ScriptableObject` 에셋에
 9. 노드 또는 연결선을 선택하고 `Delete` 키를 누르면 삭제됩니다. `Blackboard`의 검색 가능한 `States`와 `Transitions` 목록에서도 선택·이동·추가·삭제할 수 있고, 각 목록은 접을 수 있습니다.
 10. 아래 `Graph Validation`을 펼쳐 구체적인 오류 내용을 확인한 뒤 `Save Asset`으로 저장합니다.
 
-그래프 편집 단축키는 `Ctrl+C` 복사, `Ctrl+V` 붙여넣기, `Ctrl+D` 복제, `A` 전체 보기, `O` 원점 보기, `Space` 노드 검색입니다. 복사한 노드 사이의 전이와 전이 설정도 함께 복사되며 같은 Graph Type의 다른 에셋에도 붙여넣을 수 있습니다.
+##### 편집 및 디버깅 기능
 
-`Auto Layout`은 Layer와 초기 상태를 기준으로 노드를 정렬하고 그래프 화면 위치와 확대 비율은 에셋별로 복원됩니다. `New Script`에서는 수정 가능한 텍스트 템플릿을 이용해 Layered State, Stack State와 Transition Condition을 생성합니다. 프로젝트 공통 설정은 `Project Settings > SWUtils > State Machine Graph`에서도 변경할 수 있습니다. 자세한 설명은 `Documentation~/StateMachineGraph.ko.md`를 참고하세요.
+- `Graph List`: 그래프 에셋을 검색하고 빠르게 전환하며 패널을 왼쪽으로 접을 수 있습니다.
+- `Blackboard`: 그래프 형식, 상태와 전이 목록을 관리하고 각 목록을 검색하거나 접을 수 있습니다. 아래 모서리를 끌어 패널 크기를 조절합니다.
+- `Graph Inspector`: 선택한 상태의 표시 이름, 초기 상태와 계층 또는 전이의 동작, 명령, 조건, 재진입과 우선순위를 편집합니다. 아래 모서리를 끌어 패널 크기를 조절합니다.
+- `Graph Validation`: 저장 전에 잘못된 노드 구성과 전이 연결을 검사합니다.
+- `Auto Layout`: 계층과 초기 상태를 기준으로 노드를 자동 정렬합니다.
+- `New Script`: 수정 가능한 텍스트 템플릿으로 다중 계층 상태, 스택 상태와 전이 조건 스크립트를 생성합니다.
+- `전이 요약`: 노드 이동을 따라가며 동작, 명령과 우선순위를 표시합니다. `Alt` 키를 누른 채 끌면 사용자 지정 위치를 에셋에 저장합니다.
+- `Settings`: 전이 요약 표시, 노드와 패널 크기, 격자 맞춤과 간격을 설정합니다. 프로젝트 공통 설정은 `Project Settings > SWUtils > State Machine Graph`에서 변경합니다.
+- `Runtime`: 그래프 팩터리로 만든 상태 머신을 Play Mode 디버거에 자동 등록합니다. 문맥 게임 오브젝트를 선택하면 활성 상태, 실행 시간과 최근 전이 이력을 표시합니다.
+- `단축키`: `Ctrl+C` 복사, `Ctrl+V` 붙여넣기, `Ctrl+D` 복제, `A` 전체 보기, `O` 원점 보기, `Space` 노드 검색을 지원합니다.
 
-`Layered` 그래프에서는 같은 `Layer`의 상태끼리 연결할 수 있으며 `Any State`를 사용할 수 있습니다. `Stack` 그래프의 `Return State`는 현재 상태를 `Pop`하기 위한 입력 전용 대상입니다. 일반 상태에서 `Return State`로 연결할 수 있지만 `Return State`에서 다른 상태로 나가는 연결은 만들 수 없습니다.
-
-일반 상태는 초록색, `Any State`는 보라색, `Return State`는 청록색 카드로 구분됩니다. `Graph List`는 왼쪽으로 접을 수 있고 `Blackboard`와 `Graph Inspector` 아래 모서리를 끌어 각각 자유롭게 크기를 조절할 수 있습니다. 전이 요약은 노드 이동을 계속 따라가며, `Alt` 키를 누른 채 요약을 끌면 연결선 중앙을 기준으로 한 사용자 위치가 그래프 에셋에 저장됩니다. `Settings` 탭에서는 전이 요약 표시, 노드·패널 크기, 격자 맞춤과 간격을 변경할 수 있으며 편집기 배치 설정은 사용자별로 저장됩니다.
-
-그래프 팩터리로 생성한 상태 머신은 Play Mode 디버거에 자동 등록됩니다. 실행 중인 문맥이 `GameObject` 또는 `Component`라면 해당 게임 오브젝트를 선택해 활성 상태와 실행 시간, 최근 전이 이력을 `Runtime` 탭에서 확인할 수 있습니다. 활성 노드는 노란색 `LIVE` 배지로, 최근 전이는 연결 요약 테두리로 강조됩니다.
+일반 상태는 초록색, `Any State`는 보라색, `Return State`는 청록색 카드로 구분됩니다. 복사한 노드 사이의 전이와 전이 설정도 함께 복사되며 같은 그래프 형식의 다른 에셋에도 붙여넣을 수 있습니다. 그래프 화면 위치와 확대 비율은 에셋별로, 편집기 배치는 사용자별로 저장됩니다. 자세한 설명은 `Documentation~/StateMachineGraph.ko.md`를 참고하세요.
 
 그래프 에셋으로 런타임 상태 머신을 생성할 수 있습니다.
 
@@ -383,11 +395,20 @@ public sealed class IsMovingCondition : SWStateMachineGraphCondition<Player>
 }
 ```
 
-다중 계층 그래프 팩터는 완성된 `SWStateMachine<TContext>`를 반환합니다. 스택 그래프 제어기는 `Tick`, `ExecuteCommand`, `SendMessage`, `Stop`을 제공하며 그래프에 지정된 상태 추가, 교체와 이전 상태 복귀 연결을 실행합니다.
+다중 계층 그래프 팩터리는 완성된 `SWStateMachine<TContext>`를 반환합니다. 스택 그래프 제어기는 `Tick`, `ExecuteCommand`, `SendMessage`, `Stop`을 제공하며 그래프에 지정된 상태 추가, 교체와 이전 상태 복귀 연결을 실행합니다.
 
 ### Behaviour Tree
 
-`SWBehaviourTreeAsset`은 `Running`, `Success`, `Failure`, `Aborted` 결과를 사용하는 Behaviour Tree입니다. Composite, Decorator, Action 기본 노드와 SubTree, Blackboard, NodeProperty, Runner별 Override를 제공하며 프로젝트의 사용자 노드도 자동으로 검색합니다.
+- `SWBehaviourTreeAsset`: 노드와 연결, Blackboard 기본값을 저장하고 `Running`, `Success`, `Failure`, `Aborted` 실행 결과를 관리합니다.
+- `SWBehaviourTreeRunner`: 에셋의 독립 실행 복제본을 생성하고 게임 오브젝트의 생명주기에 맞춰 실행합니다.
+- `SWBehaviourActionNode`: 실제 작업을 수행하며 자식을 가지지 않는 노드 기본 타입입니다.
+- `SWBehaviourCompositeNode`: 여러 자식을 가지며 실행 순서를 정의하는 노드 기본 타입입니다.
+- `SWBehaviourDecoratorNode`: 하나의 자식을 감싸 실행 결과나 실행 방식을 바꾸는 노드 기본 타입입니다.
+- `SWBehaviourBlackboard`: 트리에서 공유하는 타입별 값을 키로 관리합니다.
+- `SWBehaviourNodeProperty<T>`: 고정값 또는 같은 타입의 Blackboard 키를 노드 필드에 연결합니다.
+- `SWBehaviourSubTreeNode`: 다른 Behaviour Tree 에셋을 현재 트리의 일부로 실행합니다.
+
+##### 편집 방법
 
 1. `Assets > Create > SWTools > Behaviour Tree`에서 에셋을 생성합니다.
 2. 에셋 Inspector의 `Behaviour Tree 편집` 또는 `SWTools > Utils > Behaviour > Tree Editor`를 엽니다.
@@ -398,11 +419,26 @@ public sealed class IsMovingCondition : SWStateMachineGraphCondition<Player>
 7. 오른쪽 Node Inspector에서 표시 이름, 설명, 노드별 값을 편집하고 `Set as Root`로 시작 노드를 지정합니다.
 8. `SWBehaviourTreeRunner`에 에셋을 연결하면 활성화 시 독립 복제본을 실행합니다. Play Mode에서 해당 게임 오브젝트를 선택하면 Running은 노란색, Success는 초록색, Failure는 빨간색으로 표시됩니다.
 
-그래프는 복사, 붙여넣기, 복제, SubTree 선택, 키보드 탐색, 자동 배치, 에셋 빠른 전환, 노드 스크립트 생성을 지원합니다. `Project Settings > SWUtils > Behaviour Tree`에서 노드 크기, 간격, 패널 크기와 실행 상태 갱신 간격을 설정할 수 있습니다. 자세한 설명은 `Documentation~/BehaviourTree.ko.md`를 참고하세요.
+##### 편집 및 실행 기능
 
-두 그래프 편집기는 접을 수 있는 공통 `Graph List`와 Runtime Debug를 제공합니다. `SWStateMachineNodeCategory("Combat/Movement")` 또는 `SWBehaviourNodeCategory("Combat/Actions")`처럼 슬래시 경로를 지정하면 사용자 상태, 조건과 Behaviour 노드를 원하는 생성 메뉴 카테고리로 분류할 수 있습니다.
+- `Graph List`: Behaviour Tree 에셋을 검색하고 빠르게 전환하며 패널을 접을 수 있습니다.
+- `Blackboard`: 기본 타입과 사용자 정의 타입의 키, 기본값과 Runner별 재정의 값을 관리합니다.
+- `Node Inspector`: 표시 이름, 설명, 노드별 값과 시작 노드를 편집합니다.
+- `Auto Layout`: 시작 노드를 기준으로 트리 구조를 자동 정렬합니다.
+- `SubTree`: 다른 트리를 선택해 재사용하고 부모 Blackboard의 공유 여부를 설정합니다.
+- `New Script`: `Editor/Behaviour/Templates`의 수정 가능한 텍스트 템플릿으로 Action, Composite와 Decorator 노드 스크립트를 생성합니다.
+- `Settings`: 노드 크기, 간격, 패널 크기와 실행 상태 갱신 간격을 설정합니다. 프로젝트 공통 설정은 `Project Settings > SWUtils > Behaviour Tree`에서 변경합니다.
+- `Runtime Debug`: Runner, 노드 상태와 Blackboard 값을 확인합니다. 실행 중은 노란색, 성공은 초록색, 실패는 빨간색, 중단은 회색으로 표시됩니다.
+- `단축키`: 복사, 붙여넣기, 복제, 키보드 탐색, 전체 보기, 원점 보기와 노드 검색을 지원합니다.
 
-`Set Property`, `Compare Property`는 기본 타입과 사용자 정의 Blackboard 값을 처리합니다. `SWBehaviourTreeRunner`는 외부 MonoBehaviour용 `GetBlackboardValue`, `SetBlackboardValue`, `FindBlackboardKey`를 제공하며 사용자 정의 Key도 Runner별 Override에서 선택할 수 있습니다. `New Script`는 `Editor/Behaviour/Templates`의 수정 가능한 텍스트 템플릿을 사용합니다.
+`Set Property`와 `Compare Property`는 기본 타입과 사용자 정의 Blackboard 값을 처리합니다. `SWBehaviourTreeRunner`는 외부 `MonoBehaviour`에서 사용하는 `GetBlackboardValue`, `SetBlackboardValue`, `FindBlackboardKey`를 제공하며 사용자 정의 키도 Runner별 재정의에서 선택할 수 있습니다. 자세한 설명은 `Documentation~/BehaviourTree.ko.md`를 참고하세요.
+
+##### 사용자 정의 분류
+
+- `SWStateMachineNodeCategory`: 상태와 전이 조건을 슬래시 경로 기반 생성 메뉴 카테고리로 분류합니다.
+- `SWBehaviourNodeCategory`: Behaviour 노드를 슬래시 경로 기반 생성 메뉴 카테고리로 분류합니다.
+
+예를 들어 `SWStateMachineNodeCategory("Combat/Movement")` 또는 `SWBehaviourNodeCategory("Combat/Actions")`처럼 경로를 지정할 수 있습니다.
 
 사용자 노드는 다음처럼 추가합니다. 별도 등록 없이 노드 검색 창에 나타납니다.
 
