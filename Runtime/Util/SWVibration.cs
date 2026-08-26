@@ -105,7 +105,7 @@ namespace SW.Util
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             VibrateAndroid(100, DefaultAmplitude);
-#else
+#elif UNITY_IOS || UNITY_EDITOR
             Handheld.Vibrate();
 #endif
         }
@@ -123,7 +123,7 @@ namespace SW.Util
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             VibrateAndroid(safeMilliseconds, amplitude);
-#else
+#elif UNITY_IOS || UNITY_EDITOR
             Handheld.Vibrate();
 #endif
         }
@@ -202,7 +202,7 @@ namespace SW.Util
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             PatternAndroid(timings, null, repeat);
-#else
+#elif UNITY_IOS || UNITY_EDITOR
             Handheld.Vibrate();
 #endif
         }
@@ -220,7 +220,7 @@ namespace SW.Util
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             PatternAndroid(timings, amplitudes, repeat);
-#else
+#elif UNITY_IOS || UNITY_EDITOR
             Handheld.Vibrate();
 #endif
         }

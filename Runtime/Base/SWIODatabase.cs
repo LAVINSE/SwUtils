@@ -51,15 +51,18 @@ namespace SW.Base
             MarkDirty(target);
         }
 
+#endif // UNITY_EDITOR
+
         /// <summary>
-        /// 에디터에서 직렬화 변경을 알립니다.
+        /// 에디터에서 직렬화 변경을 알립니다. 플레이어 빌드에서는 아무 일도 하지 않습니다.
         /// </summary>
         /// <param name="target">변경된 오브젝트</param>
         private void MarkDirty(UnityEngine.Object target)
         {
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(target);
-        }
 #endif // UNITY_EDITOR
+        }
         #endregion // 에디터
 
         #region 목록 관리
