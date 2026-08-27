@@ -8,11 +8,22 @@ Release notes are grouped by version and date. The latest release is summarized 
 
 | Latest | Date | Focus |
 | --- | --- | --- |
-| `v1.1.0` | 2026-07-22 | State Machine and Behaviour Tree graphs, runtime debugging, and consolidated samples. |
+| `v1.1.1` | 2026-08-27 | Improved player-build compatibility and comprehensive README documentation. |
 
 ## [Unreleased]
 
 There are currently no unreleased changes.
+
+## [v1.1.1] - 2026-08-27
+
+### Changed
+- Reworked the English and Korean READMEs around feature guides, code examples, visual previews, and quick navigation links.
+- Declared the Unity Physics and Physics 2D modules as package dependencies.
+- Updated the package version, README badges, and installation URLs to `v1.1.1`.
+
+### Fixed
+- Fixed player builds failing because `SWIODatabase` referenced a Unity Editor API.
+- Restricted `SWVibration` fallback calls to supported platforms so unsupported targets no longer call `Handheld.Vibrate`.
 
 ## [v1.1.0] - 2026-07-22
 

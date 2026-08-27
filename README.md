@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.1.0](https://img.shields.io/badge/package-1.1.0-2f80ed)
+![Package 1.1.1](https://img.shields.io/badge/package-1.1.1-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시스템, 인스펙터 워크플로, 디버깅 도구, 에디터 생산성 창을 모은 유틸리티 패키지입니다.
@@ -93,16 +93,20 @@ Unity Package Manager에서 다음 순서로 설치합니다.
 4. 다음 주소를 입력합니다.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.1.0
+https://github.com/LAVINSE/SWUtils.git#v1.1.1
 ```
 
 특정 브랜치나 태그를 설치하려면 주소 뒤에 `#브랜치이름` 또는 `#태그이름`을 붙입니다.
 
 ## 의존성
 
-SWUtils 사용에 필요한 필수 Unity 패키지는 Localization뿐입니다. Git 주소로 SWUtils를 설치하면 `package.json`을 통해 자동으로 설치됩니다.
+SWUtils가 사용하는 Unity 패키지와 모듈은 Git 주소로 설치할 때 `package.json`을 통해 자동으로 연결됩니다.
 
 - Localization
+- TextMeshPro
+- Unity UI
+- Physics
+- Physics 2D
 
 Unity Input System은 자동 설치하지 않습니다. 디버그 콘솔은 프로젝트에 Input System이 이미 있으면 사용할 수 있지만, 필수 패키지 의존성이 생기지 않도록 선택 기능으로 유지합니다.
 

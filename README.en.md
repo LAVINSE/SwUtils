@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.1.0](https://img.shields.io/badge/package-1.1.0-2f80ed)
+![Package 1.1.1](https://img.shields.io/badge/package-1.1.1-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils is a compact Unity utility package for runtime systems, inspector workflows, debugging tools, and editor productivity windows.
@@ -95,14 +95,18 @@ Add the package through Unity Package Manager:
 Append `#branch-name` or `#tag-name` to the URL to install a specific branch or tag.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.1.0
+https://github.com/LAVINSE/SWUtils.git#v1.1.1
 ```
 
 ## Dependencies
 
-Localization is the only required Unity package for SWUtils. It is installed automatically through `package.json` when SWUtils is installed from a Git URL.
+The Unity packages and modules used by SWUtils are connected automatically through `package.json` when SWUtils is installed from a Git URL.
 
 - Localization
+- TextMeshPro
+- Unity UI
+- Physics
+- Physics 2D
 
 Unity Input System is not installed automatically. The debug console can use it when it already exists in the project, but SWUtils keeps it optional to avoid a mandatory package dependency.
 
