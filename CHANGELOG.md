@@ -8,11 +8,30 @@ Release notes are grouped by version and date. The latest release is summarized 
 
 | Latest | Date | Focus |
 | --- | --- | --- |
-| `v1.1.1` | 2026-08-27 | Improved player-build compatibility and comprehensive README documentation. |
+| `v1.2.0` | 2026-09-07 | Experimental quest and achievement system with an integrated authoring window. |
 
 ## [Unreleased]
 
-There are currently no unreleased changes.
+No changes are currently scheduled.
+
+## [v1.2.0] - 2026-09-07
+
+### Added
+- Added the `SW.Quest` quest and achievement module with task groups, conditions, rewards, and progress reports.
+- Added sequential task groups, category and target based reports, replace, additive, positive, negative, and continuous progress strategies.
+- Added extensible acceptance and cancellation conditions, rewards, automatic achievement registration, duplicate prevention, local events, and `SWEventBus` events.
+- Added complete task-group persistence through `SWQuestSystemSaveData`, replaceable `ISWQuestSaveStore`, and an encrypted `SWPlayerPrefs` default store.
+- Split quest and achievement definitions into dedicated databases with independent collection and validation.
+- Added `SWQuestSystemWindow` for creating, duplicating, deleting, searching, editing, synchronizing, and validating quest assets.
+- Added a project-defined score reward sample.
+
+### Fixed
+- Corrected negative progress handling so negative reports decrease progress instead of increasing it.
+- Restored task groups and tasks by code name so reordered definitions cannot receive the wrong progress, while preventing duplicate completed rewards and inactive newly added tasks.
+
+### Caution
+- The quest and achievement system is experimental and has not completed its full design review or real-project validation.
+- Its public API and save-data format may change following further review.
 
 ## [v1.1.1] - 2026-08-27
 

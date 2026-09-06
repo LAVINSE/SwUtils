@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.1.1](https://img.shields.io/badge/package-1.1.1-2f80ed)
+![Package 1.2.0](https://img.shields.io/badge/package-1.2.0-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils is a compact Unity utility package for runtime systems, inspector workflows, debugging tools, and editor productivity windows.
@@ -15,7 +15,7 @@ SWUtils is a compact Unity utility package for runtime systems, inspector workfl
 
 | Area | What it provides |
 | --- | --- |
-| Runtime foundations | `SWMonoBehaviour`, `SWScriptableObject`, coroutine runners, pooling, popup flow, resolution helpers, stat data, and reusable utilities. |
+| Runtime foundations | `SWMonoBehaviour`, `SWScriptableObject`, coroutine runners, quests and achievements, pooling, popup flow, resolution helpers, stat data, and reusable utilities. |
 | Graph runtimes | Layered and stack State Machines, Behaviour Trees, Blackboards, graph-asset factories, and Runtime Debug. |
 | Data and persistence | Encrypted PlayerPrefs, save slots, file saves, cloud-save entry points, and JSON import/export helpers. |
 | Inspector tooling | Grouped fields, buttons, conditions, dropdowns, read-only fields, `SerializeReference` type selection, and table import attributes. |
@@ -95,7 +95,7 @@ Add the package through Unity Package Manager:
 Append `#branch-name` or `#tag-name` to the URL to install a specific branch or tag.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.1.1
+https://github.com/LAVINSE/SWUtils.git#v1.2.0
 ```
 
 ## Dependencies
@@ -147,6 +147,7 @@ Runtime and Editor code use feature-oriented namespaces that match their folders
 | `Runtime/Debug` | `SW.Debugging` |
 | `Runtime/Pooling` | `SW.Pooling` |
 | `Runtime/Popup` | `SW.Popup` |
+| `Runtime/Quest` | `SW.Quest` |
 | `Runtime/Resolution` | `SW.ScreenResolution` |
 | `Runtime/Stat` | `SW.Stat` |
 | `Runtime/StateMachine` | `SW.StateMachine` |
@@ -614,6 +615,42 @@ Usage:
 2. Add `SWCanvasResolution` to a Canvas that requires CanvasScaler adjustment.
 3. Configure the directions and ratios in the Inspector.
 
+### `Runtime/Quest`
+
+Provides a data-driven quest and achievement runtime built on `SWIdentifiedObject`, `SWSingleton`, encrypted `SWPlayerPrefs`, and `SWEventBus`.
+
+> [!WARNING]
+> The quest and achievement system is experimental. Its complete design review and real-project validation are not finished, so its save-data format and public API may change. Validate it thoroughly before using it in production.
+
+- `SWQuest` combines sequential task groups, acceptance and cancellation conditions, and rewards.
+- `SWAchievement` is always saved, cannot be canceled, and completes automatically.
+- `SWQuestTask` filters reports by `SWCategory` and optional string or Unity object targets.
+- `SWQuestTaskAction` provides replace, additive, positive-only, negative-only, and continuous progress strategies. A task with no action uses additive progress.
+- `SWQuestCondition` and `SWQuestReward` are extension points for project rules and reward services.
+- `SWQuestDatabase` and `SWAchievementDatabase` separately store, query, collect, and validate quest and achievement definitions.
+- `SWQuestSystem` owns isolated runtime clones, duplicate prevention, reports, completion, cancellation, automatic achievement registration, and save restoration.
+- `SWQuestSystemWindow` creates, duplicates, deletes, searches, and edits related assets, and synchronizes and validates both databases.
+- `ISWQuestSaveStore` allows projects to replace persistence; the default implementation uses encrypted `SWPlayerPrefs`.
+- `SWQuestGiver` and `SWQuestReporter` connect scene interactions to the runtime without coupling presentation code to quest internals.
+
+Open `SWTools > Utils > Data > Quest System Editor` to create and manage the related assets. Create a quest database and an achievement database, synchronize each one with the project definitions, validate them, and assign both to a bootstrap-scene `SWQuestSystem`. Give every task group a code name that is unique within its quest, then report gameplay progress:
+
+```csharp
+using SW.Quest;
+
+SWQuestSystem questSystem = SWQuestSystem.Instance;
+questSystem.Initialize(questDatabase, achievementDatabase);
+SWQuest runtimeQuest = questSystem.Register(questDefinition);
+questSystem.ReceiveReport(killCategory, slimeTarget.Value, 1);
+
+if (runtimeQuest != null && runtimeQuest.IsWaitingForCompletion)
+{
+    runtimeQuest.Complete();
+}
+```
+
+`Save()` and `Load()` use encrypted `SWPlayerPrefs`. Disable automatic loading and call `SetSaveStore(ISWQuestSaveStore)` before initialization to use another store. To include quest state in a larger save root, store the `SWQuestSystemSaveData` returned by `CreateSaveData()` and pass it back to `RestoreSaveData()`. Task groups and tasks restore by code name, so their ordering may change without assigning progress to the wrong definition. Restoring completed entries never grants their rewards again. Project conditions and rewards can receive external services through `SetContext` and `TryGetContext<TContext>`. See `Samples/Scripts/SWQuestExample.cs` and `SWQuestScoreRewardExample.cs`.
+
 ### `Runtime/StateMachine`
 
 Provides a general-purpose finite state machine that supports independent layers without depending on a Unity component.
@@ -1062,6 +1099,7 @@ Provides sample prefabs and example scripts.
 - `Samples/Example/SWAttributeExample.cs`: Attribute examples.
 - `Samples/Example/SWSubClassSelectorExample.cs`: Examples for `SWSubClassSelector`, `SWAddTypeMenu`, and `SWHideInTypeMenu`.
 - `Samples/Example/SWGraphAssetsExample.cs`: Consolidated Behaviour Tree, layered state machine, stack state machine, and custom node-category example.
+- `Samples/Scripts/SWQuestExample.cs`, `SWQuestScoreRewardExample.cs`: Quest initialization, progress reporting, completion and achievement events, and a project reward example.
 - `Samples/Example/SWExampleBehaviourTree.asset`: Ready-to-run Behaviour Tree graph.
 - `Samples/Example/SWExampleStateMachine.asset`: Ready-to-run layered State Machine graph.
 - `Samples/Example/SWExampleStackStateMachine.asset`: Ready-to-run Stack State Machine graph using Gameplay, Pause, and Return State.

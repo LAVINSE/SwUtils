@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.1.1](https://img.shields.io/badge/package-1.1.1-2f80ed)
+![Package 1.2.0](https://img.shields.io/badge/package-1.2.0-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시스템, 인스펙터 워크플로, 디버깅 도구, 에디터 생산성 창을 모은 유틸리티 패키지입니다.
@@ -15,7 +15,7 @@ SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시�
 
 | 영역 | 제공 기능 |
 | --- | --- |
-| 런타임 기반 | `SWMonoBehaviour`, `SWScriptableObject`, 코루틴 실행기, 풀링, 팝업 흐름, 해상도 보정, 능력치 데이터, 공통 유틸리티를 제공합니다. |
+| 런타임 기반 | `SWMonoBehaviour`, `SWScriptableObject`, 코루틴 실행기, 퀘스트와 업적, 풀링, 팝업 흐름, 해상도 보정, 능력치 데이터, 공통 유틸리티를 제공합니다. |
 | 그래프 런타임 | 다중 계층 및 스택 State Machine, Behaviour Tree, Blackboard, 그래프 에셋 팩터리와 Runtime Debug를 제공합니다. |
 | 데이터와 저장 | 암호화 PlayerPrefs, 저장 슬롯, 파일 저장, 클라우드 저장 진입점, JSON 가져오기와 내보내기 헬퍼를 제공합니다. |
 | 인스펙터 도구 | 그룹, 버튼, 조건 표시, 드롭다운, 읽기 전용 필드, `SerializeReference` 타입 선택, 표 가져오기 어트리뷰트를 제공합니다. |
@@ -93,7 +93,7 @@ Unity Package Manager에서 다음 순서로 설치합니다.
 4. 다음 주소를 입력합니다.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.1.1
+https://github.com/LAVINSE/SWUtils.git#v1.2.0
 ```
 
 특정 브랜치나 태그를 설치하려면 주소 뒤에 `#브랜치이름` 또는 `#태그이름`을 붙입니다.
@@ -144,6 +144,7 @@ Runtime과 Editor 코드는 기능별 폴더와 같은 네임스페이스를 사
 | `Runtime/Debug` | `SW.Debugging` |
 | `Runtime/Pooling` | `SW.Pooling` |
 | `Runtime/Popup` | `SW.Popup` |
+| `Runtime/Quest` | `SW.Quest` |
 | `Runtime/Resolution` | `SW.ScreenResolution` |
 | `Runtime/Stat` | `SW.Stat` |
 | `Runtime/StateMachine` | `SW.StateMachine` |
@@ -291,6 +292,55 @@ public class DebugCommands
 - `SWStatOverride`: 개체별 기본값 재정의 설정입니다.
 - `SWStats`: 게임 오브젝트의 런타임 능력치 목록을 관리합니다.
 - `SWStatScaleFloat`: 능력치 비율을 적용한 값을 계산합니다.
+
+### 퀘스트와 업적
+
+> [!WARNING]
+> 퀘스트와 업적은 아직 전체 설계 검토와 실제 프로젝트 검증이 끝나지 않은 실험적 시스템입니다. 저장 데이터 형식과 공개 기능이 변경될 수 있으므로 실제 서비스 적용 전 충분히 검증하세요.
+
+- `SWQuest`: 순서가 있는 작업 묶음, 수락·취소 조건과 완료 보상을 조합하는 정의 에셋입니다.
+- `SWAchievement`: 자동 완료, 항상 저장, 취소 금지 규칙을 적용한 업적 정의입니다.
+- `SWQuestTask`, `SWQuestTaskGroup`: 동시에 진행할 작업과 순서대로 진행할 작업 묶음을 구성합니다.
+- `SWQuestTaskAction`: 보고 변화량을 진행량으로 바꾸는 전략입니다. 더하기, 값 교체, 양수·음수 전용, 연속 진행 전략을 기본 제공합니다.
+- `SWQuestTarget`: 문자열 또는 Unity 오브젝트 보고 대상을 비교합니다.
+- `SWQuestCondition`, `SWQuestReward`: 프로젝트별 수락 조건, 취소 조건과 보상을 확장하는 기본 타입입니다.
+- `SWQuestDatabase`, `SWAchievementDatabase`: 일반 퀘스트와 업적 정의를 각각 조회하고 검증합니다.
+- `SWQuestSystem`: 런타임 복제, 중복 등록 방지, 진행 보고, 완료·취소, 업적 자동 등록과 저장 복원을 관리합니다.
+- `SWQuestSystemWindow`: 관련 에셋 생성·복제·삭제·검색·편집과 데이터베이스 동기화·검증을 한 창에서 제공합니다.
+- `ISWQuestSaveStore`: 퀘스트 저장 위치를 교체하는 계약이며 기본 구현은 암호화된 `SWPlayerPrefs`를 사용합니다.
+- `SWQuestGiver`, `SWQuestReporter`: 시작 시 퀘스트를 지급하거나 직접 호출 및 물리 트리거에서 진행을 보고합니다.
+
+구성 순서:
+
+1. `Assets > Create > SWBase > Category`에서 진행 보고를 구분할 카테고리를 만듭니다.
+2. `Assets > Create > SWUtils > Quest > Target`에서 선택적인 문자열 또는 Unity 오브젝트 대상을 만듭니다.
+3. `Assets > Create > SWUtils > Quest > Task`에서 카테고리, 대상, 필요 진행량과 계산 전략을 연결합니다. 계산 전략이 비어 있으면 보고 변화량을 현재 진행량에 더합니다.
+4. `Quest` 또는 `Achievement` 에셋에 작업 묶음, 조건과 보상을 연결하고 묶음마다 퀘스트 안에서 고유한 코드명을 지정합니다.
+5. `SWTools > Utils > Data > Quest System Editor`를 열어 퀘스트와 업적 데이터베이스를 각각 만들고 `프로젝트 정의 동기화` 후 검증합니다.
+6. 시작 씬의 `SWQuestSystem`에 두 데이터베이스를 연결하고 게임 플레이에서 진행을 보고합니다.
+
+```csharp
+using SW.Quest;
+
+SWQuestSystem questSystem = SWQuestSystem.Instance;
+questSystem.Initialize(questDatabase, achievementDatabase);
+SWQuest runtimeQuest = questSystem.Register(questDefinition);
+
+questSystem.ReceiveReport(killCategory, slimeTarget.Value, 1);
+
+if (runtimeQuest != null && runtimeQuest.IsWaitingForCompletion)
+{
+    runtimeQuest.Complete();
+}
+```
+
+업적은 업적 데이터베이스 초기화 시 자동 등록되고 같은 진행 보고를 받습니다. 일반 퀘스트와 업적은 별도 데이터베이스이므로 서로 같은 코드명을 사용할 수 있지만, 각 데이터베이스 안에서는 코드명이 고유해야 합니다.
+
+기본 저장은 암호화된 `SWPlayerPrefs`를 사용합니다. 다른 저장소가 필요하면 자동 불러오기를 끄고 `SetSaveStore(ISWQuestSaveStore)`로 구현을 연결할 수 있습니다. 게임 전체 저장 데이터와 합칠 때는 `CreateSaveData()`가 반환하는 `SWQuestSystemSaveData`를 저장 루트에 포함하고, 불러온 뒤 `RestoreSaveData()`로 적용합니다. 완료 상태를 복원할 때 보상은 다시 지급하지 않습니다.
+
+프로젝트별 조건과 보상은 각각 `SWQuestCondition`, `SWQuestReward`를 상속합니다. 외부 게임 서비스가 필요하면 시작할 때 `SetContext`로 문맥을 연결하고 구현 안에서 `TryGetContext<TContext>`로 가져옵니다. 전체 예제는 `Samples/Scripts/SWQuestExample.cs`와 `SWQuestScoreRewardExample.cs`에 있습니다.
+
+에셋 구성, 확장 지점, 이벤트와 저장 구조는 [퀘스트와 업적 상세 문서](Documentation~/Quest.ko.md)를 참고하세요.
 
 ### 상태 머신
 
@@ -537,6 +587,7 @@ Runtime 어트리뷰트에 대응하는 프로퍼티 서랍과 `SWMonoBehaviour`
 - `SWAttributeExample`: 인스펙터 어트리뷰트 사용 예제
 - `SWSubClassSelectorExample`: `SerializeReference` 구현 타입 선택 예제
 - `SWGraphAssetsExample`: Behaviour Tree, 다중 계층 상태 머신, 스택 상태 머신과 사용자 정의 노드 카테고리를 한 파일에서 보여주는 통합 예제
+- `SWQuestExample`, `SWQuestScoreRewardExample`: 퀘스트 초기화, 진행 보고, 완료·업적 이벤트와 프로젝트별 보상 구현 예제
 - `SWExampleBehaviourTree`: 실행 가능한 Behaviour Tree 예제 에셋
 - `SWExampleStateMachine`: 실행 가능한 다중 계층 State Machine 예제 에셋
 - `SWExampleStackStateMachine`: Gameplay, Pause와 Return State를 사용하는 Stack State Machine 예제 에셋
