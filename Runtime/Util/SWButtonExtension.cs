@@ -75,7 +75,6 @@ namespace SW.Util
 
         #region 초기화
         /// <inheritdoc/>
-        /// <inheritdoc />
         protected override void OnDisable()
         {
             StopHoldRoutine();
@@ -92,7 +91,6 @@ namespace SW.Util
 
 #if UNITY_EDITOR
         /// <inheritdoc/>
-        /// <inheritdoc />
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -213,7 +211,7 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 롱프레스 감시 코루틴 본체입니다. 홀드 진행률을 발행하고 시간이 차면 발동합니다.
+        /// 누른 시간의 진행률을 알리고, 설정한 시간이 지나면 롱프레스 이벤트를 호출합니다.
         /// </summary>
         private IEnumerator LongPressRoutine()
         {
@@ -235,7 +233,7 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 홀드 반복 코루틴 본체입니다. 시작 대기 후 누르는 동안 반복 실행하며, 가속 옵션에 따라 간격이 줄어듭니다.
+        /// 시작 대기 시간이 지나면 버튼을 누르는 동안 반복 이벤트를 호출합니다. 누른 시간에 따라 호출 간격을 줄입니다.
         /// </summary>
         private IEnumerator RepeatRoutine()
         {
@@ -301,7 +299,7 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 연타 방지 쿨다운 코루틴 본체입니다.
+        /// 쿨다운 동안 연속 입력을 막고, 설정한 시간이 지나면 입력을 다시 허용합니다.
         /// </summary>
         private IEnumerator CooldownRoutine()
         {

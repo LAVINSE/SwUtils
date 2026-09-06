@@ -485,7 +485,7 @@ namespace SW.Util
             => Mathf.Max(0f, durationSeconds - (float)(DateTime.UtcNow - startUtc).TotalSeconds);
         #endregion // 쿨다운 & 타이머
 
-        #region 보간 & 이징 헬퍼
+        #region 시간 정규화 및 반복
         /// <summary>
         /// 경과 시간을 0~1로 정규화합니다.
         /// </summary>
@@ -519,7 +519,7 @@ namespace SW.Util
         /// <returns>0 ~ 1 사이의 반복 값</returns>
         public static float Repeat01(float duration)
             => duration <= 0f ? 0f : Mathf.Repeat(Time.time, duration) / duration;
-        #endregion // 보간 & 이징 헬퍼
+        #endregion // 시간 정규화 및 반복
 
         #region 시간 단위 변환
         /// <summary>

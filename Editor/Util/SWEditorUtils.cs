@@ -14,7 +14,7 @@ using SW.Util;
 namespace SW.EditorTools.Util
 {
     /// <summary>
-    /// SWTools 에디터 UI에서 공통으로 사용하는 GUI, 아이콘, 스타일, EditorPrefs 헬퍼 모음입니다.
+    /// SWTools 에디터 창의 GUI 그리기, 아이콘 로드, 스타일 적용, EditorPrefs 저장에 사용하는 공통 함수입니다.
     /// </summary>
     public static class SWEditorUtils
     {
@@ -189,8 +189,8 @@ namespace SW.EditorTools.Util
         }
 
         /// <summary>
-        /// 문자열 배열과 아이콘 이름 배열로 GUIContent 탭 배열을 생성하는 헬퍼입니다.
-        /// OnEnable 등에서 한 번만 호출해 캐싱해두면 좋습니다.
+        /// 탭 텍스트와 아이콘 이름으로 GUIContent 배열을 생성합니다.
+        /// OnEnable에서 생성한 배열을 보관해 사용하면 매 프레임 할당을 줄일 수 있습니다.
         /// </summary>
         /// <param name="labels">탭 텍스트 배열</param>
         /// <param name="iconNames">Unity 내장 아이콘 이름 배열 (null 항목은 아이콘 없이 생성)</param>
@@ -869,7 +869,7 @@ namespace SW.EditorTools.Util
         }
         #endregion // 도움말
 
-        #region EditorWindow 헬퍼
+        #region EditorWindow 설정
         /// <summary>
         /// EditorWindow의 기본 설정을 적용합니다. (타이틀, 아이콘, 최소 크기)
         /// </summary>
@@ -886,7 +886,7 @@ namespace SW.EditorTools.Util
 
             window.minSize = new Vector2(minWidth, minHeight);
         }
-        #endregion // EditorWindow 헬퍼
+        #endregion // EditorWindow 설정
 
         #region 리페인트 타이머
         /// <summary>
@@ -989,10 +989,8 @@ namespace SW.EditorTools.Util
         #endregion // 포맷
 
         /// <summary>
-        /// SWEditorUtilsStylesheet에 정의된 스타일 값을 캐싱해서 관리하는 클래스입니다.
-        /// 스타일시트의 사용자 지정 값을 파싱하여 즉시 모드 사용자 인터페이스에서 재사용합니다.
-        ///
-        /// USS 파일 예시 (SWEditorUtilsStylesheet.uss):
+        /// StyleSheet에서 읽은 아이콘과 색상을 캐시합니다.
+        /// USS 클래스의 background-image와 background-color를 읽어 IMGUI에서 사용합니다.
         /// </summary>
         public class SWStyleCache
         {

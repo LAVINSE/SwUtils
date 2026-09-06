@@ -70,7 +70,6 @@ namespace SW.Pooling
 
         #region 초기화
         /// <inheritdoc/>
-        /// <inheritdoc />
         public override void Awake()
         {
             base.Awake();
@@ -81,7 +80,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public override void OnDestroy()
         {
             ClearAll();
@@ -186,7 +184,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void Prewarm(GameObject prefab, int count)
         {
             if (prefab == null)
@@ -214,7 +211,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void Prewarm(string poolName, int count)
         {
             if (!TryGetPrefab(poolName, out GameObject prefab))
@@ -224,7 +220,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public GameObject Spawn(GameObject prefab, Vector3 position = default,
             Quaternion rotation = default, Transform parent = null)
         {
@@ -248,7 +243,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public GameObject Spawn(string poolName, Vector3 position = default,
             Quaternion rotation = default, Transform parent = null)
         {
@@ -274,7 +268,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public GameObject SpawnFromGroup(string groupName, SWPoolGroupSelectionMode selectionMode = SWPoolGroupSelectionMode.Random,
             Vector3 position = default, Quaternion rotation = default, Transform parent = null)
         {
@@ -284,7 +277,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public GameObject SpawnFromGroup(string groupName, string poolName,
             Vector3 position = default, Quaternion rotation = default, Transform parent = null)
         {
@@ -310,7 +302,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void Release(GameObject instance)
         {
             if (instance == null)
@@ -342,7 +333,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void Release(GameObject instance, float delay)
         {
             if (instance == null) return;
@@ -366,7 +356,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void Clear(GameObject prefab)
         {
             if (prefab == null)
@@ -387,7 +376,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public void ClearAll()
         {
             StopAllCoroutines();
@@ -405,7 +393,6 @@ namespace SW.Pooling
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc />
         public int CountInPool(GameObject prefab)
         {
             return poolDictionary.TryGetValue(prefab, out ObjectPool<GameObject> pool) ? pool.CountInactive : 0;
@@ -752,11 +739,10 @@ namespace SW.Pooling
         }
 
         /// <summary>
-        /// 지연 반환 코루틴 본체입니다.
+        /// 지정한 시간만큼 대기한 뒤 오브젝트를 풀에 반환합니다.
         /// </summary>
         /// <param name="instance">반환할 오브젝트입니다.</param>
         /// <param name="delay">지연 시간(초)입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
         private IEnumerator DelayedReleaseRoutine(GameObject instance, float delay)
         {
             yield return GetWait(delay);
@@ -787,9 +773,8 @@ namespace SW.Pooling
         }
 
         /// <summary>
-        /// 유휴 풀을 주기적으로 정리하는 코루틴 본체입니다.
+        /// 일정 간격으로 사용하지 않는 풀을 정리합니다.
         /// </summary>
-        /// <returns>IEnumerator입니다.</returns>
         private IEnumerator AutoClearRoutine()
         {
             float interval = Mathf.Max(1f, autoClearCheckInterval);

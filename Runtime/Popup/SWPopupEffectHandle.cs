@@ -100,10 +100,9 @@ namespace SW.Popup
         }
 
         /// <summary>
-        /// 내부 코루틴이 자연 종료될 때까지 감싸서 완료 처리를 수행합니다.
+        /// 연출 코루틴이 끝나면 재생 상태를 정리하고 완료 콜백을 호출합니다.
         /// </summary>
-        /// <param name="routine">감쌀 연출 코루틴입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
+        /// <param name="routine">완료를 기다릴 연출 코루틴입니다.</param>
         private IEnumerator WrapRoutine(IEnumerator routine)
         {
             yield return routine;
@@ -126,7 +125,7 @@ namespace SW.Popup
     }
 
     /// <summary>
-    /// 팝업 연출에서 공용으로 사용하는 코루틴 헬퍼입니다. Time.timeScale의 영향을 받지 않습니다.
+    /// 팝업 연출의 대기, 크기 변경, 페이드를 처리하는 코루틴입니다. Time.timeScale의 영향을 받지 않습니다.
     /// </summary>
     public static class SWPopupEffectRoutines
     {
@@ -134,7 +133,6 @@ namespace SW.Popup
         /// unscaled 시간 기준으로 지정 시간만큼 대기합니다.
         /// </summary>
         /// <param name="seconds">대기 시간(초)입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
         public static IEnumerator WaitRealtime(float seconds)
         {
             if (seconds <= 0f) yield break;
@@ -153,7 +151,6 @@ namespace SW.Popup
         /// <param name="target">스케일을 변경할 Transform입니다.</param>
         /// <param name="endScale">목표 스케일입니다.</param>
         /// <param name="duration">보간 시간(초)입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
         public static IEnumerator ScaleTo(Transform target, Vector3 endScale, float duration)
         {
             if (target == null) yield break;
@@ -187,7 +184,6 @@ namespace SW.Popup
         /// <param name="target">알파를 변경할 CanvasGroup입니다.</param>
         /// <param name="endAlpha">목표 알파입니다.</param>
         /// <param name="duration">보간 시간(초)입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
         public static IEnumerator FadeTo(CanvasGroup target, float endAlpha, float duration)
         {
             if (target == null) yield break;

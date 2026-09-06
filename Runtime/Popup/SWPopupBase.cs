@@ -13,7 +13,7 @@ namespace SW.Popup
     /// <remarks>
     /// 기본 구현은 GameObject 활성 상태와 표시/숨김 연출을 제어합니다.
     /// 사운드, 입력 잠금 같은 부가 처리는 <see cref="OnShow"/>와 <see cref="OnHide"/>를 재정의해 확장합니다.
-    /// DOTween 의존성이 제거되어 연출은 <see cref="SWPopupEffectHandle"/>로 재생됩니다.
+    /// <see cref="SWPopupEffectHandle"/>로 표시/숨김 연출의 재생 상태와 완료 콜백을 관리합니다.
     /// </remarks>
     public class SWPopupBase : SWMonoBehaviour
     {

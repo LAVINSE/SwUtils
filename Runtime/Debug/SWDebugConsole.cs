@@ -549,7 +549,7 @@ namespace SW.Debugging
 
         #region Input System 리플렉션 캐시
         /// <summary>
-        /// Input System 패키지를 필수 의존으로 만들지 않고 필요한 멤버만 캐시해 사용하는 헬퍼입니다.
+        /// Input System의 키보드와 터치 입력을 리플렉션으로 조회하고 멤버 정보를 캐시합니다. 패키지가 없어도 사용할 수 있습니다.
         /// </summary>
         private static class SWInputSystemReflectionCache
         {

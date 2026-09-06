@@ -7,8 +7,7 @@ namespace SW.Popup
     /// 팝업 표시 시 작게 시작해 커졌다가 원래 크기로 돌아오는 기본 표시 연출입니다.
     /// </summary>
     /// <remarks>
-    /// DOTween 없이 코루틴으로 동일한 연출을 재생합니다.
-    /// 직렬화 필드 이름이 기존과 동일하므로 이미 만들어둔 에셋 데이터가 그대로 유지됩니다.
+    /// 코루틴으로 크기를 보간하며 Time.timeScale의 영향을 받지 않습니다.
     /// </remarks>
     [CreateAssetMenu(menuName = "SWUtils/Popup Show Effects/Scale", fileName = "SWPopupScaleShowEffect")]
     public class SWPopupScaleShowEffect : SWPopupShowEffect
@@ -23,7 +22,6 @@ namespace SW.Popup
 
         #region 재생
         /// <inheritdoc/>
-        /// <inheritdoc />
         public override SWPopupEffectHandle Play(SWPopupBase popup, Transform target)
         {
             if (target == null) return null;
@@ -35,10 +33,9 @@ namespace SW.Popup
         }
 
         /// <summary>
-        /// 스케일 표시 연출 코루틴 본체입니다.
+        /// 지정한 시간만큼 대기한 뒤 크기를 키웠다가 기본 크기로 되돌립니다.
         /// </summary>
         /// <param name="target">연출 대상 Transform입니다.</param>
-        /// <returns>IEnumerator입니다.</returns>
         private IEnumerator PlayRoutine(Transform target)
         {
             if (delay > 0f)

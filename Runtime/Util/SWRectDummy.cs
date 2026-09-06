@@ -34,7 +34,7 @@ namespace SW.Util
         /// <summary>
         /// 메시를 생성하지 않아 화면에 아무것도 그리지 않습니다.
         /// </summary>
-        /// <param name="vertexHelper">UI 메시 생성 헬퍼입니다.</param>
+        /// <param name="vertexHelper">정점과 삼각형 데이터를 관리하는 VertexHelper입니다.</param>
         protected override void OnPopulateMesh(VertexHelper vertexHelper)
         {
             vertexHelper.Clear();

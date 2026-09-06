@@ -6,7 +6,7 @@ namespace SW.Popup
     /// 팝업이 숨겨질 때 재생되는 연출의 ScriptableObject 기반 클래스입니다.
     /// </summary>
     /// <remarks>
-    /// DOTween 의존성이 제거되었습니다. 연출은 코루틴 기반 <see cref="SWPopupEffectHandle"/>로 재생됩니다.
+    /// <see cref="SWPopupEffectHandle"/>로 연출의 재생 상태와 완료 콜백을 관리합니다.
     /// </remarks>
     public abstract class SWPopupHideEffect : ScriptableObject
     {

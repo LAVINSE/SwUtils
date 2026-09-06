@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SW.Util
 {
     /// <summary>
-    /// 스킬, 버튼, 상호작용처럼 반복 사용에 제한 시간이 필요한 기능을 위한 쿨다운 유틸리티.
+    /// 스킬이나 버튼을 다시 사용할 때까지의 대기 시간을 관리합니다.
     /// 마지막 사용 시각과 현재 시각을 비교하여 남은 시간을 계산합니다.
     /// </summary>
     [System.Serializable]
@@ -16,18 +16,18 @@ namespace SW.Util
         {
             /// <summary>Time.time 기준. Time.timeScale의 영향을 받습니다.</summary>
             Scaled,
-            /// <summary>Time.unscaledTime 기준. Time.timeScale의 영향을 받지 않는다.</summary>
+            /// <summary>Time.unscaledTime 기준. Time.timeScale의 영향을 받지 않습니다.</summary>
             Unscaled
         }
 
-        #region Fields
+        #region 필드
         [SerializeField] private float duration;
         [SerializeField] private float lastUseTime;
         [SerializeField] private bool hasUsed;
         [SerializeField] private TimeMode timeMode;
-        #endregion // Fields
+        #endregion // 필드
 
-        #region Properties
+        #region 프로퍼티
         /// <summary>쿨다운 전체 시간(초).</summary>
         public float Duration => duration;
         /// <summary>한 번이라도 사용된 적이 있는지 여부.</summary>
@@ -44,9 +44,9 @@ namespace SW.Util
         public float Remaining => Mathf.Max(0f, duration - Elapsed);
         /// <summary>쿨다운 진행률. 0은 방금 사용, 1은 사용 가능 상태를 의미합니다.</summary>
         public float Progress => duration <= 0f ? 1f : Mathf.Clamp01(Elapsed / duration);
-        #endregion // Properties
+        #endregion // 프로퍼티
 
-        #region Constructors
+        #region 생성자
         /// <summary>
         /// 쿨다운을 생성합니다.
         /// </summary>
@@ -59,9 +59,9 @@ namespace SW.Util
             lastUseTime = 0f;
             hasUsed = false;
         }
-        #endregion // Constructors
+        #endregion // 생성자
 
-        #region Controls
+        #region 제어
         /// <summary>
         /// 사용 가능하면 쿨다운을 시작합니다.
         /// </summary>
@@ -94,16 +94,16 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 쿨다운을 즉시 완료 상태로 만든다.
+        /// 쿨다운을 즉시 완료합니다.
         /// </summary>
         public void Finish()
         {
             lastUseTime = CurrentTime - duration;
             hasUsed = true;
         }
-        #endregion // Controls
+        #endregion // 제어
 
-        #region Settings
+        #region 설정
         /// <summary>
         /// 쿨다운 전체 시간을 변경합니다.
         /// </summary>
@@ -133,9 +133,9 @@ namespace SW.Util
             if (hasUsed)
                 lastUseTime = CurrentTime - elapsed;
         }
-        #endregion // Settings
+        #endregion // 설정
 
-        #region Helpers
+        #region 시간 조회 및 포맷
         /// <summary>
         /// 남은 시간을 MM:SS 형식으로 반환합니다.
         /// </summary>
@@ -164,6 +164,6 @@ namespace SW.Util
                 return timeMode == TimeMode.Unscaled ? Time.unscaledTime : Time.time;
             }
         }
-        #endregion // Helpers
+        #endregion // 시간 조회 및 포맷
     }
 }

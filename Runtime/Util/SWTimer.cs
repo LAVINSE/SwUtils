@@ -4,7 +4,7 @@ namespace SW.Util
 {
     /// <summary>
     /// 시작, 정지, 일시정지, 재개를 지원하는 런타임 타이머.
-    /// Update에서 Tick을 호출하거나, 원하는 deltaTime을 직접 넣어 수동으로 진행시킬 수 있습니다.
+    /// Update에서 Tick()을 호출하거나 Tick(deltaTime)에 경과 시간을 전달해 타이머를 갱신합니다.
     /// </summary>
     [System.Serializable]
     public class SWTimer
@@ -16,27 +16,27 @@ namespace SW.Util
         {
             /// <summary>Time.deltaTime 기준. Time.timeScale의 영향을 받습니다.</summary>
             Scaled,
-            /// <summary>Time.unscaledDeltaTime 기준. Time.timeScale의 영향을 받지 않는다.</summary>
+            /// <summary>Time.unscaledDeltaTime 기준. Time.timeScale의 영향을 받지 않습니다.</summary>
             Unscaled,
             /// <summary>자동 Tick을 사용하지 않고 Tick(deltaTime)으로 직접 진행합니다.</summary>
             Manual
         }
 
-        #region Fields
+        #region 필드
         [SerializeField] private float duration;
         [SerializeField] private float elapsed;
         [SerializeField] private bool isRunning;
         [SerializeField] private bool isPaused;
         [SerializeField] private bool loop;
         [SerializeField] private TimeMode timeMode;
-        #endregion // Fields
+        #endregion // 필드
 
-        #region Properties
+        #region 프로퍼티
         /// <summary>타이머 전체 시간(초).</summary>
         public float Duration => duration;
         /// <summary>현재까지 진행된 시간(초).</summary>
         public float Elapsed => elapsed;
-        /// <summary>남은 시간(초). 최소값은 0이다.</summary>
+        /// <summary>남은 시간(초). 0보다 작아지지 않습니다.</summary>
         public float Remaining => Mathf.Max(0f, duration - elapsed);
         /// <summary>진행률. 0은 시작, 1은 완료를 의미합니다.</summary>
         public float Progress => duration <= 0f ? 1f : Mathf.Clamp01(elapsed / duration);
@@ -50,9 +50,9 @@ namespace SW.Util
         public bool Loop => loop;
         /// <summary>현재 시간 기준.</summary>
         public TimeMode Mode => timeMode;
-        #endregion // Properties
+        #endregion // 프로퍼티
 
-        #region Constructors
+        #region 생성자
         /// <summary>
         /// 타이머를 생성합니다.
         /// </summary>
@@ -70,9 +70,9 @@ namespace SW.Util
             isRunning = playOnCreate;
             isPaused = false;
         }
-        #endregion // Constructors
+        #endregion // 생성자
 
-        #region Controls
+        #region 제어
         /// <summary>
         /// 타이머를 처음부터 시작합니다.
         /// </summary>
@@ -111,7 +111,7 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 진행 시간을 0으로 되돌린다. 실행 상태는 변경하지 않는다.
+        /// 진행 시간과 일시정지 상태를 초기화합니다. 실행 여부는 유지합니다.
         /// </summary>
         public void Reset()
         {
@@ -129,7 +129,7 @@ namespace SW.Util
         }
 
         /// <summary>
-        /// 타이머를 즉시 완료 상태로 만든다.
+        /// 타이머를 즉시 완료합니다.
         /// </summary>
         public void Complete()
         {
@@ -137,9 +137,9 @@ namespace SW.Util
             isRunning = false;
             isPaused = false;
         }
-        #endregion // Controls
+        #endregion // 제어
 
-        #region Settings
+        #region 설정
         /// <summary>
         /// 타이머 전체 시간을 변경합니다.
         /// </summary>
@@ -178,7 +178,7 @@ namespace SW.Util
         {
             this.elapsed = Mathf.Clamp(elapsed, 0f, duration);
         }
-        #endregion // Settings
+        #endregion // 설정
 
         #region Tick
         /// <summary>
@@ -222,7 +222,7 @@ namespace SW.Util
         }
         #endregion // Tick
 
-        #region Helpers
+        #region 시간 포맷
         /// <summary>
         /// 남은 시간을 MM:SS 형식으로 반환합니다.
         /// </summary>
@@ -240,6 +240,6 @@ namespace SW.Util
         {
             return SWTime.ToHourMinSec(Remaining);
         }
-        #endregion // Helpers
+        #endregion // 시간 포맷
     }
 }

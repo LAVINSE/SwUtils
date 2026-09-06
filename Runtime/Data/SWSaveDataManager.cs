@@ -14,7 +14,7 @@ namespace SW.Data
     /// </summary>
     public static class SWSaveDataManager
     {
-        #region Nested Types
+        #region 중첩 타입
         /// <summary>
         /// 저장 슬롯 파일의 간단한 정보.
         /// </summary>
@@ -67,9 +67,9 @@ namespace SW.Data
             /// <summary>백업 저장 시각(UTC).</summary>
             public string savedAtUtc;
         }
-        #endregion // Nested Types
+        #endregion // 중첩 타입
 
-        #region Fields
+        #region 필드
         /// <summary>
         /// 기본 저장 슬롯 이름.
         /// </summary>
@@ -83,9 +83,9 @@ namespace SW.Data
         private static string currentSlot = DefaultSlotName;
         private static object currentData;
         private static Type currentDataType;
-        #endregion // Fields
+        #endregion // 필드
 
-        #region Properties
+        #region 프로퍼티
         /// <summary>
         /// slot 인자를 생략했을 때 사용하는 현재 슬롯 이름.
         /// </summary>
@@ -110,7 +110,7 @@ namespace SW.Data
         /// 저장 파일이 생성되는 폴더 경로.
         /// </summary>
         public static string SaveDirectoryPath => Path.Combine(Application.persistentDataPath, SaveDirectoryName);
-        #endregion // Properties
+        #endregion // 프로퍼티
 
         #region Slot
         /// <summary>
@@ -773,7 +773,7 @@ namespace SW.Data
         }
 
         /// <summary>
-        /// 파일이 있으면 삭제를 시도하고 실패해도 예외를 밖으로 전달하지 않는다.
+        /// 파일이 있으면 삭제합니다. 삭제에 실패하면 경고를 기록하고 예외를 전파하지 않습니다.
         /// </summary>
         /// <param name="path">삭제할 파일 경로</param>
         private static void TryDeleteFile(string path)

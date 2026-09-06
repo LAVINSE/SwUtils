@@ -8,11 +8,20 @@ Release notes are grouped by version and date. The latest release is summarized 
 
 | Latest | Date | Focus |
 | --- | --- | --- |
-| `v1.2.0` | 2026-09-07 | Experimental quest and achievement system with an integrated authoring window. |
+| `v1.2.1` | 2026-09-07 | Consistent code section names and clearer comments. |
 
 ## [Unreleased]
 
 No changes are currently scheduled.
+
+## [v1.2.1] - 2026-09-07
+
+### Fixed
+
+- Reviewed all scripts and aligned 15 common code section names, such as Fields and Properties, in SWTimer, SWCooldown, and SWSaveDataManager with the existing Korean naming convention.
+- Updated matching end-region comments. Executable code behavior is unchanged.
+- Replaced vague helper labels and coroutine descriptions with their actual behavior, and removed duplicate comments and historical migration notes.
+- Clarified that SWTimer.Reset also clears the paused state.
 
 ## [v1.2.0] - 2026-09-07
 
