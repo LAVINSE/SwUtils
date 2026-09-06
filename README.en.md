@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.2.1](https://img.shields.io/badge/package-1.2.1-2f80ed)
+![Package 1.2.2](https://img.shields.io/badge/package-1.2.2-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils is a compact Unity utility package for runtime systems, inspector workflows, debugging tools, and editor productivity windows.
@@ -95,7 +95,7 @@ Add the package through Unity Package Manager:
 Append `#branch-name` or `#tag-name` to the URL to install a specific branch or tag.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.2.1
+https://github.com/LAVINSE/SWUtils.git#v1.2.2
 ```
 
 ## Dependencies

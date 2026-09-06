@@ -6,6 +6,12 @@ using SW.EditorTools.Util;
 
 using SW.Pooling;
 
+#if UNITY_6000_4_OR_NEWER
+using SWObjectIdentifier = UnityEngine.EntityId;
+#else
+using SWObjectIdentifier = System.Int32;
+#endif
+
 namespace SW.EditorTools.Window
 {
     /// <summary>
@@ -31,8 +37,8 @@ namespace SW.EditorTools.Window
         private SWPool cachedPool;
         /// <summary>캐시된 스냅샷 목록입니다. SNAPSHOT_INTERVAL마다 갱신됩니다.</summary>
         private IReadOnlyList<SWPoolSnapshot> cachedSnapshots;
-        /// <summary>펼쳐진 행의 프리팹 InstanceID 집합입니다.</summary>
-        private readonly HashSet<int> expandedIds = new();
+        /// <summary>펼쳐진 행의 프리팹 식별자 집합입니다.</summary>
+        private readonly HashSet<SWObjectIdentifier> expandedObjectIdentifiers = new();
 
         private GUIStyle rightAlignedLabelStyle;
         private GUIStyle boldMiniLabelStyle;
@@ -235,8 +241,8 @@ namespace SW.EditorTools.Window
         /// <param name="snapshot">풀 상태입니다.</param>
         private void DrawPoolRow(SWPoolSnapshot snapshot)
         {
-            int id = snapshot.Prefab != null ? snapshot.Prefab.GetInstanceID() : 0;
-            bool expanded = expandedIds.Contains(id);
+            SWObjectIdentifier objectIdentifier = SWEditorObjectUtility.GetIdentifier(snapshot.Prefab);
+            bool expanded = expandedObjectIdentifiers.Contains(objectIdentifier);
             bool hasActive = snapshot.ActiveCount > 0;
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -246,8 +252,8 @@ namespace SW.EditorTools.Window
             bool newExpanded = GUILayout.Toggle(expanded, GUIContent.none, EditorStyles.foldout, GUILayout.Width(14f));
             if (newExpanded != expanded)
             {
-                if (newExpanded) expandedIds.Add(id);
-                else expandedIds.Remove(id);
+                if (newExpanded) expandedObjectIdentifiers.Add(objectIdentifier);
+                else expandedObjectIdentifiers.Remove(objectIdentifier);
                 SaveExpandedState();
             }
 
@@ -359,7 +365,13 @@ namespace SW.EditorTools.Window
         /// </summary>
         private void SaveExpandedState()
         {
-            SessionState.SetString(ExpandedSessionKey, string.Join(",", expandedIds));
+#if UNITY_6000_4_OR_NEWER
+            SWObjectIdentifier[] identifiers = new SWObjectIdentifier[expandedObjectIdentifiers.Count];
+            expandedObjectIdentifiers.CopyTo(identifiers);
+            SessionState.SetEntityIdArray(ExpandedSessionKey, identifiers);
+#else
+            SessionState.SetString(ExpandedSessionKey, string.Join(",", expandedObjectIdentifiers));
+#endif
         }
 
         /// <summary>
@@ -367,17 +379,21 @@ namespace SW.EditorTools.Window
         /// </summary>
         private void LoadExpandedState()
         {
-            expandedIds.Clear();
+            expandedObjectIdentifiers.Clear();
 
+#if UNITY_6000_4_OR_NEWER
+            expandedObjectIdentifiers.UnionWith(SessionState.GetEntityIdArray(ExpandedSessionKey, System.Array.Empty<SWObjectIdentifier>()));
+#else
             string saved = SessionState.GetString(ExpandedSessionKey, string.Empty);
             if (string.IsNullOrEmpty(saved)) return;
 
             string[] tokens = saved.Split(',');
             for (int index = 0; index < tokens.Length; index++)
             {
-                if (int.TryParse(tokens[index], out int id))
-                    expandedIds.Add(id);
+                if (int.TryParse(tokens[index], out int objectIdentifier))
+                    expandedObjectIdentifiers.Add(objectIdentifier);
             }
+#endif
         }
         #endregion // 상태 유지
     }

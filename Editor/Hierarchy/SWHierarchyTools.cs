@@ -7,6 +7,12 @@ using UnityEngine;
 
 using SW.EditorTools.Util;
 
+#if UNITY_6000_4_OR_NEWER
+using SWObjectIdentifier = UnityEngine.EntityId;
+#else
+using SWObjectIdentifier = System.Int32;
+#endif
+
 namespace SW.EditorTools.Hierarchy
 {
     /// <summary>
@@ -71,11 +77,11 @@ namespace SW.EditorTools.Hierarchy
         private const string LineWidthKey = "SWTools.HierarchyTools.LineWidth";
 
         private static readonly Dictionary<string, Entry> entriesById = new();
-        private static readonly Dictionary<int, Entry> entriesByInstanceId = new();
-        private static readonly Dictionary<int, string> globalIdByInstanceId = new();
-        private static readonly Dictionary<int, bool> missingScriptCache = new();
-        private static readonly Dictionary<int, Component[]> componentCache = new();
-        private static readonly HashSet<int> syncedIconInstanceIds = new();
+        private static readonly Dictionary<SWObjectIdentifier, Entry> entriesByObjectIdentifier = new();
+        private static readonly Dictionary<SWObjectIdentifier, string> globalIdByObjectIdentifier = new();
+        private static readonly Dictionary<SWObjectIdentifier, bool> missingScriptCache = new();
+        private static readonly Dictionary<SWObjectIdentifier, Component[]> componentCache = new();
+        private static readonly HashSet<SWObjectIdentifier> syncedIconObjectIdentifiers = new();
         private static readonly Dictionary<string, Texture> iconCache = new();
         private static readonly Dictionary<string, Texture2D> assetIconCache = new();
         private static readonly Color defaultA = new(0.2f, 0.65f, 1f, 1f);
@@ -196,7 +202,11 @@ namespace SW.EditorTools.Hierarchy
         {
             EnsureSettingsLoaded();
             EnsureLoaded();
+#if UNITY_6000_4_OR_NEWER
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += OnHierarchyGUI;
+#else
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
+#endif
             EditorApplication.hierarchyChanged += ClearTransientCaches;
         }
 
@@ -388,9 +398,9 @@ namespace SW.EditorTools.Hierarchy
             return gameObject;
         }
 
-        private static void OnHierarchyGUI(int instanceId, Rect rowRect)
+        private static void OnHierarchyGUI(SWObjectIdentifier objectIdentifier, Rect rowRect)
         {
-            GameObject gameObject = EntityIdToObject(instanceId) as GameObject;
+            GameObject gameObject = SWEditorObjectUtility.FindObject(objectIdentifier) as GameObject;
             if (gameObject == null)
                 return;
 
@@ -404,7 +414,7 @@ namespace SW.EditorTools.Hierarchy
             if (!Enabled || evt.type != EventType.Repaint)
                 return;
 
-            if (drawZebraRows && instanceId % 2 != 0)
+            if (drawZebraRows && rowRect.height > 0f && Mathf.FloorToInt(rowRect.y / rowRect.height) % 2 != 0)
                 DrawFullRow(rowRect, EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.025f) : new Color(0f, 0f, 0f, 0.025f));
 
             Entry entry = TryGetEntry(gameObject);
@@ -607,14 +617,14 @@ namespace SW.EditorTools.Hierarchy
             if (!TryGetGlobalId(gameObject, out string globalId))
                 return null;
 
-            int instanceId = gameObject.GetInstanceID();
-            if (entriesByInstanceId.TryGetValue(instanceId, out Entry cachedEntry))
+            SWObjectIdentifier objectIdentifier = SWEditorObjectUtility.GetIdentifier(gameObject);
+            if (entriesByObjectIdentifier.TryGetValue(objectIdentifier, out Entry cachedEntry))
                 return cachedEntry;
 
             if (!entriesById.TryGetValue(globalId, out Entry entry))
                 return null;
 
-            entriesByInstanceId[instanceId] = entry;
+            entriesByObjectIdentifier[objectIdentifier] = entry;
             SyncUnityObjectIcon(gameObject, entry);
             return entry;
         }
@@ -640,7 +650,7 @@ namespace SW.EditorTools.Hierarchy
                 entriesById[globalId] = entry;
             }
 
-            entriesByInstanceId[gameObject.GetInstanceID()] = entry;
+            entriesByObjectIdentifier[SWEditorObjectUtility.GetIdentifier(gameObject)] = entry;
             return entry;
         }
 
@@ -721,9 +731,9 @@ namespace SW.EditorTools.Hierarchy
 
         private static void RebuildInstanceCache()
         {
-            entriesByInstanceId.Clear();
-            globalIdByInstanceId.Clear();
-            syncedIconInstanceIds.Clear();
+            entriesByObjectIdentifier.Clear();
+            globalIdByObjectIdentifier.Clear();
+            syncedIconObjectIdentifiers.Clear();
         }
 
         private static void ClearTransientCaches()
@@ -735,23 +745,23 @@ namespace SW.EditorTools.Hierarchy
 
         private static bool HasMissingScriptsCached(GameObject gameObject)
         {
-            int id = gameObject.GetInstanceID();
-            if (missingScriptCache.TryGetValue(id, out bool cached))
+            SWObjectIdentifier objectIdentifier = SWEditorObjectUtility.GetIdentifier(gameObject);
+            if (missingScriptCache.TryGetValue(objectIdentifier, out bool cached))
                 return cached;
 
             bool hasMissing = SWEditorUtils.HasMissingScripts(gameObject);
-            missingScriptCache[id] = hasMissing;
+            missingScriptCache[objectIdentifier] = hasMissing;
             return hasMissing;
         }
 
         private static Component[] GetCachedComponents(GameObject gameObject)
         {
-            int id = gameObject.GetInstanceID();
-            if (componentCache.TryGetValue(id, out Component[] cached) && cached != null)
+            SWObjectIdentifier objectIdentifier = SWEditorObjectUtility.GetIdentifier(gameObject);
+            if (componentCache.TryGetValue(objectIdentifier, out Component[] cached) && cached != null)
                 return cached;
 
             Component[] components = gameObject.GetComponents<Component>();
-            componentCache[id] = components;
+            componentCache[objectIdentifier] = components;
             return components;
         }
 
@@ -803,12 +813,12 @@ namespace SW.EditorTools.Hierarchy
             if (!IsSupportedSceneObject(gameObject))
                 return false;
 
-            int instanceId = gameObject.GetInstanceID();
-            if (globalIdByInstanceId.TryGetValue(instanceId, out globalId))
+            SWObjectIdentifier objectIdentifier = SWEditorObjectUtility.GetIdentifier(gameObject);
+            if (globalIdByObjectIdentifier.TryGetValue(objectIdentifier, out globalId))
                 return !string.IsNullOrEmpty(globalId);
 
             globalId = GetGlobalId(gameObject);
-            globalIdByInstanceId[instanceId] = globalId;
+            globalIdByObjectIdentifier[objectIdentifier] = globalId;
             return !string.IsNullOrEmpty(globalId);
         }
 
@@ -885,7 +895,7 @@ namespace SW.EditorTools.Hierarchy
                 return;
 
             EditorGUIUtility.SetIconForObject(gameObject, icon);
-            syncedIconInstanceIds.Add(gameObject.GetInstanceID());
+            syncedIconObjectIdentifiers.Add(SWEditorObjectUtility.GetIdentifier(gameObject));
             if (!markDirty)
                 return;
 
@@ -905,7 +915,7 @@ namespace SW.EditorTools.Hierarchy
                 return;
 
             EditorGUIUtility.SetIconForObject(gameObject, null);
-            syncedIconInstanceIds.Remove(gameObject.GetInstanceID());
+            syncedIconObjectIdentifiers.Remove(SWEditorObjectUtility.GetIdentifier(gameObject));
             if (!markDirty)
                 return;
 
@@ -921,12 +931,12 @@ namespace SW.EditorTools.Hierarchy
         /// <param name="entry">저장된 하이어라키 항목입니다.</param>
         private static void SyncUnityObjectIcon(GameObject gameObject, Entry entry)
         {
-            if (gameObject == null || entry == null || syncedIconInstanceIds.Contains(gameObject.GetInstanceID()))
+            if (gameObject == null || entry == null || syncedIconObjectIdentifiers.Contains(SWEditorObjectUtility.GetIdentifier(gameObject)))
                 return;
 
             if (string.IsNullOrEmpty(entry.iconName))
             {
-                syncedIconInstanceIds.Add(gameObject.GetInstanceID());
+                syncedIconObjectIdentifiers.Add(SWEditorObjectUtility.GetIdentifier(gameObject));
                 return;
             }
 
@@ -936,15 +946,6 @@ namespace SW.EditorTools.Hierarchy
         private static void DrawFullRow(Rect rowRect, Color color)
         {
             EditorGUI.DrawRect(new Rect(0f, rowRect.y, rowRect.xMax + 260f, rowRect.height), color);
-        }
-
-        private static UnityEngine.Object EntityIdToObject(int instanceId)
-        {
-#if UNITY_6000_3_OR_NEWER
-            return EditorUtility.EntityIdToObject(instanceId);
-#else
-            return EditorUtility.InstanceIDToObject(instanceId);
-#endif
         }
 
         private static void DrawGradientRect(Rect rect, Color left, Color right)
@@ -978,8 +979,9 @@ namespace SW.EditorTools.Hierarchy
             if (type == null) return;
 
             EditorWindow window = EditorWindow.GetWindow(type);
-            MethodInfo method = type.GetMethod("SetExpandedRecursive", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            method?.Invoke(window, new object[] { gameObject.GetInstanceID(), expanded });
+            MethodInfo method = type.GetMethod("SetExpandedRecursive", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, new[] { typeof(SWObjectIdentifier), typeof(bool) }, null);
+            method?.Invoke(window, new object[] { SWEditorObjectUtility.GetIdentifier(gameObject), expanded });
             Repaint();
         }
     }

@@ -3,7 +3,7 @@
 [한국어](README.md) | [English](README.en.md)
 
 ![Unity 6.0+](https://img.shields.io/badge/Unity-6.0%2B-222222)
-![Package 1.2.1](https://img.shields.io/badge/package-1.2.1-2f80ed)
+![Package 1.2.2](https://img.shields.io/badge/package-1.2.2-2f80ed)
 ![Runtime and Editor](https://img.shields.io/badge/runtime%20%2B%20editor-tools-31a36c)
 
 SWUtils는 Unity 프로젝트에서 반복적으로 사용하는 런타임 시스템, 인스펙터 워크플로, 디버깅 도구, 에디터 생산성 창을 모은 유틸리티 패키지입니다.
@@ -93,7 +93,7 @@ Unity Package Manager에서 다음 순서로 설치합니다.
 4. 다음 주소를 입력합니다.
 
 ```text
-https://github.com/LAVINSE/SWUtils.git#v1.2.1
+https://github.com/LAVINSE/SWUtils.git#v1.2.2
 ```
 
 특정 브랜치나 태그를 설치하려면 주소 뒤에 `#브랜치이름` 또는 `#태그이름`을 붙입니다.

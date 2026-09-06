@@ -888,8 +888,12 @@ namespace SW.EditorTools.Behaviour
             if (selectedRunner != null && selectedRunner.TreeAsset == treeAsset)
                 return selectedRunner;
 
+#if UNITY_6000_4_OR_NEWER
+            SWBehaviourTreeRunner[] runners = FindObjectsByType<SWBehaviourTreeRunner>();
+#else
             SWBehaviourTreeRunner[] runners = FindObjectsByType<SWBehaviourTreeRunner>(
                 FindObjectsSortMode.None);
+#endif
             for (int index = 0; index < runners.Length; index++)
             {
                 if (runners[index].TreeAsset == treeAsset)

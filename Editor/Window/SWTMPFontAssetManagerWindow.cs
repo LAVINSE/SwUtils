@@ -462,7 +462,11 @@ namespace SW.EditorTools.Window
                 "적용", "취소"))
                 return;
 
+#if UNITY_6000_4_OR_NEWER
+            var allTmps = Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include);
+#else
             var allTmps = Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#endif
 
             Undo.SetCurrentGroupName("TMP Font Apply All");
             int undoGroup = Undo.GetCurrentGroup();

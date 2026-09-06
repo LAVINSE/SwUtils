@@ -698,7 +698,11 @@ namespace SW.EditorTools.Attributes
         /// <returns>찾거나 생성한 하위 항목입니다.</returns>
         private AdvancedDropdownItem GetOrCreateChild(AdvancedDropdownItem parent, string name)
         {
+#if UNITY_6000_6_OR_NEWER
+            foreach (AdvancedDropdownItem child in parent.childList)
+#else
             foreach (AdvancedDropdownItem child in parent.children)
+#endif
             {
                 if (child.name == name)
                 {

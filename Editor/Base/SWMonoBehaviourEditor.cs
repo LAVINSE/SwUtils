@@ -12,6 +12,7 @@ using SW.Attributes;
 using SW.Base;
 
 using SW.Util;
+using SW.EditorTools.Util;
 
 namespace SW.EditorTools.Base
 {
@@ -240,8 +241,8 @@ namespace SW.EditorTools.Base
                     }
 
                     // EditorPrefs에서 저장된 접힘 상태 불러오기
-                    // 키 형식: "{그룹이름}{필드이름}{인스턴스ID}"
-                    bool isGroupOpen = EditorPrefs.GetBool(string.Format($"{group.GroupName}{fieldInfoList[i].Name}{target.GetInstanceID()}"), fallbackOpenState);
+                    // 키 형식: "{그룹이름}{필드이름}{오브젝트 식별자}"
+                    bool isGroupOpen = EditorPrefs.GetBool($"{group.GroupName}{fieldInfoList[i].Name}{SWEditorObjectUtility.GetPreferenceIdentifier(target)}", fallbackOpenState);
 
                     // 새 그룹 데이터 생성 및 추가
                     GroupDataDict.Add(group.GroupName, new SWGroupDataEditor

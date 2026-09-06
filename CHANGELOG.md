@@ -8,11 +8,24 @@ Release notes are grouped by version and date. The latest release is summarized 
 
 | Latest | Date | Focus |
 | --- | --- | --- |
-| `v1.2.1` | 2026-09-07 | Consistent code section names and clearer comments. |
+| `v1.2.2` | 2026-09-07 | Unity 6.6 object identifier and Editor compatibility fixes. |
 
 ## [Unreleased]
 
 No changes are currently scheduled.
+
+## [v1.2.2] - 2026-09-07
+
+### Fixed
+
+- Use EntityId for object lookup, hierarchy caches and callbacks, and graph asset opening on Unity 6.4 or newer, while retaining legacy identifiers on older versions.
+- Store expanded pool monitor rows as an EntityId array and preserve all 64 bits in Inspector preference keys.
+- Match the recursive hierarchy expansion parameter type to the Unity version and calculate alternating row backgrounds from row position instead of identifier values.
+- Replace the obsolete dropdown children property with childList on Unity 6.6 and remove deprecated sorting arguments from object searches on newer versions.
+
+### Validation
+
+- Compiled all Runtime, Editor, and Samples scripts against Unity 6000.6.0f1 and 6000.3.11f1 assemblies.
 
 ## [v1.2.1] - 2026-09-07
 

@@ -2,6 +2,13 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
 using SW.BehaviourTree;
+using SW.EditorTools.Util;
+
+#if UNITY_6000_4_OR_NEWER
+using SWObjectIdentifier = UnityEngine.EntityId;
+#else
+using SWObjectIdentifier = System.Int32;
+#endif
 
 namespace SW.EditorTools.Behaviour
 {
@@ -21,9 +28,9 @@ namespace SW.EditorTools.Behaviour
 
         /// <summary>Behaviour Tree 에셋을 두 번 누르면 전용 그래프 편집기에서 엽니다.</summary>
         [OnOpenAsset]
-        private static bool OnOpenAsset(int instanceIdentifier, int line)
+        private static bool OnOpenAsset(SWObjectIdentifier objectIdentifier, int line)
         {
-            SWBehaviourTreeAsset asset = EditorUtility.EntityIdToObject(instanceIdentifier)
+            SWBehaviourTreeAsset asset = SWEditorObjectUtility.FindObject(objectIdentifier)
                 as SWBehaviourTreeAsset;
             if (asset == null)
                 return false;
